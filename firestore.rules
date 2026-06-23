@@ -1,0 +1,158 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {uid} (must match request.auth.uid)
+// Fields:
+//   - streak: int (required, 0–10000)
+//   - lastActiveDate: string | null (required, YYYY-MM-DD or null)
+//   - completedLessons: list<string> (required, max 50 slugs)
+//   - currentLesson: map | null (optional, lessonId + stepIndex)
+//
+// Subcollection: users/{uid}/lessonProgress
+// Document ID: {lessonId}
+// Fields:
+//   - currentStepIndex: int (required, 0–49)
+//   - completed: bool (required)
+//   - masteryIndex: int (optional, 0–19)
+//   - distinctConicsSeen: list<string> (optional)
+//   - distinctPValues: list<number> (optional)
+//   - movedFocus: bool (optional)
+//   - movedDirectrix: bool (optional)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+  // ===============================================================
+  // Helper Functions
+  // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidLessonSlug(value) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= 64
+        && value.matches('^[a-z][a-z0-9-]*$');
+    }
+
+    function isValidDateString(value) {
+      return value is string
+        && value.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isValidConicType(value) {
+      return value in ['circle', 'ellipse', 'parabola', 'hyperbola', 'none'];
+    }
+
+    function isValidConicList(list) {
+      return list is list
+        && list.size() <= 10
+        && (list.size() < 1 || isValidConicType(list[0]))
+        && (list.size() < 2 || isValidConicType(list[1]))
+        && (list.size() < 3 || isValidConicType(list[2]))
+        && (list.size() < 4 || isValidConicType(list[3]))
+        && (list.size() < 5 || isValidConicType(list[4]))
+        && (list.size() < 6 || isValidConicType(list[5]))
+        && (list.size() < 7 || isValidConicType(list[6]))
+        && (list.size() < 8 || isValidConicType(list[7]))
+        && (list.size() < 9 || isValidConicType(list[8]))
+        && (list.size() < 10 || isValidConicType(list[9]));
+    }
+
+    function isValidPValueList(list) {
+      return list is list
+        && list.size() <= 50;
+    }
+
+    function isValidCurrentLesson(value) {
+      return value == null
+        || (
+          value is map
+          && value.keys().hasOnly(['lessonId', 'stepIndex'])
+          && isValidLessonSlug(value.lessonId)
+          && value.stepIndex is int
+          && value.stepIndex >= 0
+          && value.stepIndex < 50
+        );
+    }
+
+    function isValidCompletedLessons(list) {
+      return list is list && list.size() <= 50;
+    }
+
+    function isValidUserProgress(data) {
+      return hasOnlyAllowedFields(['streak', 'lastActiveDate', 'completedLessons', 'currentLesson'])
+        && data.streak is int
+        && data.streak >= 0
+        && data.streak <= 10000
+        && (data.lastActiveDate == null || isValidDateString(data.lastActiveDate))
+        && isValidCompletedLessons(data.completedLessons)
+        && isValidCurrentLesson(data.get('currentLesson', null));
+    }
+
+    function isValidLessonProgress(data) {
+      return hasOnlyAllowedFields([
+          'currentStepIndex',
+          'completed',
+          'masteryIndex',
+          'distinctConicsSeen',
+          'distinctPValues',
+          'movedFocus',
+          'movedDirectrix',
+        ])
+        && data.currentStepIndex is int
+        && data.currentStepIndex >= 0
+        && data.currentStepIndex < 50
+        && data.completed is bool
+        && (!('masteryIndex' in data) || (data.masteryIndex is int && data.masteryIndex >= 0 && data.masteryIndex < 20))
+        && (!('distinctConicsSeen' in data) || isValidConicList(data.distinctConicsSeen))
+        && (!('distinctPValues' in data) || isValidPValueList(data.distinctPValues))
+        && (!('movedFocus' in data) || data.movedFocus is bool)
+        && (!('movedDirectrix' in data) || data.movedDirectrix is bool);
+    }
+
+  // ===============================================================
+  // Rules
+  // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+
+      allow create: if isOwner(userId) && isValidUserProgress(request.resource.data);
+
+      allow update: if isOwner(userId) && isValidUserProgress(request.resource.data);
+
+      allow delete: if false;
+
+      match /lessonProgress/{lessonId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+          && isValidLessonSlug(lessonId)
+          && isValidLessonProgress(request.resource.data);
+
+        allow update: if isOwner(userId)
+          && isValidLessonSlug(lessonId)
+          && isValidLessonProgress(request.resource.data);
+
+        allow delete: if false;
+      }
+    }
+  }
+}

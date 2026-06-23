@@ -6,32 +6,31 @@
     {
       "id": "introduction",
       "title": "Introduction",
-      "order": 1,
-      "locked": false
+      "order": 1
     },
     {
       "id": "parabolas",
       "title": "Parabolas",
       "order": 2,
-      "locked": true
+      "unlockAfter": "introduction"
     },
     {
       "id": "circles",
       "title": "Circles",
       "order": 3,
-      "locked": true
+      "comingSoon": true
     },
     {
       "id": "ellipses",
       "title": "Ellipses",
       "order": 4,
-      "locked": true
+      "comingSoon": true
     },
     {
       "id": "hyperbolas",
       "title": "Hyperbolas",
       "order": 5,
-      "locked": true
+      "comingSoon": true
     }
   ]
 }

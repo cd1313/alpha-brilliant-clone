@@ -49,6 +49,9 @@ export function LessonPage() {
           ← Course Map
         </Link>
         <h1>{lesson.title}</h1>
+        <p className="lesson-page-subtitle">
+          Conic Sections · {lesson.steps.length} steps · Learn by interacting with the cone
+        </p>
       </header>
 
       {error && <p className="error-banner">{error}</p>}

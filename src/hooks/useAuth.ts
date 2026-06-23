@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   type User,
 } from 'firebase/auth'
 import { auth, isFirebaseConfigured } from '../lib/firebase'
+import { getAuthErrorMessage } from '../lib/authErrors'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -29,26 +31,45 @@ export function useAuth() {
   const signUp = async (email: string, password: string) => {
     if (!auth) {
       setError('Firebase is not configured. Add your credentials to .env.local')
-      return
+      return false
     }
     setError(null)
     try {
       await createUserWithEmailAndPassword(auth, email, password)
+      return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign up failed')
+      setError(getAuthErrorMessage(err, 'Sign up failed'))
+      return false
     }
   }
 
   const signIn = async (email: string, password: string) => {
     if (!auth) {
       setError('Firebase is not configured. Add your credentials to .env.local')
-      return
+      return false
     }
     setError(null)
     try {
       await signInWithEmailAndPassword(auth, email, password)
+      return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed')
+      setError(getAuthErrorMessage(err, 'Sign in failed'))
+      return false
+    }
+  }
+
+  const resetPassword = async (email: string) => {
+    if (!auth) {
+      setError('Firebase is not configured. Add your credentials to .env.local')
+      return false
+    }
+    setError(null)
+    try {
+      await sendPasswordResetEmail(auth, email)
+      return true
+    } catch (err) {
+      setError(getAuthErrorMessage(err, 'Could not send reset email'))
+      return false
     }
   }
 
@@ -58,7 +79,7 @@ export function useAuth() {
     try {
       await signOut(auth)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign out failed')
+      setError(getAuthErrorMessage(err, 'Sign out failed'))
     }
   }
 
@@ -68,6 +89,7 @@ export function useAuth() {
     error,
     signUp,
     signIn,
+    resetPassword,
     logOut,
     isConfigured: isFirebaseConfigured,
   }

@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
+type AuthMode = 'signin' | 'signup' | 'reset'
+
 export function LoginPage() {
-  const { user, signIn, signUp, error, isConfigured } = useAuth()
+  const { user, signIn, signUp, resetPassword, error, isConfigured } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [mode, setMode] = useState<AuthMode>('signin')
   const [submitting, setSubmitting] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
 
   if (user) {
     return <Navigate to="/" replace />
@@ -16,12 +19,23 @@ export function LoginPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setSubmitting(true)
-    if (mode === 'signin') {
+    setResetSent(false)
+
+    if (mode === 'reset') {
+      const ok = await resetPassword(email)
+      if (ok) setResetSent(true)
+    } else if (mode === 'signin') {
       await signIn(email, password)
     } else {
       await signUp(email, password)
     }
+
     setSubmitting(false)
+  }
+
+  const switchMode = (nextMode: AuthMode) => {
+    setMode(nextMode)
+    setResetSent(false)
   }
 
   return (
@@ -47,32 +61,56 @@ export function LoginPage() {
               autoComplete="email"
             />
           </label>
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            />
-          </label>
+
+          {mode !== 'reset' && (
+            <label>
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              />
+            </label>
+          )}
+
+          {resetSent && (
+            <p className="success-text">Check your email for a password reset link.</p>
+          )}
 
           {error && <p className="error-text">{error}</p>}
 
           <button type="submit" className="btn btn-primary" disabled={submitting || !isConfigured}>
-            {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+            {mode === 'signin' && 'Sign In'}
+            {mode === 'signup' && 'Sign Up'}
+            {mode === 'reset' && 'Send Reset Link'}
           </button>
         </form>
 
-        <button
-          type="button"
-          className="btn btn-link"
-          onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-        >
-          {mode === 'signin' ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
-        </button>
+        {mode === 'signin' && (
+          <>
+            <button type="button" className="btn btn-link" onClick={() => switchMode('signup')}>
+              Need an account? Sign up
+            </button>
+            <button type="button" className="btn btn-link" onClick={() => switchMode('reset')}>
+              Forgot password?
+            </button>
+          </>
+        )}
+
+        {mode === 'signup' && (
+          <button type="button" className="btn btn-link" onClick={() => switchMode('signin')}>
+            Already have an account? Sign in
+          </button>
+        )}
+
+        {mode === 'reset' && (
+          <button type="button" className="btn btn-link" onClick={() => switchMode('signin')}>
+            Back to sign in
+          </button>
+        )}
       </div>
     </div>
   )

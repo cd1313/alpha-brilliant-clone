@@ -28,12 +28,11 @@ export function ExploreStepView({
 
   const canContinue =
     step.successCondition === 'continue' ||
-    (typeof step.successCondition === 'object' &&
+    ('minDistinctConics' in step.successCondition &&
       distinctValid >= step.successCondition.minDistinctConics)
 
   return (
     <div className="step-view explore-step">
-      {step.title && <h2>{step.title}</h2>}
       {step.introText && <p className="intro-text">{step.introText}</p>}
       <p className="step-prompt">{step.prompt}</p>
 
@@ -57,7 +56,7 @@ export function ExploreStepView({
         </div>
       )}
 
-      {typeof step.successCondition === 'object' && (
+      {typeof step.successCondition === 'object' && 'minDistinctConics' in step.successCondition && (
         <p className="success-hint">
           Distinct shapes found: {distinctValid} / {step.successCondition.minDistinctConics}
         </p>

@@ -12,6 +12,9 @@ export type LessonProgress = {
   currentStepIndex: number
   completed: boolean
   distinctConicsSeen?: string[]
+  distinctPValues?: number[]
+  movedFocus?: boolean
+  movedDirectrix?: boolean
   masteryIndex?: number
 }
 

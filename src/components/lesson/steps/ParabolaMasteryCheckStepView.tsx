@@ -1,12 +1,15 @@
 import { useState } from 'react'
-import { ConeSimulator } from '../../cone/ConeSimulator'
-import { classifyConic, conicLabel, type PlaneState } from '../../../lib/conicClassifier'
-import type { ConicType, MasteryCheckStep } from '../../../types/lesson'
+import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
+import {
+  matchesParabolaMasteryTarget,
+  type ParabolaState,
+} from '../../../lib/parabolaGeometry'
+import type { MasteryCheckStep } from '../../../types/lesson'
 
-type MasteryCheckStepViewProps = {
+type ParabolaMasteryCheckStepViewProps = {
   step: MasteryCheckStep
-  plane: PlaneState
-  onPlaneChange: (plane: PlaneState) => void
+  parabola: ParabolaState
+  onParabolaChange: (parabola: ParabolaState) => void
   masteryIndex: number
   onMasteryIndexChange: (index: number) => void
   onComplete: () => void
@@ -16,21 +19,21 @@ function MasteryProgressList({
   sequence,
   masteryIndex,
 }: {
-  sequence: ConicType[]
+  sequence: NonNullable<MasteryCheckStep['parabolaSequence']>
   masteryIndex: number
 }) {
   return (
     <ol className="mastery-progress-list">
-      {sequence.map((conic, index) => {
+      {sequence.map((target, index) => {
         const done = index < masteryIndex
         const current = index === masteryIndex
         return (
           <li
-            key={conic}
+            key={target.id}
             className={`mastery-progress-item ${done ? 'done' : ''} ${current ? 'current' : ''}`}
           >
             <span className="mastery-progress-marker">{done ? '✓' : index + 1}</span>
-            <span>{conicLabel(conic)}</span>
+            <span>{target.label}</span>
           </li>
         )
       })}
@@ -38,38 +41,33 @@ function MasteryProgressList({
   )
 }
 
-export function MasteryCheckStepView({
+export function ParabolaMasteryCheckStepView({
   step,
-  plane,
-  onPlaneChange,
+  parabola,
+  onParabolaChange,
   masteryIndex,
   onMasteryIndexChange,
   onComplete,
-}: MasteryCheckStepViewProps) {
+}: ParabolaMasteryCheckStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [lastCheckCorrect, setLastCheckCorrect] = useState<boolean | null>(null)
   const [verified, setVerified] = useState(false)
 
-  const sequence = step.sequence ?? []
+  const sequence = step.parabolaSequence ?? []
   const finished = masteryIndex >= sequence.length
   const target = finished ? null : sequence[masteryIndex]
 
   const checkShape = () => {
     if (!target) return
 
-    const current = classifyConic(plane.angle, plane.offset)
-    if (current === target) {
+    if (matchesParabolaMasteryTarget(parabola, target)) {
       setLastCheckCorrect(true)
       setVerified(true)
-      setFeedback(`Correct! That was a ${conicLabel(target)}.`)
+      setFeedback(`Correct! ${target.label} achieved.`)
     } else {
       setLastCheckCorrect(false)
       setVerified(false)
-      setFeedback(
-        current === 'none'
-          ? `Not quite — adjust the plane until you create a ${conicLabel(target)}.`
-          : `That's a ${conicLabel(current)}, not a ${conicLabel(target)}. Keep adjusting.`,
-      )
+      setFeedback(`Not quite — adjust the focus, directrix, or vertex until you match the task.`)
     }
   }
 
@@ -97,14 +95,16 @@ export function MasteryCheckStepView({
       <MasteryProgressList sequence={sequence} masteryIndex={masteryIndex} />
 
       <p className="step-prompt">
-        Create a <strong>{conicLabel(target!)}</strong> — no shape labels are shown.
+        Create: <strong>{target!.label}</strong> — no hints shown.
       </p>
 
-      <ConeSimulator
-        plane={plane}
-        onPlaneChange={onPlaneChange}
+      <ParabolaSimulator
+        parabola={parabola}
+        onParabolaChange={onParabolaChange}
         interactive
-        hideShapeLabel={step.hideLabels}
+        vertexDraggable
+        hideLabels={step.hideLabels}
+        showEquation
       />
 
       {feedback && (
@@ -122,7 +122,7 @@ export function MasteryCheckStepView({
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={checkShape}>
-            Check Shape
+            Check Parabola
           </button>
         )}
       </div>

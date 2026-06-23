@@ -1,29 +1,35 @@
 import { useState } from 'react'
-import { ConeSimulator } from '../../cone/ConeSimulator'
-import { matchesTarget, type PlaneState } from '../../../lib/conicClassifier'
+import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
+import {
+  matchesParabolaChallengeTarget,
+  type ParabolaState,
+} from '../../../lib/parabolaGeometry'
 import type { ChallengeStep } from '../../../types/lesson'
 
-type ChallengeStepViewProps = {
+type ParabolaChallengeStepViewProps = {
   step: ChallengeStep
-  plane: PlaneState
-  onPlaneChange: (plane: PlaneState) => void
+  parabola: ParabolaState
+  onParabolaChange: (parabola: ParabolaState) => void
   onSuccess: () => void
 }
 
-export function ChallengeStepView({
+export function ParabolaChallengeStepView({
   step,
-  plane,
-  onPlaneChange,
+  parabola,
+  onParabolaChange,
   onSuccess,
-}: ChallengeStepViewProps) {
+}: ParabolaChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [solved, setSolved] = useState(false)
+  const target = step.parabolaTarget
+  const config = step.parabolaConfig ?? {}
+  const vertexDraggable = config.vertexDraggable ?? target?.kind === 'vertex'
 
   const checkAnswer = () => {
-    if (!step.targetConic) return
+    if (!target) return
 
-    if (matchesTarget(plane.angle, plane.offset, step.targetConic)) {
+    if (matchesParabolaChallengeTarget(parabola, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
     } else {
@@ -36,12 +42,15 @@ export function ChallengeStepView({
     <div className="step-view challenge-step">
       <p className="step-prompt">{step.prompt}</p>
 
-      <ConeSimulator
-        plane={plane}
-        onPlaneChange={onPlaneChange}
+      <ParabolaSimulator
+        parabola={parabola}
+        onParabolaChange={onParabolaChange}
         interactive
-        highlightConeEdge={step.visualCue === 'highlightConeEdge'}
-        glowConic={solved && step.visualReward === 'glow' ? step.targetConic : null}
+        vertexDraggable={vertexDraggable}
+        showEquation={config.showEquation ?? true}
+        showParameterP={config.showParameterP ?? true}
+        highlightVertex={config.highlightVertex}
+        focusVerticalOnly={config.focusVerticalOnly}
       />
 
       {feedback && (
