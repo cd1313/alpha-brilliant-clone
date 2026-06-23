@@ -1,0 +1,428 @@
+# Lesson Plan: Parabolas
+
+## Learning Objectives
+
+By the end of this lesson, students will be able to:
+
+* Explain what a parabola is geometrically.
+* Identify the focus, directrix, and vertex of a parabola.
+* Understand the meaning of the parameter p.
+* Relate the graph of a parabola to its equation.
+* Predict how moving the focus or directrix changes the parabola's shape.
+* Create parabolas with specified properties.
+
+---
+
+## Page 1 — Meet the Parabola
+
+### Type
+
+Explore
+
+### Goal
+
+Introduce the geometric definition of a parabola.
+
+### Prompt
+
+A parabola is the set of all points that are the same distance from a focus and a directrix.
+
+### Interactive Elements
+
+* Coordinate plane
+* Focus point (F)
+* Directrix line
+* Parabola drawn automatically
+
+### User Actions
+
+* Drag the focus up and down.
+* Drag the directrix up and down.
+* Watch the parabola update in real time.
+
+### Visual Features
+
+* Highlight a point on the parabola.
+* Draw:
+
+  * Distance from the point to the focus
+  * Distance from the point to the directrix
+
+Show that the two distances are equal.
+
+### Success Condition
+
+Click "Continue."
+
+---
+
+## Page 2 — Explore Freely
+
+### Type
+
+Explore
+
+### Goal
+
+Build intuition for how the focus and directrix determine the parabola.
+
+### Prompt
+
+Move the focus and directrix around.
+
+What changes?
+What stays the same?
+
+### Interactions
+
+User can:
+
+* Drag focus vertically
+* Drag directrix vertically
+* Toggle labels:
+
+  * Focus
+  * Directrix
+  * Vertex
+
+### Hints
+
+* What happens when the focus moves farther away?
+* What happens when the focus gets closer to the directrix?
+* Can you make the parabola wider?
+* Can you make it narrower?
+
+### Success Condition
+
+Move both the focus and directrix at least once.
+
+---
+
+## Page 3 — Discover the Vertex
+
+### Type
+
+Explore
+
+### Goal
+
+Understand where the vertex comes from.
+
+### Prompt
+
+Notice the lowest point of the parabola.
+
+This point is called the vertex.
+
+### Interactive Elements
+
+* Vertex highlighted automatically
+
+### Explanation
+
+The vertex is exactly halfway between:
+
+* The focus
+* The directrix
+
+### Challenge
+
+Move the focus.
+
+Predict where the vertex will move.
+
+### Success Condition
+
+Correctly answer:
+
+"Where is the vertex located?"
+
+A. At the focus
+
+B. Halfway between the focus and directrix
+
+C. On the directrix
+
+Correct Answer: B
+
+---
+
+## Page 4 — Introducing p
+
+### Type
+
+Explore
+
+### Goal
+
+Introduce the parameter p.
+
+### Prompt
+
+The distance from the vertex to the focus is called p.
+
+### Visual Features
+
+Display:
+
+p = distance from vertex to focus
+
+### Interactions
+
+User drags the focus.
+
+Value of p updates dynamically.
+
+### Observation Questions
+
+* What happens when p gets larger?
+* What happens when p gets smaller?
+
+### Key Takeaway
+
+Larger p → wider parabola
+
+Smaller p → narrower parabola
+
+### Success Condition
+
+Adjust p to at least three different values.
+
+---
+
+## Page 5 — The Equation Appears
+
+### Type
+
+Explore
+
+### Goal
+
+Connect the geometry to the algebra.
+
+### Equation Display
+
+For a vertical parabola:
+
+x² = 4py
+
+### Interactive Elements
+
+As the user moves the focus:
+
+* p updates
+* Equation updates automatically
+
+Examples:
+
+p = 1
+
+x² = 4y
+
+p = 2
+
+x² = 8y
+
+p = 3
+
+x² = 12y
+
+### Prompt
+
+What number changes when p changes?
+
+### Success Condition
+
+Answer:
+
+"The coefficient depends on ____."
+
+Correct Answer: p
+
+---
+
+## Page 6 — Move the Vertex
+
+### Type
+
+Explore
+
+### Goal
+
+Introduce vertex form.
+
+### Equation Display
+
+(x − h)² = 4p(y − k)
+
+### Explanation
+
+(h, k) is the vertex.
+
+### Interactive Elements
+
+User can drag the entire parabola.
+
+As they drag:
+
+* Vertex moves
+* Equation updates live
+
+Example:
+
+Vertex = (3, 2)
+
+(x − 3)² = 4p(y − 2)
+
+### Observation
+
+h controls left/right position.
+
+k controls up/down position.
+
+### Success Condition
+
+Move the vertex to a target location.
+
+Example:
+
+Move the vertex to (2, 1).
+
+---
+
+## Page 7 — Prediction Challenge
+
+### Type
+
+Challenge
+
+### Goal
+
+Connect graph features to equation components.
+
+### Prompt
+
+Suppose:
+
+* Vertex = (0, 0)
+* Focus = (0, 3)
+
+Predict:
+
+1. What is p?
+2. What is the equation?
+
+### Expected Answer
+
+p = 3
+
+x² = 12y
+
+### Feedback
+
+Correct:
+Great! You connected the geometry to the equation.
+
+Incorrect:
+Remember that p is the distance from the vertex to the focus.
+
+---
+
+## Page 8 — Create a Specific Parabola
+
+### Type
+
+Challenge
+
+### Goal
+
+Apply understanding independently.
+
+### Prompt
+
+Create a parabola with:
+
+* Vertex at (0,0)
+* Focus at (0,2)
+
+### Validation
+
+Check:
+
+* Focus position
+* Directrix position
+* Resulting equation
+
+### Feedback
+
+Correct:
+Nice work! You successfully constructed the parabola.
+
+Hint:
+The directrix should be the same distance below the vertex as the focus is above it.
+
+---
+
+## Page 9 — Reflection
+
+### Type
+
+Reflection
+
+### Question
+
+Which statement is true?
+
+A. A parabola is determined only by its focus.
+
+B. A parabola is determined only by its directrix.
+
+C. A parabola is determined by both the focus and directrix.
+
+D. A parabola is determined by its vertex alone.
+
+### Correct Answer
+
+C
+
+### Feedback
+
+The focus and directrix together define every point on the parabola.
+
+---
+
+## Page 10 — Mastery Check
+
+### Type
+
+Mastery Check
+
+### Tasks
+
+Create four parabolas:
+
+1. Wide upward-opening parabola
+2. Narrow upward-opening parabola
+3. Wide parabola with vertex at (2,1)
+4. Narrow parabola with vertex at (-3,2)
+
+No hints shown.
+
+### Success Condition
+
+Complete all four constructions.
+
+---
+
+## Lesson Complete
+
+Congratulations!
+
+You now understand:
+
+* Focus
+* Directrix
+* Vertex
+* Parameter p
+* Equation of a parabola
+* How geometry and algebra describe the same curve

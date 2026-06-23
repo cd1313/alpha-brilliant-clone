@@ -1,0 +1,89 @@
+{
+  "id": "introduction",
+  "title": "Introduction",
+  "order": 1,
+  "subject": "conics",
+  "steps": [
+    {
+      "type": "explore",
+      "title": "What Are Conic Sections?",
+      "introText": "Conic sections are shapes created when a flat plane cuts through a double cone. By changing the angle of the plane, we can create circles, ellipses, parabolas, and hyperbolas.",
+      "prompt": "Explore the cone and its parts, then continue when you're ready.",
+      "showLabels": true,
+      "interactive": false,
+      "successCondition": "continue"
+    },
+    {
+      "type": "explore",
+      "prompt": "Move the plane around and see what happens to the cross section.",
+      "interactive": true,
+      "successCondition": { "minDistinctConics": 2 },
+      "hints": [
+        "Try making the plane flatter.",
+        "Try tilting the plane more.",
+        "What happens if the plane cuts both cones?"
+      ]
+    },
+    {
+      "type": "challenge",
+      "prompt": "Can you make a circle?",
+      "targetConic": "circle",
+      "feedback": {
+        "correct": "Great! A circle is formed when the plane cuts straight across one cone.",
+        "incorrect": "This slice isn't a circle yet.",
+        "hint": "Try making the plane more horizontal."
+      },
+      "visualReward": "glow"
+    },
+    {
+      "type": "challenge",
+      "prompt": "Create an ellipse.",
+      "targetConic": "ellipse",
+      "feedback": {
+        "correct": "Nice work! An ellipse forms when the plane is tilted but still cuts only one cone.",
+        "incorrect": "You're close, but this slice is producing a different conic.",
+        "hint": "Tilt the plane slightly without making it parallel to the side of the cone."
+      },
+      "miniReflection": "Notice how the circle stretched into an oval shape."
+    },
+    {
+      "type": "challenge",
+      "prompt": "Create a parabola.",
+      "targetConic": "parabola",
+      "feedback": {
+        "correct": "Excellent! A parabola appears when the plane is parallel to the cone's side.",
+        "incorrect": "This isn't quite a parabola.",
+        "hint": "Match the slope of the cone's edge."
+      },
+      "visualCue": "highlightConeEdge"
+    },
+    {
+      "type": "challenge",
+      "prompt": "Create a hyperbola.",
+      "targetConic": "hyperbola",
+      "feedback": {
+        "correct": "Perfect! Because the plane cuts both cones, the cross section becomes a hyperbola.",
+        "incorrect": "Try tilting the plane further.",
+        "hint": "Can you make the plane pass through both cones?"
+      }
+    },
+    {
+      "type": "reflection",
+      "prompt": "What determines which conic section appears?",
+      "choices": [
+        { "id": "a", "label": "The size of the cone" },
+        { "id": "b", "label": "The angle of the plane" },
+        { "id": "c", "label": "The color of the cone" },
+        { "id": "d", "label": "The position of the camera" }
+      ],
+      "correctChoiceId": "b",
+      "feedback": "Exactly. The angle of the plane relative to the cone determines the shape."
+    },
+    {
+      "type": "mastery",
+      "sequence": ["circle", "ellipse", "parabola", "hyperbola"],
+      "hideLabels": true,
+      "completionMessage": "You've discovered all four conic sections! In the next lesson, we'll focus on parabolas and see how they appear everywhere from satellite dishes to car headlights."
+    }
+  ]
+}

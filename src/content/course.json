@@ -1,0 +1,37 @@
+{
+  "id": "conics",
+  "title": "Conic Sections",
+  "subject": "precalculus",
+  "lessons": [
+    {
+      "id": "introduction",
+      "title": "Introduction",
+      "order": 1,
+      "locked": false
+    },
+    {
+      "id": "parabolas",
+      "title": "Parabolas",
+      "order": 2,
+      "locked": true
+    },
+    {
+      "id": "circles",
+      "title": "Circles",
+      "order": 3,
+      "locked": true
+    },
+    {
+      "id": "ellipses",
+      "title": "Ellipses",
+      "order": 4,
+      "locked": true
+    },
+    {
+      "id": "hyperbolas",
+      "title": "Hyperbolas",
+      "order": 5,
+      "locked": true
+    }
+  ]
+}

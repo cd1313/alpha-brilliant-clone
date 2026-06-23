@@ -1,0 +1,257 @@
+﻿Minimum Viable Product
+Core Screens
+* Login Page: user authentication, must have capability to sign up, sign in, and sign out. Implement using Firebase Authentication.
+* Course Map: linear structure, tracks user progress throughout the unit. The unit I create will be Conic Sections. Only the Introduction lesson will be visible for now, the others will be placeholders (Parabolas, Circles, Ellipses, and Hyperbolas).
+* Lesson Screen: navigate here after choosing a lesson from the Course Map. The most interactive screen, it will cycle through the different steps of each lesson.
+Lesson Plan (Introduction Lesson)
+Page 1 — What Are Conic Sections?
+Type: Explore
+Goal: Introduce the idea that all conic sections come from slicing a double cone.
+Content:
+* Short text:
+Conic sections are shapes created when a flat plane cuts through a double cone. By changing the angle of the plane, we can create circles, ellipses, parabolas, and hyperbolas.
+* Rotatable 3D double cone.
+* User can drag to rotate.
+* User can toggle labels:
+   * Cone
+   * Plane
+   * Cross Section
+Success Condition: Click "Continue."
+________________
+
+
+Page 2 — Free Exploration
+Type: Explore
+Goal: Let users discover that different slices produce different shapes.
+Prompt:
+Move the plane around and see what happens to the cross section.
+Interactions:
+   * Drag handle rotates the plane.
+   * Cross-section updates in real time.
+   * Shape label appears dynamically:
+   * Circle
+   * Ellipse
+   * Parabola
+   * Hyperbola
+   * Not Quite There
+Hints:
+   * "Try making the plane flatter."
+   * "Try tilting the plane more."
+   * "What happens if the plane cuts both cones?"
+Success Condition:
+User creates at least 2 different conic sections.
+________________
+
+
+Page 3 — Challenge: Create a Circle
+Type: Challenge
+Prompt:
+Can you make a circle?
+Validation:
+Plane is approximately perpendicular to the cone's axis.
+Feedback:
+Correct:
+Great! A circle is formed when the plane cuts straight across one cone.
+Incorrect:
+This slice isn't a circle yet.
+Hint:
+Try making the plane more horizontal.
+Visual Reward:
+Circle glows briefly when detected.
+________________
+
+
+Page 4 — Challenge: Create an Ellipse
+Type: Challenge
+Prompt:
+Create an ellipse.
+Validation:
+Plane intersects one cone at an angle that is less steep than the cone's side.
+Feedback:
+Correct:
+Nice work! An ellipse forms when the plane is tilted but still cuts only one cone.
+Incorrect:
+You're close, but this slice is producing a different conic.
+Hint:
+Tilt the plane slightly without making it parallel to the side of the cone.
+Mini Reflection:
+Notice how the circle stretched into an oval shape.
+________________
+
+
+Page 5 — Challenge: Create a Parabola
+Type: Challenge
+Prompt:
+Create a parabola.
+Validation:
+Plane is approximately parallel to a side (generator) of the cone.
+Feedback:
+Correct:
+Excellent! A parabola appears when the plane is parallel to the cone's side.
+Incorrect:
+This isn't quite a parabola.
+Hint:
+Match the slope of the cone's edge.
+Visual Cue:
+Highlight one edge of the cone to help users reason visually.
+________________
+
+
+Page 6 — Challenge: Create a Hyperbola
+Type: Challenge
+Prompt:
+Create a hyperbola.
+Validation:
+Plane intersects both nappes of the double cone.
+Feedback:
+Correct:
+Perfect! Because the plane cuts both cones, the cross section becomes a hyperbola.
+Incorrect:
+Try tilting the plane further.
+Hint:
+Can you make the plane pass through both cones?
+________________
+
+
+Page 7 — Reflection
+Type: ReflectionStep
+Prompt:
+What determines which conic section appears?
+Multiple Choice:
+A. The size of the cone
+B. The angle of the plane
+C. The color of the cone
+D. The position of the camera
+Correct Answer:
+B
+Feedback:
+Exactly. The angle of the plane relative to the cone determines the shape.
+________________
+
+
+Page 8 — Mastery Check
+Type: MasteryCheck
+A rapid challenge sequence:
+   1. Make a Circle
+   2. Make an Ellipse
+   3. Make a Parabola
+   4. Make a Hyperbola
+No labels are shown.
+User must successfully create all four.
+Completion Message:
+You've discovered all four conic sections! In the next lesson, we'll focus on parabolas and see how they appear everywhere from satellite dishes to car headlights.
+The hardest part is detecting which conic section the user has created, but you can simplify it by classifying the plane angle into ranges rather than performing full geometric analysis. 
+—
+Implement a Habit Loop:
+   * The user keeps a streak counter. Completing a lesson for a new day will increment the counter.
+   * Keep a progress bar at the top of the Lesson Screen, showing how far done the user is with the current lesson. Have a short “Lesson Complete” screen once the lesson is done.
+   * If the user leaves a lesson mid-way, their progress should be saved.
+   * A user’s progress in the course map should be saved each time they enter/exit the app.
+
+
+Possible Database Structure to Store Lessons and Steps:
+type Lesson = {
+  id: string;
+  title: string;
+  order: number;
+  subject: "conics";
+  steps: Step[];
+};
+
+
+type Step =
+  | ExploreStep
+  | ChallengeStep
+  | ReflectionStep
+  | MasteryCheck;
+
+
+type ExploreStep = {
+  type: "explore";
+  prompt: string;
+  visualConfig: object;
+};
+
+
+type ChallengeStep = {
+  type: "challenge";
+  prompt: string;
+  validation: object;
+  feedback: Feedback;
+};
+
+
+type Feedback = {
+  correct: string;
+  incorrect: string;
+  hint: string;
+};
+
+
+users/{uid}
+{
+  streak: 3,
+
+
+  completedLessons: [
+    "introduction"
+  ],
+
+
+  currentLesson: {
+    lessonId: "parabolas",
+    stepIndex: 1
+  }
+}
+users/{uid}/lessonProgress/{lessonId}
+{
+  currentStepIndex: 1,
+  completed: false
+}
+User Persona: Sarah Chen
+Background
+Sarah is a high school junior enrolled in Precalculus. She earns mostly B's in math and hopes to pursue a STEM-related major in college. While she understands algebraic procedures, she struggles when mathematical concepts become more visual and abstract.
+Sarah primarily studies using her phone and laptop after school. She often watches online videos when she gets stuck, but finds herself memorizing steps rather than truly understanding why formulas work.
+Goals
+   * Understand conic sections conceptually rather than memorizing equations.
+   * Improve her performance on quizzes and exams.
+   * Build confidence when graphing and analyzing conics.
+   * Prepare for future math courses such as Calculus and Physics.
+Pain Points
+   * Static textbook diagrams do not help her visualize how conic sections change.
+   * She forgets formulas shortly after learning them.
+   * Traditional homework only tells her whether an answer is right or wrong.
+   * She struggles to connect equations with the shapes they represent.
+   * When she makes mistakes, she often doesn't know why.
+Behaviors
+   * Studies in short 10–15 minute sessions.
+   * Uses educational apps on mobile devices.
+   * Learns best through experimentation and visual examples.
+   * Frequently revisits concepts before tests.
+   * Responds well to progress tracking, streaks, and achievement milestones.
+Needs
+   * Interactive visualizations that respond immediately to her actions.
+   * Step-by-step guidance when she gets stuck.
+   * Instant feedback explaining mistakes.
+   * A structured learning path that builds from simple to advanced concepts.
+   * A way to track mastery and identify weak areas.
+User Stories
+Authentication
+   * As a student, I want to create an account so that my learning progress is saved across sessions.
+   * As a returning student, I want to sign in so that I can continue where I left off.
+Core Learning Experience
+   * As a student, I want to rotate a 3D double cone so that I can better understand its structure.
+   * As a student, I want to freely move the intersecting plane so that I can experiment with how different conic sections are formed.
+   * As a student, I want to see the resulting cross section update in real time so that I can connect my actions to the resulting shape.
+   * As a student, I want the app to identify the shape I have created so that I receive immediate feedback about my exploration.
+Lesson Challenges
+   * As a student, I want to be challenged to create each conic section so that I can verify my understanding of how they are formed.
+   * As a student, I want immediate feedback when I complete a challenge so that I know whether my reasoning is correct.
+Progress Tracking
+   * As a student, I want a progress bar during lessons so that I know how much of the lesson remains.
+   * As a student, I want my current lesson step to be saved automatically so that I can leave and return without losing progress.
+   * As a student, I want completed lessons to remain marked as completed so that I can track my progress through the course.
+Tech Stack
+Backend: Firebase for auth, progress, and content.
+Frontend: React, Vue, or Svelte. HTML5 Canvas, SVG, or a library like D3 or Konva.js for interactive visuals and simulations. Consider Three.js or React Three Fiber for 3d interactables (very optional, only try if the other things do not work.
+Content: a structured lesson format (JSON or similar) so you can add lessons in your subject without rewriting code, and so AI can generate them later.
