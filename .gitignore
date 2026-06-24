@@ -49,5 +49,5 @@ coverage/
 # OS files
 Thumbs.db
 
-.agents
-.cursor
+.agents/
+.cursor/
