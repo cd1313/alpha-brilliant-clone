@@ -8,7 +8,6 @@ import {
   classifyConic,
   clampPlaneOffset,
   conicLabel,
-  generatorAngles,
   normalizePlaneAngle360,
   type PlaneState,
 } from '../../lib/conicClassifier'
@@ -23,10 +22,11 @@ type ConeSimulatorProps = {
   hideShapeLabel?: boolean
   highlightConeEdge?: boolean
   glowConic?: ConicType | null
+  guidePlane?: { angle: number; offset: number } | null
 }
 
 const WIDTH = 520
-const HEIGHT = 320
+const HEIGHT = 344
 const APEX_X = 160
 const APEX_Y = 160
 
@@ -40,6 +40,7 @@ export function ConeSimulator({
   hideShapeLabel = false,
   highlightConeEdge = false,
   glowConic = null,
+  guidePlane = null,
 }: ConeSimulatorProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const dragModeRef = useRef<DragMode>(null)
@@ -56,12 +57,14 @@ export function ConeSimulator({
   const shouldGlow = glowConic && conic === glowConic
   const displayAngle = normalizePlaneAngle360(plane.angle)
   const angleRad = (displayAngle * Math.PI) / 180
-  const parabolaHintNappe = plane.offset < 0 ? 'upper' : 'lower'
-  const [paraA, paraB] = generatorAngles(parabolaHintNappe).map((a) => Math.round(a))
   const planeLength = 200
   const planeDx = Math.cos(angleRad) * planeLength
   const planeDy = Math.sin(angleRad) * planeLength
   const centerY = APEX_Y + plane.offset
+  const guideRad = guidePlane ? (normalizePlaneAngle360(guidePlane.angle) * Math.PI) / 180 : 0
+  const guideDx = Math.cos(guideRad) * planeLength
+  const guideDy = Math.sin(guideRad) * planeLength
+  const guideCenterY = guidePlane ? APEX_Y + guidePlane.offset : 0
   const rotateHandleX = APEX_X + Math.cos(angleRad) * 70
   const rotateHandleY = centerY - Math.sin(angleRad) * 70
 
@@ -135,6 +138,13 @@ export function ConeSimulator({
   const lowerRightX = APEX_X + CONE_WIDTH
   const lowerRightY = APEX_Y + CONE_HEIGHT
 
+  // 3D rim depth + dashed "extends forever" edge continuations.
+  const rimRy = 18
+  const slantLen = Math.hypot(CONE_WIDTH, CONE_HEIGHT)
+  const extLen = 34
+  const exDx = (CONE_WIDTH / slantLen) * extLen
+  const exDy = (CONE_HEIGHT / slantLen) * extLen
+
   return (
     <div className="cone-simulator">
       {showLabels && (
@@ -161,6 +171,15 @@ export function ConeSimulator({
         role="img"
         aria-label="Double cone with intersecting plane"
       >
+        <defs>
+          <linearGradient id="cone-shade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.34" />
+            <stop offset="48%" stopColor="var(--primary)" stopOpacity="0.1" />
+            <stop offset="52%" stopColor="var(--primary)" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.34" />
+          </linearGradient>
+        </defs>
+
         <rect x="0" y="0" width={WIDTH} height={HEIGHT} fill="var(--surface)" rx="12" />
 
         <line
@@ -174,17 +193,52 @@ export function ConeSimulator({
         />
 
         <g className="cone-group">
-          <polygon
-            points={`${APEX_X},${APEX_Y} ${upperLeftX},${upperLeftY} ${upperRightX},${upperRightY}`}
-            fill="rgba(99, 102, 241, 0.2)"
+          {/* Dashed edge continuations — the double cone extends infinitely. */}
+          <g
             stroke="var(--primary)"
-            strokeWidth="2"
+            strokeWidth="1.5"
+            strokeDasharray="6 5"
+            strokeLinecap="round"
+            opacity="0.4"
+          >
+            <line x1={upperLeftX} y1={upperLeftY} x2={upperLeftX - exDx} y2={upperLeftY - exDy} />
+            <line x1={upperRightX} y1={upperRightY} x2={upperRightX + exDx} y2={upperRightY - exDy} />
+            <line x1={lowerLeftX} y1={lowerLeftY} x2={lowerLeftX - exDx} y2={lowerLeftY + exDy} />
+            <line x1={lowerRightX} y1={lowerRightY} x2={lowerRightX + exDx} y2={lowerRightY + exDy} />
+          </g>
+
+          {/* Hidden back rims (dashed) give each opening a 3D tube look. */}
+          <path
+            d={`M ${upperLeftX} ${upperLeftY} Q ${APEX_X} ${upperLeftY - rimRy} ${upperRightX} ${upperRightY}`}
+            fill="none"
+            stroke="var(--primary)"
+            strokeWidth="1.5"
+            strokeDasharray="5 4"
+            opacity="0.65"
           />
-          <polygon
-            points={`${APEX_X},${APEX_Y} ${lowerLeftX},${lowerLeftY} ${lowerRightX},${lowerRightY}`}
-            fill="rgba(99, 102, 241, 0.2)"
+          <path
+            d={`M ${lowerLeftX} ${lowerLeftY} Q ${APEX_X} ${lowerLeftY - rimRy} ${lowerRightX} ${lowerRightY}`}
+            fill="none"
+            stroke="var(--primary)"
+            strokeWidth="1.5"
+            strokeDasharray="5 4"
+            opacity="0.65"
+          />
+
+          {/* Shaded nappes with curved front rims. */}
+          <path
+            d={`M ${APEX_X} ${APEX_Y} L ${upperLeftX} ${upperLeftY} Q ${APEX_X} ${upperLeftY + rimRy} ${upperRightX} ${upperRightY} Z`}
+            fill="url(#cone-shade)"
             stroke="var(--primary)"
             strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          <path
+            d={`M ${APEX_X} ${APEX_Y} L ${lowerLeftX} ${lowerLeftY} Q ${APEX_X} ${lowerLeftY + rimRy} ${lowerRightX} ${lowerRightY} Z`}
+            fill="url(#cone-shade)"
+            stroke="var(--primary)"
+            strokeWidth="2"
+            strokeLinejoin="round"
           />
           {highlightConeEdge && (
             <line
@@ -203,6 +257,29 @@ export function ConeSimulator({
             </text>
           )}
         </g>
+
+        {guidePlane && (
+          <>
+            <line
+              x1={APEX_X - guideDx}
+              y1={guideCenterY + guideDy}
+              x2={APEX_X + guideDx}
+              y2={guideCenterY - guideDy}
+              stroke="#9333ea"
+              strokeWidth="2.5"
+              strokeDasharray="7 5"
+              opacity="0.6"
+            />
+            <text
+              x={APEX_X + guideDx * 0.4 + 10}
+              y={guideCenterY - guideDy * 0.4}
+              className="svg-label"
+              fill="#9333ea"
+            >
+              Aim here
+            </text>
+          </>
+        )}
 
         <line
           x1={APEX_X - planeDx}
@@ -267,7 +344,7 @@ export function ConeSimulator({
               className="plane-handle plane-handle-rotate"
               onPointerDown={handleRotatePointerDown}
             />
-            <text x="20" y="292" className="angle-readout">
+            <text x="20" y="332" className="angle-readout">
               Angle: {Math.round(displayAngle)}° · Height: {Math.round(plane.offset)} · Cone slope: {Math.round(CONE_SLOPE_ANGLE)}°
             </text>
           </>
@@ -310,9 +387,6 @@ export function ConeSimulator({
               }
             />
           </div>
-          <p className="control-hint">
-            Drag blue to move, purple to rotate 360°. Parabola in {parabolaHintNappe} cone: ~{paraA}° or ~{paraB}°.
-          </p>
         </div>
       )}
     </div>

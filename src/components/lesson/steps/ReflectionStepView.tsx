@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { HyperbolaSimulator } from '../../hyperbola/HyperbolaSimulator'
+import { clampHyperbolaState, type HyperbolaState } from '../../../lib/hyperbolaGeometry'
 import type { ReflectionStep } from '../../../types/lesson'
 
 type ReflectionStepViewProps = {
@@ -10,17 +12,40 @@ export function ReflectionStepView({ step, onSuccess }: ReflectionStepViewProps)
   const [selected, setSelected] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [correct, setCorrect] = useState(false)
+  const [refHyperbola, setRefHyperbola] = useState<HyperbolaState | undefined>(
+    step.referenceHyperbola,
+  )
 
   const submit = () => {
     if (!selected) return
     const isCorrect = selected === step.correctChoiceId
     setCorrect(isCorrect)
-    setFeedback(isCorrect ? step.feedback : 'Not quite. Think about what you changed during exploration.')
+    setFeedback(
+      isCorrect
+        ? step.feedback
+        : step.incorrectFeedback ?? 'Not quite — take another look at the question and try again.',
+    )
   }
 
   return (
     <div className="step-view reflection-step">
       <p className="step-prompt">{step.prompt}</p>
+
+      {refHyperbola && (
+        <HyperbolaSimulator
+          hyperbola={refHyperbola}
+          onHyperbolaChange={(next) => setRefHyperbola(clampHyperbolaState(next))}
+          interactive
+          showFoci={step.hyperbolaConfig?.showFoci ?? true}
+          showAsymptotes={step.hyperbolaConfig?.showAsymptotes}
+          showBox={step.hyperbolaConfig?.showBox}
+          showAxes={step.hyperbolaConfig?.showAxes}
+          showEquation={step.hyperbolaConfig?.showEquation}
+          highlightVertices={step.hyperbolaConfig?.highlightVertices}
+          centerDraggable={step.hyperbolaConfig?.centerDraggable ?? false}
+          allowOrientationToggle={step.hyperbolaConfig?.allowOrientationToggle}
+        />
+      )}
 
       <div className="choice-list" role="radiogroup">
         {step.choices.map((choice) => (

@@ -1,19 +1,12 @@
-import { Link, useParams } from 'react-router-dom'
-import { getLesson } from '../lib/lessons'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
 
 export function LessonCompletePage() {
-  const { lessonId } = useParams<{ lessonId: string }>()
   const { user } = useAuth()
   const { userProgress, loading } = useProgress(user?.uid)
 
-  const lesson = lessonId ? getLesson(lessonId) : undefined
-  const masteryStep = lesson?.steps.find((s) => s.type === 'mastery')
-  const message =
-    masteryStep?.type === 'mastery'
-      ? masteryStep.completionMessage
-      : 'Great work completing this lesson!'
+  const message = 'Great work completing this lesson!'
 
   if (loading) {
     return (

@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react'
 import {
+  DEFAULT_CIRCLE,
   distanceToPoint,
   formatCircleEquation,
   formatMeasuredValue,
@@ -20,6 +21,7 @@ type CircleSimulatorProps = {
   hideLabels?: boolean
   centerDraggable?: boolean
   targetPoint?: { x: number; y: number }
+  ghost?: CircleState | null
 }
 
 const WIDTH = 520
@@ -42,6 +44,16 @@ function fromSvg(svgX: number, svgY: number) {
   }
 }
 
+function circlePathStr(cx: number, cy: number, r: number): string {
+  return (
+    Array.from({ length: 65 }, (_, i) => {
+      const theta = (2 * Math.PI * i) / 64
+      const pt = toSvg(cx + r * Math.cos(theta), cy + r * Math.sin(theta))
+      return `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`
+    }).join(' ') + ' Z'
+  )
+}
+
 export function CircleSimulator({
   circle,
   onCircleChange,
@@ -53,6 +65,7 @@ export function CircleSimulator({
   hideLabels = false,
   centerDraggable = true,
   targetPoint,
+  ghost,
 }: CircleSimulatorProps) {
   const gridPatternId = `circle-grid${useId().replace(/:/g, '')}`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -66,18 +79,30 @@ export function CircleSimulator({
   const demoPoint = pointOnCircle(centerX, centerY, radius, demoAngle)
   const demoSvg = toSvg(demoPoint.x, demoPoint.y)
   const demoPointDraggable = interactive && showRadiusDemo
-  const pathSvg = Array.from({ length: 65 }, (_, i) => {
-    const theta = (2 * Math.PI * i) / 64
-    const pt = toSvg(
-      centerX + radius * Math.cos(theta),
-      centerY + radius * Math.sin(theta),
-    )
-    return `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`
-  }).join(' ') + ' Z'
+  const pathSvg = circlePathStr(centerX, centerY, radius)
+  const ghostPath = ghost ? circlePathStr(ghost.centerX, ghost.centerY, ghost.radius) : null
 
   const demoDist = distanceToPoint(demoPoint.x, demoPoint.y, centerX, centerY)
   const targetSvg = targetPoint ? toSvg(targetPoint.x, targetPoint.y) : null
   const targetLabelOnLeft = targetSvg !== null && targetSvg.x > WIDTH - 90
+
+  // Angle of the demo point measured counterclockwise from the positive x-axis.
+  const TWO_PI = Math.PI * 2
+  const angleNorm = ((demoAngle % TWO_PI) + TWO_PI) % TWO_PI
+  const angleDeg = Math.round(angleNorm * (180 / Math.PI))
+  const angleRad = (angleNorm / Math.PI).toFixed(2)
+  const arcR = Math.min(radius * 0.4, 1.4)
+  const refRaySvg = toSvg(centerX + radius, centerY)
+  const arcSteps = Math.max(2, Math.round((angleNorm / TWO_PI) * 64))
+  const arcPath = Array.from({ length: arcSteps + 1 }, (_, i) => {
+    const t = (angleNorm * i) / arcSteps
+    const pt = toSvg(centerX + arcR * Math.cos(t), centerY + arcR * Math.sin(t))
+    return `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`
+  }).join(' ')
+  const angleLabelSvg = toSvg(
+    centerX + (arcR + 0.7) * Math.cos(angleNorm / 2),
+    centerY + (arcR + 0.7) * Math.sin(angleNorm / 2),
+  )
 
   const clientToSvg = useCallback((clientX: number, clientY: number) => {
     const svg = svgRef.current
@@ -260,6 +285,31 @@ export function CircleSimulator({
           </g>
         )}
 
+        {showRadiusDemo && demoPointDraggable && (
+          <g pointerEvents="none">
+            <line
+              x1={centerSvg.x}
+              y1={centerSvg.y}
+              x2={refRaySvg.x}
+              y2={refRaySvg.y}
+              stroke="#cbd5e1"
+              strokeWidth="1.5"
+              strokeDasharray="3 4"
+            />
+            <path d={arcPath} fill="none" stroke="#7c3aed" strokeWidth="2.5" />
+            <text
+              x={angleLabelSvg.x}
+              y={angleLabelSvg.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="parabola-label"
+              fill="#7c3aed"
+            >
+              {angleDeg}° · {angleRad}π rad
+            </text>
+          </g>
+        )}
+
         {showRadiusDemo && (
           <>
             <line
@@ -300,6 +350,18 @@ export function CircleSimulator({
           />
         )}
 
+        {ghostPath && (
+          <path
+            d={ghostPath}
+            fill="none"
+            stroke="#9333ea"
+            strokeWidth="2.5"
+            strokeDasharray="6 5"
+            opacity="0.5"
+            pointerEvents="none"
+          />
+        )}
+
         {interactive && centerDraggable && (
           <circle
             cx={centerSvg.x}
@@ -310,6 +372,18 @@ export function CircleSimulator({
             strokeWidth="2"
             className="parabola-handle"
             onPointerDown={startCenterDrag}
+          />
+        )}
+
+        {!(interactive && centerDraggable) && !hideLabels && (
+          <circle
+            cx={centerSvg.x}
+            cy={centerSvg.y}
+            r={highlightCenter ? 6 : 4}
+            fill={highlightCenter ? '#ef4444' : '#dc2626'}
+            stroke="#fff"
+            strokeWidth="2"
+            pointerEvents="none"
           />
         )}
 
@@ -337,6 +411,18 @@ export function CircleSimulator({
           </text>
         )}
       </svg>
+
+      {interactive && (
+        <div className="simulator-actions">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => onCircleChange(DEFAULT_CIRCLE)}
+          >
+            ↺ Reset
+          </button>
+        </div>
+      )}
     </div>
   )
 }

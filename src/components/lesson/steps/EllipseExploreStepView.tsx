@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { EllipseSimulator } from '../../ellipse/EllipseSimulator'
 import { DEFAULT_ELLIPSE, type EllipseState } from '../../../lib/ellipseGeometry'
 import type { ExploreStep } from '../../../types/lesson'
+import { renderRichText } from '../../../lib/richText'
 
 type EllipseExploreStepViewProps = {
   step: ExploreStep
@@ -64,7 +65,7 @@ export function EllipseExploreStepView({
 
   return (
     <div className="step-view explore-step">
-      {step.introText && <p className="intro-text">{step.introText}</p>}
+      {step.introText && <p className="intro-text">{renderRichText(step.introText)}</p>}
       <p className="step-prompt">{step.prompt}</p>
 
       <EllipseSimulator

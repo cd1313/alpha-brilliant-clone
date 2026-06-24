@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { HyperbolaSimulator } from '../../hyperbola/HyperbolaSimulator'
 import { DEFAULT_HYPERBOLA, type HyperbolaState } from '../../../lib/hyperbolaGeometry'
 import type { ExploreStep } from '../../../types/lesson'
+import { renderRichText } from '../../../lib/richText'
 
 type HyperbolaExploreStepViewProps = {
   step: ExploreStep
@@ -64,8 +65,8 @@ export function HyperbolaExploreStepView({
 
   return (
     <div className="step-view explore-step">
-      {step.introText && <p className="intro-text">{step.introText}</p>}
-      <p className="step-prompt">{step.prompt}</p>
+      {step.introText && <p className="intro-text">{renderRichText(step.introText)}</p>}
+      <p className="step-prompt">{renderRichText(step.prompt)}</p>
 
       <HyperbolaSimulator
         hyperbola={hyperbola}
@@ -77,6 +78,7 @@ export function HyperbolaExploreStepView({
         showBox={config.showBox}
         showAxes={config.showAxes}
         showEquation={config.showEquation}
+        showSemiAxes={config.showSemiAxes}
         centerDraggable={config.centerDraggable ?? true}
         allowOrientationToggle={config.allowOrientationToggle}
       />

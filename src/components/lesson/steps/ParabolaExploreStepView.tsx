@@ -10,6 +10,7 @@ import {
   snapParabolaVertexAtOrigin,
   type ParabolaState,
 } from '../../../lib/parabolaGeometry'
+import { renderRichText } from '../../../lib/richText'
 import type { ExploreStep } from '../../../types/lesson'
 
 type ParabolaExploreStepViewProps = {
@@ -95,7 +96,7 @@ export function ParabolaExploreStepView({
 
   return (
     <div className="step-view explore-step">
-      {step.introText && <p className="intro-text">{step.introText}</p>}
+      {step.introText && <p className="intro-text">{renderRichText(step.introText)}</p>}
       <p className="step-prompt">{step.prompt}</p>
 
       <ParabolaSimulator

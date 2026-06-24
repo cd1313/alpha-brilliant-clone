@@ -4,13 +4,39 @@ import {
   matchesParabolaChallengeTarget,
   type ParabolaState,
 } from '../../../lib/parabolaGeometry'
-import type { ChallengeStep } from '../../../types/lesson'
+import type { ChallengeStep, ParabolaChallengeTarget } from '../../../types/lesson'
 
 type ParabolaChallengeStepViewProps = {
   step: ChallengeStep
   parabola: ParabolaState
   onParabolaChange: (parabola: ParabolaState) => void
   onSuccess: () => void
+}
+
+function ghostFromTarget(
+  target: ParabolaChallengeTarget | undefined,
+): ParabolaState | null {
+  if (!target) return null
+  switch (target.kind) {
+    case 'focus':
+      return {
+        focusX: target.focusX,
+        focusY: target.focusY,
+        directrixY: 2 * target.vertexY - target.focusY,
+      }
+    case 'vertex':
+      return {
+        focusX: target.x,
+        focusY: target.y + 2,
+        directrixY: target.y - 2,
+      }
+    case 'narrow':
+      return {
+        focusX: target.vertexX,
+        focusY: target.vertexY + 1,
+        directrixY: target.vertexY - 1,
+      }
+  }
 }
 
 export function ParabolaChallengeStepView({
@@ -52,6 +78,7 @@ export function ParabolaChallengeStepView({
         focusVerticalOnly={config.focusVerticalOnly === true}
         vertexAtOrigin={config.vertexAtOrigin === true}
         targetPoint={config.targetPoint}
+        ghost={showHint ? ghostFromTarget(target) : null}
       />
 
       {feedback && (
@@ -69,8 +96,8 @@ export function ParabolaChallengeStepView({
       <div className="step-actions">
         {!solved && (
           <>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowHint(true)}>
-              Hint
+            <button type="button" className="btn btn-secondary" onClick={() => setShowHint((show) => !show)}>
+              {showHint ? 'Hide Hint' : 'Hint'}
             </button>
             <button type="button" className="btn btn-primary" onClick={checkAnswer}>
               Check

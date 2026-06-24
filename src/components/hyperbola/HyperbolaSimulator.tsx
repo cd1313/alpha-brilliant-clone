@@ -1,6 +1,7 @@
 import { useCallback, useId, useRef, useState } from 'react'
 import {
   clampHyperbolaState,
+  DEFAULT_HYPERBOLA,
   deriveHyperbola,
   distanceToPoint,
   formatHyperbolaEquation,
@@ -14,6 +15,7 @@ import {
 type HyperbolaSimulatorProps = {
   hyperbola: HyperbolaState
   onHyperbolaChange: (next: HyperbolaState) => void
+  ghost?: HyperbolaState | null
   interactive?: boolean
   showDifferenceDemo?: boolean
   highlightVertices?: boolean
@@ -24,6 +26,8 @@ type HyperbolaSimulatorProps = {
   hideLabels?: boolean
   centerDraggable?: boolean
   allowOrientationToggle?: boolean
+  showFoci?: boolean
+  showSemiAxes?: boolean
 }
 
 const WIDTH = 520
@@ -57,6 +61,7 @@ function pointsToPath(points: Point[]): string {
 export function HyperbolaSimulator({
   hyperbola,
   onHyperbolaChange,
+  ghost = null,
   interactive = true,
   showDifferenceDemo = false,
   highlightVertices = false,
@@ -67,6 +72,8 @@ export function HyperbolaSimulator({
   hideLabels = false,
   centerDraggable = true,
   allowOrientationToggle = false,
+  showFoci = true,
+  showSemiAxes = false,
 }: HyperbolaSimulatorProps) {
   const gridPatternId = `hyperbola-grid${useId().replace(/:/g, '')}`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -92,6 +99,10 @@ export function HyperbolaSimulator({
   const branch1Path = pointsToPath(branch1)
   const branch2Path = pointsToPath(branch2)
 
+  const ghostBranches = ghost ? hyperbolaBranchPaths(ghost) : null
+  const ghostBranch1Path = ghostBranches ? pointsToPath(ghostBranches.branch1) : null
+  const ghostBranch2Path = ghostBranches ? pointsToPath(ghostBranches.branch2) : null
+
   const slope = derived.asymptoteSlope
   const asymSpan = 8
   const asym1 = [
@@ -110,10 +121,9 @@ export function HyperbolaSimulator({
   const demoPoint = pointOnHyperbolaBranch(hyperbola, demoT)
   const demoSvg = toSvg(demoPoint.x, demoPoint.y)
   const demoPointDraggable = interactive && showDifferenceDemo
-  const diffDistances = Math.abs(
-    distanceToPoint(demoPoint.x, demoPoint.y, derived.focus1.x, derived.focus1.y) -
-      distanceToPoint(demoPoint.x, demoPoint.y, derived.focus2.x, derived.focus2.y),
-  )
+  const d1 = distanceToPoint(demoPoint.x, demoPoint.y, derived.focus1.x, derived.focus1.y)
+  const d2 = distanceToPoint(demoPoint.x, demoPoint.y, derived.focus2.x, derived.focus2.y)
+  const diffDistances = Math.abs(d1 - d2)
 
   const equation = formatHyperbolaEquation(centerX, centerY, a, b, orientation)
 
@@ -328,16 +338,20 @@ export function HyperbolaSimulator({
           <path d={branch2Path} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" />
         </g>
 
-        <circle cx={focus1Svg.x} cy={focus1Svg.y} r={4} fill="#0f172a" />
-        <circle cx={focus2Svg.x} cy={focus2Svg.y} r={4} fill="#0f172a" />
-        {!hideLabels && (
+        {showFoci && (
           <>
-            <text x={focus1Svg.x - 6} y={focus1Svg.y - 8} textAnchor="end" className="parabola-label">
-              F₁
-            </text>
-            <text x={focus2Svg.x + 8} y={focus2Svg.y - 8} className="parabola-label">
-              F₂
-            </text>
+            <circle cx={focus1Svg.x} cy={focus1Svg.y} r={4} fill="#0f172a" />
+            <circle cx={focus2Svg.x} cy={focus2Svg.y} r={4} fill="#0f172a" />
+            {!hideLabels && (
+              <>
+                <text x={focus1Svg.x - 6} y={focus1Svg.y - 8} textAnchor="end" className="parabola-label">
+                  F₁
+                </text>
+                <text x={focus2Svg.x + 8} y={focus2Svg.y - 8} className="parabola-label">
+                  F₂
+                </text>
+              </>
+            )}
           </>
         )}
 
@@ -372,7 +386,23 @@ export function HyperbolaSimulator({
               onPointerDown={startDemoDrag}
             />
             <text x={demoSvg.x + 12} y={demoSvg.y - 10} className="parabola-label">
-              |d₁ − d₂| = {formatMeasuredValue(diffDistances)}
+              <tspan>|</tspan>
+              <tspan fill="#10b981">d₁</tspan>
+              <tspan> − </tspan>
+              <tspan fill="#8b5cf6">d₂</tspan>
+              <tspan>| = {formatMeasuredValue(diffDistances)}</tspan>
+            </text>
+            <text x={20} y={HEIGHT - 16} className="parabola-readout-label" fill="#10b981">
+              d₁ = {formatMeasuredValue(d1)}
+            </text>
+            <text
+              x={WIDTH - 20}
+              y={HEIGHT - 16}
+              textAnchor="end"
+              className="parabola-readout-label"
+              fill="#8b5cf6"
+            >
+              d₂ = {formatMeasuredValue(d2)}
             </text>
           </>
         )}
@@ -385,6 +415,48 @@ export function HyperbolaSimulator({
           stroke="#fff"
           strokeWidth="2"
         />
+
+        {ghost && ghostBranch1Path && ghostBranch2Path && (
+          <>
+            <path
+              d={ghostBranch1Path}
+              fill="none"
+              stroke="#9333ea"
+              strokeWidth="2.5"
+              strokeDasharray="6 5"
+              opacity="0.5"
+            />
+            <path
+              d={ghostBranch2Path}
+              fill="none"
+              stroke="#9333ea"
+              strokeWidth="2.5"
+              strokeDasharray="6 5"
+              opacity="0.5"
+            />
+          </>
+        )}
+
+        {showSemiAxes && (
+          <>
+            <line
+              x1={centerSvg.x}
+              y1={centerSvg.y}
+              x2={aHandleSvg.x}
+              y2={aHandleSvg.y}
+              stroke="#f59e0b"
+              strokeWidth="2.5"
+            />
+            <line
+              x1={centerSvg.x}
+              y1={centerSvg.y}
+              x2={bHandleSvg.x}
+              y2={bHandleSvg.y}
+              stroke="#0d9488"
+              strokeWidth="2.5"
+            />
+          </>
+        )}
 
         {interactive && centerDraggable && (
           <circle
@@ -457,6 +529,18 @@ export function HyperbolaSimulator({
             onClick={() => onHyperbolaChange({ ...hyperbola, orientation: 'vertical' })}
           >
             Opens up/down
+          </button>
+        </div>
+      )}
+
+      {interactive && (
+        <div className="simulator-actions">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => onHyperbolaChange(DEFAULT_HYPERBOLA)}
+          >
+            ↺ Reset
           </button>
         </div>
       )}

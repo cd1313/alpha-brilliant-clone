@@ -2,6 +2,7 @@ import { useCallback, useId, useRef, useState } from 'react'
 import {
   adjustParabolaWithVertexAtOrigin,
   clampParabolaState,
+  DEFAULT_PARABOLA,
   deriveParabola,
   distanceToHorizontalLine,
   distanceToPoint,
@@ -29,6 +30,7 @@ type ParabolaSimulatorProps = {
   focusVerticalOnly?: boolean
   vertexAtOrigin?: boolean
   targetPoint?: { x: number; y: number }
+  ghost?: ParabolaState | null
 }
 
 const WIDTH = 520
@@ -50,6 +52,16 @@ function fromSvg(svgX: number, svgY: number) {
   }
 }
 
+function parabolaPathToSvg(state: ParabolaState): string {
+  const { vertexX, vertexY, p, opens } = deriveParabola(state)
+  return parabolaPath(vertexX, vertexY, p, opens)
+    .replace(/([ML])\s*([-\d.]+)\s+([-\d.]+)/g, (_, cmd, x, y) => {
+      const pt = toSvg(Number(x), Number(y))
+      return `${cmd} ${pt.x} ${pt.y}`
+    })
+    .trim()
+}
+
 export function ParabolaSimulator({
   parabola,
   onParabolaChange,
@@ -64,6 +76,7 @@ export function ParabolaSimulator({
   focusVerticalOnly = false,
   vertexAtOrigin = false,
   targetPoint,
+  ghost,
 }: ParabolaSimulatorProps) {
   const gridPatternId = `parabola-grid${useId().replace(/:/g, '')}`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -82,13 +95,8 @@ export function ParabolaSimulator({
   const vertexSvg = toSvg(vertexX, vertexY)
   const directrixLeft = toSvg(-7, parabola.directrixY)
   const directrixRight = toSvg(7, parabola.directrixY)
-  const pathMath = parabolaPath(vertexX, vertexY, p, opens)
-  const pathSvg = pathMath
-    .replace(/([ML])\s*([-\d.]+)\s+([-\d.]+)/g, (_, cmd, x, y) => {
-      const pt = toSvg(Number(x), Number(y))
-      return `${cmd} ${pt.x} ${pt.y}`
-    })
-    .trim()
+  const pathSvg = parabolaPathToSvg(parabola)
+  const ghostPathSvg = ghost ? parabolaPathToSvg(ghost) : null
 
   const targetSvg = targetPoint ? toSvg(targetPoint.x, targetPoint.y) : null
   const targetLabelOnLeft = targetSvg !== null && targetSvg.x > WIDTH - 90
@@ -160,10 +168,20 @@ export function ParabolaSimulator({
     const math = fromSvg(point.x, point.y)
 
     if (target === 'focus') {
+      let focusY = math.y
+      if (!vertexAtOrigin) {
+        // Let the focus cross the directrix (flipping the parabola) instead of
+        // sticking to it; snap across a small band so p never collapses to zero.
+        const minGap = PARABOLA_MIN_P * 2
+        const dir = parabola.directrixY
+        if (Math.abs(focusY - dir) < minGap) {
+          focusY = focusY >= dir ? dir + minGap : dir - minGap
+        }
+      }
       const next = {
         ...parabola,
         focusX: focusVerticalOnly || vertexAtOrigin ? 0 : math.x,
-        focusY: math.y,
+        focusY,
       }
       onParabolaChange(
         vertexAtOrigin
@@ -174,9 +192,18 @@ export function ParabolaSimulator({
     }
 
     if (target === 'directrix') {
+      let directrixY = math.y
+      if (!vertexAtOrigin) {
+        // Mirror the focus behavior: allow the directrix to cross the focus.
+        const minGap = PARABOLA_MIN_P * 2
+        const f = parabola.focusY
+        if (Math.abs(directrixY - f) < minGap) {
+          directrixY = directrixY >= f ? f + minGap : f - minGap
+        }
+      }
       const next = {
         ...parabola,
-        directrixY: math.y,
+        directrixY,
       }
       onParabolaChange(
         vertexAtOrigin
@@ -383,7 +410,9 @@ export function ParabolaSimulator({
               onPointerDown={startDemoDrag}
             />
             <text x={demoSvg.x + 12} y={demoSvg.y - 10} className="parabola-label">
-              d₁ = {formatMeasuredValue(distFocus)}, d₂ = {formatMeasuredValue(distDirectrix)}
+              <tspan fill="#10b981">d₁ = {formatMeasuredValue(distFocus)}</tspan>
+              <tspan>, </tspan>
+              <tspan fill="#8b5cf6">d₂ = {formatMeasuredValue(distDirectrix)}</tspan>
             </text>
           </>
         )}
@@ -396,6 +425,17 @@ export function ParabolaSimulator({
             fill={highlightVertex ? '#ef4444' : '#64748b'}
             stroke="#fff"
             strokeWidth="2"
+          />
+        )}
+
+        {ghostPathSvg && (
+          <path
+            d={ghostPathSvg}
+            fill="none"
+            stroke="#9333ea"
+            strokeWidth="2.5"
+            strokeDasharray="6 5"
+            opacity="0.5"
           />
         )}
 
@@ -466,6 +506,18 @@ export function ParabolaSimulator({
               {key.charAt(0).toUpperCase() + key.slice(1)}
             </label>
           ))}
+        </div>
+      )}
+
+      {interactive && (
+        <div className="simulator-actions">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => onParabolaChange(DEFAULT_PARABOLA)}
+          >
+            ↺ Reset
+          </button>
         </div>
       )}
     </div>

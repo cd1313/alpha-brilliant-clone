@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ConeSimulator } from '../../cone/ConeSimulator'
+import { ConicGallery } from '../../cone/ConicGallery'
 import { classifyConic, type PlaneState } from '../../../lib/conicClassifier'
 import type { ConicType, ExploreStep } from '../../../types/lesson'
 
@@ -34,6 +35,9 @@ export function ExploreStepView({
   return (
     <div className="step-view explore-step">
       {step.introText && <p className="intro-text">{step.introText}</p>}
+
+      {step.showConicGallery && <ConicGallery />}
+
       <p className="step-prompt">{step.prompt}</p>
 
       <ConeSimulator

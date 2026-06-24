@@ -50,7 +50,7 @@ export function LessonPage() {
         </Link>
         <h1>{lesson.title}</h1>
         <p className="lesson-page-subtitle">
-          Conic Sections · {lesson.steps.length} steps · Learn by interacting with the cone
+          Conic Sections · {lesson.steps.length} steps · Learn by interacting with the geometry
         </p>
       </header>
 

@@ -1,19 +1,31 @@
 import { useEffect, useState } from 'react'
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User,
 } from 'firebase/auth'
+import { FirebaseError } from 'firebase/app'
 import { auth, isFirebaseConfigured } from '../lib/firebase'
 import { getAuthErrorMessage } from '../lib/authErrors'
+
+/** Popup sign-in codes that mean the user simply dismissed the flow — not real errors. */
+const SILENT_AUTH_CODES = new Set([
+  'auth/popup-closed-by-user',
+  'auth/cancelled-popup-request',
+  'auth/user-cancelled',
+])
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(() => Boolean(auth))
   const [error, setError] = useState<string | null>(null)
+  const [, setReloadTick] = useState(0)
 
   useEffect(() => {
     if (!auth) {
@@ -35,7 +47,8 @@ export function useAuth() {
     }
     setError(null)
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
+      const credential = await createUserWithEmailAndPassword(auth, email, password)
+      await sendEmailVerification(credential.user)
       return true
     } catch (err) {
       setError(getAuthErrorMessage(err, 'Sign up failed'))
@@ -58,6 +71,26 @@ export function useAuth() {
     }
   }
 
+  const signInWithGoogle = async () => {
+    if (!auth) {
+      setError('Firebase is not configured. Add your credentials to .env.local')
+      return false
+    }
+    setError(null)
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      return true
+    } catch (err) {
+      // Closing/cancelling the popup isn't a real failure — stay quiet.
+      if (err instanceof FirebaseError && SILENT_AUTH_CODES.has(err.code)) {
+        return false
+      }
+      setError(getAuthErrorMessage(err, 'Google sign-in failed'))
+      return false
+    }
+  }
+
   const resetPassword = async (email: string) => {
     if (!auth) {
       setError('Firebase is not configured. Add your credentials to .env.local')
@@ -71,6 +104,27 @@ export function useAuth() {
       setError(getAuthErrorMessage(err, 'Could not send reset email'))
       return false
     }
+  }
+
+  const resendVerification = async () => {
+    if (!auth?.currentUser) return false
+    setError(null)
+    try {
+      await sendEmailVerification(auth.currentUser)
+      return true
+    } catch (err) {
+      setError(getAuthErrorMessage(err, 'Could not send verification email'))
+      return false
+    }
+  }
+
+  /** Refresh the signed-in user (e.g. after they verify in their inbox). Returns the new verified status. */
+  const reloadUser = async (): Promise<boolean> => {
+    if (!auth?.currentUser) return false
+    await auth.currentUser.reload()
+    setUser(auth.currentUser)
+    setReloadTick((tick) => tick + 1)
+    return auth.currentUser.emailVerified
   }
 
   const logOut = async () => {
@@ -89,7 +143,10 @@ export function useAuth() {
     error,
     signUp,
     signIn,
+    signInWithGoogle,
     resetPassword,
+    resendVerification,
+    reloadUser,
     logOut,
     isConfigured: isFirebaseConfigured,
   }

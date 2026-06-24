@@ -12,6 +12,7 @@ import {
   type CircleState,
 } from '../../../lib/circleGeometry'
 import type { ExploreStep } from '../../../types/lesson'
+import { renderRichText } from '../../../lib/richText'
 
 type Combo = { h: number; k: number; r: number }
 
@@ -119,7 +120,7 @@ export function CircleExploreStepView({
 
   return (
     <div className="step-view explore-step">
-      {step.introText && <p className="intro-text">{step.introText}</p>}
+      {step.introText && <p className="intro-text">{renderRichText(step.introText)}</p>}
       <p className="step-prompt">{step.prompt}</p>
 
       <CircleSimulator

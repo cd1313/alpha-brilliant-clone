@@ -4,6 +4,7 @@ import { CourseMapPage } from './pages/CourseMapPage'
 import { LessonCompletePage } from './pages/LessonCompletePage'
 import { LessonPage } from './pages/LessonPage'
 import { LoginPage } from './pages/LoginPage'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import './App.css'
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route
           path="/"
           element={

@@ -42,6 +42,7 @@ export function ChallengeStepView({
         interactive
         highlightConeEdge={step.visualCue === 'highlightConeEdge'}
         glowConic={solved && step.visualReward === 'glow' ? step.targetConic : null}
+        guidePlane={showHint && step.planeGuide ? step.planeGuide : null}
       />
 
       {feedback && (
@@ -59,8 +60,8 @@ export function ChallengeStepView({
       <div className="step-actions">
         {!solved && (
           <>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowHint(true)}>
-              Hint
+            <button type="button" className="btn btn-secondary" onClick={() => setShowHint((show) => !show)}>
+              {showHint ? 'Hide Hint' : 'Hint'}
             </button>
             <button type="button" className="btn btn-primary" onClick={checkAnswer}>
               Check

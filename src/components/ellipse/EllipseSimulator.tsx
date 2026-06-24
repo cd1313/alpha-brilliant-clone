@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react'
 import {
+  DEFAULT_ELLIPSE,
   deriveEllipse,
   distanceToPoint,
   clampEllipseState,
@@ -24,6 +25,8 @@ type EllipseSimulatorProps = {
   hideLabels?: boolean
   centerDraggable?: boolean
   targetPoint?: { x: number; y: number }
+  /** Faint dashed preview of the target ellipse, shown as a non-interactive guide. */
+  ghost?: EllipseState | null
 }
 
 const WIDTH = 520
@@ -45,6 +48,16 @@ function fromSvg(svgX: number, svgY: number) {
   }
 }
 
+function ellipsePathStr(cx: number, cy: number, a: number, b: number): string {
+  return (
+    Array.from({ length: 81 }, (_, i) => {
+      const theta = (2 * Math.PI * i) / 80
+      const pt = toSvg(cx + a * Math.cos(theta), cy + b * Math.sin(theta))
+      return `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`
+    }).join(' ') + ' Z'
+  )
+}
+
 export function EllipseSimulator({
   ellipse,
   onEllipseChange,
@@ -58,6 +71,7 @@ export function EllipseSimulator({
   hideLabels = false,
   centerDraggable = true,
   targetPoint,
+  ghost,
 }: EllipseSimulatorProps) {
   const gridPatternId = `ellipse-grid${useId().replace(/:/g, '')}`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -77,20 +91,16 @@ export function EllipseSimulator({
   const majorLabel = horizontalMajor ? 'a' : 'b'
   const minorLabel = horizontalMajor ? 'b' : 'a'
 
-  const pathSvg =
-    Array.from({ length: 81 }, (_, i) => {
-      const theta = (2 * Math.PI * i) / 80
-      const pt = toSvg(centerX + a * Math.cos(theta), centerY + b * Math.sin(theta))
-      return `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`
-    }).join(' ') + ' Z'
+  const pathSvg = ellipsePathStr(centerX, centerY, a, b)
+  const ghostPathSvg = ghost ? ellipsePathStr(ghost.centerX, ghost.centerY, ghost.a, ghost.b) : null
 
   // A draggable point on the curve: the two focal radii always sum to 2 x the
   // major semi-axis, no matter where the point or the foci sit.
   const demoPoint = pointOnEllipse(centerX, centerY, a, b, demoAngle)
   const demoSvg = toSvg(demoPoint.x, demoPoint.y)
-  const sumDistances =
-    distanceToPoint(demoPoint.x, demoPoint.y, derived.focus1.x, derived.focus1.y) +
-    distanceToPoint(demoPoint.x, demoPoint.y, derived.focus2.x, derived.focus2.y)
+  const d1 = distanceToPoint(demoPoint.x, demoPoint.y, derived.focus1.x, derived.focus1.y)
+  const d2 = distanceToPoint(demoPoint.x, demoPoint.y, derived.focus2.x, derived.focus2.y)
+  const sumDistances = d1 + d2
 
   const targetSvg = targetPoint ? toSvg(targetPoint.x, targetPoint.y) : null
   const targetLabelOnLeft = targetSvg !== null && targetSvg.x > WIDTH - 90
@@ -277,6 +287,17 @@ export function EllipseSimulator({
             )
           })}
 
+        {ghostPathSvg && (
+          <path
+            d={ghostPathSvg}
+            fill="none"
+            stroke="#9333ea"
+            strokeWidth="2.5"
+            strokeDasharray="6 5"
+            opacity="0.5"
+          />
+        )}
+
         {pathSvg && (
           <path d={pathSvg} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" />
         )}
@@ -379,7 +400,22 @@ export function EllipseSimulator({
               onPointerDown={startDemoDrag}
             />
             <text x={demoSvg.x + 12} y={demoSvg.y - 10} className="parabola-label">
-              d₁ + d₂ = {formatMeasuredValue(sumDistances)}
+              <tspan fill="#10b981">d₁</tspan>
+              <tspan> + </tspan>
+              <tspan fill="#8b5cf6">d₂</tspan>
+              <tspan> = {formatMeasuredValue(sumDistances)}</tspan>
+            </text>
+            <text x={20} y={HEIGHT - 16} className="parabola-readout-label" fill="#10b981">
+              d₁ = {formatMeasuredValue(d1)}
+            </text>
+            <text
+              x={WIDTH - 20}
+              y={HEIGHT - 16}
+              textAnchor="end"
+              className="parabola-readout-label"
+              fill="#8b5cf6"
+            >
+              d₂ = {formatMeasuredValue(d2)}
             </text>
           </>
         )}
@@ -432,6 +468,18 @@ export function EllipseSimulator({
           />
         )}
 
+        {!(interactive && centerDraggable) && !hideLabels && (
+          <circle
+            cx={centerSvg.x}
+            cy={centerSvg.y}
+            r={highlightCenter ? 6 : 4}
+            fill={highlightCenter ? '#ef4444' : '#dc2626'}
+            stroke="#fff"
+            strokeWidth="2"
+            pointerEvents="none"
+          />
+        )}
+
         {interactive && (
           <circle
             cx={aHandleSvg.x}
@@ -476,6 +524,18 @@ export function EllipseSimulator({
           </>
         )}
       </svg>
+
+      {interactive && (
+        <div className="simulator-actions">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => onEllipseChange(DEFAULT_ELLIPSE)}
+          >
+            ↺ Reset
+          </button>
+        </div>
+      )}
     </div>
   )
 }

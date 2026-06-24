@@ -94,7 +94,10 @@ function shiftTerm(variable: 'x' | 'y', value: number): string {
 export function formatEllipseEquation(h: number, k: number, a: number, b: number): string {
   const aSq = formatMeasuredValue(roundMeasured(a) * roundMeasured(a))
   const bSq = formatMeasuredValue(roundMeasured(b) * roundMeasured(b))
-  return `${shiftTerm('x', h)}/${aSq} + ${shiftTerm('y', k)}/${bSq} = 1`
+  // Dividing by 1 is redundant, so drop the "/1" for a unit semi-axis.
+  const term = (numerator: string, denom: string) =>
+    denom === '1' ? numerator : `${numerator}/${denom}`
+  return `${term(shiftTerm('x', h), aSq)} + ${term(shiftTerm('y', k), bSq)} = 1`
 }
 
 export function pointOnEllipse(

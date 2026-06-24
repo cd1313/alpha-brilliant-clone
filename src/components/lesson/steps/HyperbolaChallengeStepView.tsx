@@ -1,13 +1,27 @@
 import { useState } from 'react'
 import { HyperbolaSimulator } from '../../hyperbola/HyperbolaSimulator'
 import { matchesHyperbolaChallengeTarget, type HyperbolaState } from '../../../lib/hyperbolaGeometry'
-import type { ChallengeStep } from '../../../types/lesson'
+import type { ChallengeStep, HyperbolaChallengeTarget } from '../../../types/lesson'
 
 type HyperbolaChallengeStepViewProps = {
   step: ChallengeStep
   hyperbola: HyperbolaState
   onHyperbolaChange: (hyperbola: HyperbolaState) => void
   onSuccess: () => void
+}
+
+function deriveGhostHyperbola(target: HyperbolaChallengeTarget | undefined): HyperbolaState | null {
+  if (!target) return null
+  if (target.kind === 'axes') {
+    return {
+      centerX: target.centerX,
+      centerY: target.centerY,
+      a: target.a,
+      b: target.b,
+      orientation: target.orientation,
+    }
+  }
+  return null
 }
 
 export function HyperbolaChallengeStepView({
@@ -41,6 +55,7 @@ export function HyperbolaChallengeStepView({
       <HyperbolaSimulator
         hyperbola={hyperbola}
         onHyperbolaChange={onHyperbolaChange}
+        ghost={showHint ? deriveGhostHyperbola(target) : null}
         interactive
         highlightVertices={config.highlightVertices}
         showAsymptotes={config.showAsymptotes ?? true}
@@ -66,8 +81,8 @@ export function HyperbolaChallengeStepView({
       <div className="step-actions">
         {!solved && (
           <>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowHint(true)}>
-              Hint
+            <button type="button" className="btn btn-secondary" onClick={() => setShowHint((show) => !show)}>
+              {showHint ? 'Hide Hint' : 'Hint'}
             </button>
             <button type="button" className="btn btn-primary" onClick={checkAnswer}>
               Check

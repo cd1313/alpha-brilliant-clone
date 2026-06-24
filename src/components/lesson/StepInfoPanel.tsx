@@ -1,3 +1,4 @@
+import { renderRichText } from '../../lib/richText'
 import type { ConicType, Step } from '../../types/lesson'
 
 const STEP_TYPE_LABELS: Record<Step['type'], string> = {
@@ -101,16 +102,6 @@ export function StepInfoPanel({ step, stepNumber, totalSteps }: StepInfoPanelPro
         </p>
       )}
 
-      {step.type === 'mastery' && step.circleSequence && (
-        <div className="step-info-block step-info-tip">
-          <h3 className="step-info-label">How it works</h3>
-          <p>
-            Labels are hidden. Build each circle in order, then press{' '}
-            <strong>Check Circle</strong> to verify.
-          </p>
-        </div>
-      )}
-
       {step.goal && (
         <div className="step-info-block">
           <h3 className="step-info-label">Your goal</h3>
@@ -121,29 +112,10 @@ export function StepInfoPanel({ step, stepNumber, totalSteps }: StepInfoPanelPro
       {step.info && (
         <div className="step-info-callout">
           <h3 className="step-info-label">Did you know?</h3>
-          <p>{step.info}</p>
+          <p>{renderRichText(step.info)}</p>
         </div>
       )}
 
-      {step.type === 'mastery' && step.sequence && (
-        <div className="step-info-block step-info-tip">
-          <h3 className="step-info-label">How it works</h3>
-          <p>
-            Shape labels are hidden. Create each conic in order, then press{' '}
-            <strong>Check Shape</strong> to verify.
-          </p>
-        </div>
-      )}
-
-      {step.type === 'mastery' && step.parabolaSequence && (
-        <div className="step-info-block step-info-tip">
-          <h3 className="step-info-label">How it works</h3>
-          <p>
-            Labels are hidden. Build each parabola in order, then press{' '}
-            <strong>Check Parabola</strong> to verify.
-          </p>
-        </div>
-      )}
     </aside>
   )
 }

@@ -68,6 +68,10 @@ export type HyperbolaSimulatorConfig = {
   showEquation?: boolean
   centerDraggable?: boolean
   allowOrientationToggle?: boolean
+  /** Hide the focus markers (e.g. when the foci are what the student must figure out). */
+  showFoci?: boolean
+  /** Draw line indicators from the center to the a (vertex) and b handles. */
+  showSemiAxes?: boolean
 }
 
 export type ExploreSuccessCondition =
@@ -88,6 +92,8 @@ export type ExploreStep = StepMeta & {
   introText?: string
   showLabels?: boolean
   interactive?: boolean
+  /** Show a labeled gallery of the four conic sections above the simulator. */
+  showConicGallery?: boolean
   successCondition: ExploreSuccessCondition
   hints?: string[]
   parabolaConfig?: ParabolaExploreConfig
@@ -164,6 +170,8 @@ export type ChallengeStep = StepMeta & {
   miniReflection?: string
   visualReward?: 'glow'
   visualCue?: 'highlightConeEdge'
+  /** A target plane orientation to show as a dashed guide when the hint is open. */
+  planeGuide?: { angle: number; offset: number }
   parabolaConfig?: ParabolaSimulatorConfig
   circleConfig?: CircleSimulatorConfig
   ellipseConfig?: EllipseSimulatorConfig
@@ -176,6 +184,17 @@ export type ReflectionStep = StepMeta & {
   choices: { id: string; label: string }[]
   correctChoiceId: string
   feedback: string
+  /** Shown when the answer is wrong; falls back to a generic message. */
+  incorrectFeedback?: string
+  /** Optional non-interactive hyperbola shown as a reference grid to reason on. */
+  referenceHyperbola?: {
+    centerX: number
+    centerY: number
+    a: number
+    b: number
+    orientation: HyperbolaOrientation
+  }
+  hyperbolaConfig?: HyperbolaSimulatorConfig
 }
 
 export type ParabolaMasteryTarget = {

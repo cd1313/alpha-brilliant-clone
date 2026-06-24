@@ -10,6 +10,9 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/too-many-requests': 'Too many attempts. Wait a moment and try again.',
   'auth/network-request-failed': 'Network error. Check your connection and try again.',
   'auth/operation-not-allowed': 'This sign-in method is not enabled for this app.',
+  'auth/popup-blocked': 'Your browser blocked the sign-in popup. Allow popups and try again.',
+  'auth/account-exists-with-different-credential':
+    'An account already exists with this email. Sign in with your original method instead.',
 }
 
 export function getAuthErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {

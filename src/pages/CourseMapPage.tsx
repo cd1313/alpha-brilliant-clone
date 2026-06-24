@@ -29,6 +29,25 @@ export function CourseMapPage() {
     )
   }
 
+  const completedIds = userProgress.completedLessons
+  const countCompleted = (lessons: { id: string }[]) =>
+    lessons.filter((l) => completedIds.includes(l.id)).length
+  const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : 0)
+
+  // Course total includes every lesson (even not-yet-active ones); completed
+  // only ever counts available lessons.
+  const realSections = course.sections.filter((s) => !s.comingSoon)
+  const courseDone = countCompleted(allLessons)
+
+  // "Current unit" = the section holding the next lesson, else the last available one.
+  const currentSection =
+    realSections.find((s) => s.lessons.some((l) => l.id === nextLessonId)) ??
+    realSections[realSections.length - 1]
+  const unitLessons = currentSection
+    ? currentSection.lessons.filter((l) => !l.comingSoon)
+    : []
+  const unitDone = countCompleted(unitLessons)
+
   return (
     <div className="page course-map-page">
       <header className="page-header">
@@ -37,14 +56,47 @@ export function CourseMapPage() {
           <p className="subtitle">Work through each section to build mastery</p>
         </div>
         <div className="header-actions">
-          <span className="streak-badge" title="Daily streak">
-            🔥 {userProgress.streak} day streak
-          </span>
           <button type="button" className="btn btn-secondary" onClick={() => void logOut()}>
             Sign Out
           </button>
         </div>
       </header>
+
+      <section className="course-dashboard" aria-label="Your progress">
+        <div className="dashboard-card">
+          <span className="dashboard-label">Streak</span>
+          <span className="dashboard-value">
+            🔥 {userProgress.streak}
+            <span className="dashboard-unit"> day{userProgress.streak === 1 ? '' : 's'}</span>
+          </span>
+        </div>
+        <div className="dashboard-card">
+          <span className="dashboard-label">{currentSection?.title ?? 'Current unit'}</span>
+          <span className="dashboard-value">
+            {unitDone}
+            <span className="dashboard-unit"> / {unitLessons.length} lessons</span>
+          </span>
+          <div className="dashboard-bar">
+            <div
+              className="dashboard-bar-fill"
+              style={{ width: `${pct(unitDone, unitLessons.length)}%` }}
+            />
+          </div>
+        </div>
+        <div className="dashboard-card">
+          <span className="dashboard-label">{course.title}</span>
+          <span className="dashboard-value">
+            {courseDone}
+            <span className="dashboard-unit"> / {allLessons.length} lessons</span>
+          </span>
+          <div className="dashboard-bar">
+            <div
+              className="dashboard-bar-fill"
+              style={{ width: `${pct(courseDone, allLessons.length)}%` }}
+            />
+          </div>
+        </div>
+      </section>
 
       {error && <p className="error-banner">{error}</p>}
 

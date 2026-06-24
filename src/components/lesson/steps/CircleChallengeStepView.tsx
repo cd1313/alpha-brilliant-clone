@@ -1,13 +1,25 @@
 import { useState } from 'react'
 import { CircleSimulator } from '../../circle/CircleSimulator'
 import { matchesCircleChallengeTarget, type CircleState } from '../../../lib/circleGeometry'
-import type { ChallengeStep } from '../../../types/lesson'
+import type { ChallengeStep, CircleChallengeTarget } from '../../../types/lesson'
 
 type CircleChallengeStepViewProps = {
   step: ChallengeStep
   circle: CircleState
   onCircleChange: (circle: CircleState) => void
   onSuccess: () => void
+}
+
+function deriveGhost(target: CircleChallengeTarget | undefined): CircleState | null {
+  if (!target) return null
+  switch (target.kind) {
+    case 'radius':
+      return { centerX: target.centerX, centerY: target.centerY, radius: target.radius }
+    case 'center':
+      return { centerX: target.x, centerY: target.y, radius: 3 }
+    case 'small':
+      return { centerX: target.centerX, centerY: target.centerY, radius: target.maxR ?? 1.5 }
+  }
 }
 
 export function CircleChallengeStepView({
@@ -47,6 +59,7 @@ export function CircleChallengeStepView({
         showEquation={config.showEquation ?? true}
         centerDraggable={config.centerDraggable ?? target?.kind !== 'radius'}
         targetPoint={config.targetPoint}
+        ghost={showHint ? deriveGhost(target) : null}
       />
 
       {feedback && (
@@ -64,8 +77,8 @@ export function CircleChallengeStepView({
       <div className="step-actions">
         {!solved && (
           <>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowHint(true)}>
-              Hint
+            <button type="button" className="btn btn-secondary" onClick={() => setShowHint((show) => !show)}>
+              {showHint ? 'Hide Hint' : 'Hint'}
             </button>
             <button type="button" className="btn btn-primary" onClick={checkAnswer}>
               Check

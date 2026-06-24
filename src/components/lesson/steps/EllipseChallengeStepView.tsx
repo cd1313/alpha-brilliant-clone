@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { EllipseSimulator } from '../../ellipse/EllipseSimulator'
 import { matchesEllipseChallengeTarget, type EllipseState } from '../../../lib/ellipseGeometry'
-import type { ChallengeStep } from '../../../types/lesson'
+import type { ChallengeStep, EllipseChallengeTarget } from '../../../types/lesson'
+
+function ghostFromTarget(target: EllipseChallengeTarget | undefined): EllipseState | null {
+  if (!target) return null
+  return { centerX: target.centerX, centerY: target.centerY, a: target.a, b: target.b }
+}
 
 type EllipseChallengeStepViewProps = {
   step: ChallengeStep
@@ -47,6 +52,7 @@ export function EllipseChallengeStepView({
         showEquation={config.showEquation ?? true}
         centerDraggable={config.centerDraggable ?? true}
         targetPoint={config.targetPoint}
+        ghost={showHint ? ghostFromTarget(target) : null}
       />
 
       {feedback && (
@@ -64,8 +70,8 @@ export function EllipseChallengeStepView({
       <div className="step-actions">
         {!solved && (
           <>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowHint(true)}>
-              Hint
+            <button type="button" className="btn btn-secondary" onClick={() => setShowHint((show) => !show)}>
+              {showHint ? 'Hide Hint' : 'Hint'}
             </button>
             <button type="button" className="btn btn-primary" onClick={checkAnswer}>
               Check
