@@ -1,6 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
-import { deriveParabola, roundP, type ParabolaState } from '../../../lib/parabolaGeometry'
+import {
+  clampParabolaState,
+  deriveParabola,
+  isParabolaVertexAtOrigin,
+  PARABOLA_MAX_P,
+  PARABOLA_MIN_P,
+  roundP,
+  snapParabolaVertexAtOrigin,
+  type ParabolaState,
+} from '../../../lib/parabolaGeometry'
 import type { ExploreStep } from '../../../types/lesson'
 
 type ParabolaExploreStepViewProps = {
@@ -23,8 +32,54 @@ export function ParabolaExploreStepView({
   onContinue,
 }: ParabolaExploreStepViewProps) {
   const [hintIndex, setHintIndex] = useState(0)
+  const [pInput, setPInput] = useState('')
+  const [pError, setPError] = useState<string | null>(null)
   const config = step.parabolaConfig ?? {}
+  const lockVertexAtOrigin = config.vertexAtOrigin === true
+  const lockFocusToYAxis = config.focusVerticalOnly === true || lockVertexAtOrigin
+  const pInputMode = config.pInputMode === true
   const { p } = deriveParabola(parabola)
+
+  const handleParabolaChange = (next: ParabolaState) => {
+    onParabolaChange(
+      lockFocusToYAxis
+        ? clampParabolaState({ ...next, focusX: 0 })
+        : clampParabolaState(next),
+    )
+  }
+
+  const submitPValue = () => {
+    const trimmed = pInput.trim()
+    const value = Number(trimmed)
+
+    if (!trimmed || Number.isNaN(value)) {
+      setPError('Enter a number for p.')
+      return
+    }
+    if (value < PARABOLA_MIN_P || value > PARABOLA_MAX_P) {
+      setPError(`Choose a value of p between ${PARABOLA_MIN_P} and ${PARABOLA_MAX_P}.`)
+      return
+    }
+
+    setPError(null)
+    setPInput('')
+    onParabolaChange(
+      clampParabolaState({ focusX: 0, focusY: value, directrixY: -value }),
+    )
+  }
+
+  const triedValues = [...distinctPValues].sort((a, b) => a - b)
+
+  useEffect(() => {
+    if (lockVertexAtOrigin && !isParabolaVertexAtOrigin(parabola)) {
+      onParabolaChange(snapParabolaVertexAtOrigin(parabola))
+      return
+    }
+
+    if (lockFocusToYAxis && Math.abs(parabola.focusX) > 0.001) {
+      onParabolaChange(clampParabolaState({ ...parabola, focusX: 0 }))
+    }
+  }, [lockVertexAtOrigin, lockFocusToYAxis, onParabolaChange, parabola])
 
   const canContinue = (() => {
     const condition = step.successCondition
@@ -45,16 +100,60 @@ export function ParabolaExploreStepView({
 
       <ParabolaSimulator
         parabola={parabola}
-        onParabolaChange={onParabolaChange}
-        interactive={step.interactive ?? true}
+        onParabolaChange={handleParabolaChange}
+        interactive={pInputMode ? false : step.interactive ?? true}
         showDistanceDemo={config.showDistanceDemo}
         highlightVertex={config.highlightVertex}
         showParameterP={config.showParameterP}
         showEquation={config.showEquation}
         labelToggles={config.labelToggles}
         vertexDraggable={config.vertexDraggable}
-        focusVerticalOnly={config.focusVerticalOnly}
+        focusVerticalOnly={config.focusVerticalOnly === true}
+        vertexAtOrigin={config.vertexAtOrigin === true}
       />
+
+      {pInputMode && (
+        <div className="p-input-panel">
+          <form
+            className="p-input-row"
+            onSubmit={(event) => {
+              event.preventDefault()
+              submitPValue()
+            }}
+          >
+            <label className="p-input-label" htmlFor="p-value-input">
+              Enter a value for p
+            </label>
+            <input
+              id="p-value-input"
+              className="p-input"
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              min={PARABOLA_MIN_P}
+              max={PARABOLA_MAX_P}
+              value={pInput}
+              onChange={(event) => setPInput(event.target.value)}
+              placeholder={`${PARABOLA_MIN_P}–${PARABOLA_MAX_P}`}
+            />
+            <button type="submit" className="btn btn-primary btn-sm">
+              Try
+            </button>
+          </form>
+
+          {pError && <p className="p-input-error">{pError}</p>}
+
+          {triedValues.length > 0 && (
+            <div className="p-chips" aria-label="Values of p tried">
+              {triedValues.map((value) => (
+                <span key={value} className="p-chip">
+                  p = {value}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {config.showParameterP && (
         <p className="success-hint">

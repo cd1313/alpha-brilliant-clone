@@ -1,0 +1,163 @@
+{
+  "id": "hyperbolas",
+  "title": "Hyperbolas",
+  "order": 5,
+  "subject": "conics",
+  "simulator": "hyperbola",
+  "steps": [
+    {
+      "type": "explore",
+      "title": "Meet the Hyperbola",
+      "goal": "Understand the geometric definition.",
+      "introText": "A hyperbola has two branches. It is the set of all points where the difference of the distances to two fixed points — the foci — stays constant.",
+      "prompt": "Drag the point along a branch and watch |d₁ − d₂| stay constant. Reshape the curve with the a and b handles.",
+      "interactive": true,
+      "successCondition": { "movedAxes": true },
+      "hyperbolaConfig": {
+        "showDifferenceDemo": true,
+        "highlightVertices": true
+      }
+    },
+    {
+      "type": "explore",
+      "title": "Asymptotes and the Equation",
+      "goal": "See how a and b shape the branches.",
+      "introText": "Centered at the origin and opening left/right, a hyperbola is x²/a² − y²/b² = 1. The branches hug two diagonal asymptotes with slope ±b/a — the diagonals of the a-by-b box.",
+      "prompt": "Drag the a and b handles to try three different shapes. Watch the box, the asymptotes, and the equation change.",
+      "interactive": true,
+      "successCondition": { "minDistinctHyperbolas": 3 },
+      "hyperbolaConfig": {
+        "showAsymptotes": true,
+        "showBox": true,
+        "showAxes": true,
+        "showEquation": true,
+        "centerDraggable": false
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Match the Equation",
+      "goal": "Read a and b from the denominators.",
+      "prompt": "Build the hyperbola x²/9 − y²/4 = 1 (opening left/right, centered at the origin), then press Check.",
+      "hideTarget": true,
+      "hyperbolaTarget": {
+        "kind": "axes",
+        "centerX": 0,
+        "centerY": 0,
+        "a": 3,
+        "b": 2,
+        "orientation": "horizontal"
+      },
+      "hyperbolaConfig": {
+        "showAsymptotes": true,
+        "showAxes": true,
+        "showEquation": false,
+        "centerDraggable": false
+      },
+      "feedback": {
+        "correct": "Perfect! √9 = 3 and √4 = 2, so a = 3 and b = 2.",
+        "incorrect": "Not yet — the denominators are a² and b². Take their square roots.",
+        "hint": "a² = 9 → a = 3; b² = 4 → b = 2. Drag the vertex (a) and the b handle to match."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Open It Upward",
+      "goal": "Flip the orientation with the toggle.",
+      "info": "When the y-term is positive, the hyperbola opens up and down: y²/a² − x²/b² = 1.",
+      "prompt": "Use the orientation toggle to build y²/9 − x²/4 = 1, opening up and down, then press Check.",
+      "hideTarget": true,
+      "hyperbolaTarget": {
+        "kind": "axes",
+        "centerX": 0,
+        "centerY": 0,
+        "a": 3,
+        "b": 2,
+        "orientation": "vertical"
+      },
+      "hyperbolaConfig": {
+        "allowOrientationToggle": true,
+        "showAsymptotes": true,
+        "showAxes": true,
+        "showEquation": true,
+        "centerDraggable": false
+      },
+      "feedback": {
+        "correct": "Yes! The positive y-term means it opens up and down, with a = 3 and b = 2.",
+        "incorrect": "Use the toggle so the branches open up and down, then set a = 3 and b = 2.",
+        "hint": "Tap “Opens up/down”, then make a = 3 (vertex) and b = 2."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Find the Foci",
+      "goal": "Locate the foci with c² = a² + b².",
+      "prompt": "A hyperbola opening left/right has a = 3 and b = 4. Using c² = a² + b², where are its foci?",
+      "choices": [
+        { "id": "a", "label": "(±5, 0)" },
+        { "id": "b", "label": "(0, ±5)" },
+        { "id": "c", "label": "(±1, 0)" },
+        { "id": "d", "label": "(±7, 0)" }
+      ],
+      "correctChoiceId": "a",
+      "feedback": "Right — c² = 9 + 16 = 25, so c = 5 and the foci sit beyond the vertices at (±5, 0). For a hyperbola you add a² and b² (a circle has just one radius)."
+    },
+    {
+      "type": "challenge",
+      "title": "Shift the Center",
+      "goal": "Move the center, then size the branches.",
+      "prompt": "Build the hyperbola (x − 2)²/9 − (y + 1)²/4 = 1, then press Check.",
+      "hideTarget": true,
+      "hyperbolaTarget": {
+        "kind": "axes",
+        "centerX": 2,
+        "centerY": -1,
+        "a": 3,
+        "b": 2,
+        "orientation": "horizontal"
+      },
+      "hyperbolaConfig": {
+        "centerDraggable": true,
+        "showAsymptotes": true,
+        "showAxes": true,
+        "showEquation": true
+      },
+      "feedback": {
+        "correct": "Nice! (x − 2) gives h = 2 and (y + 1) gives k = −1, with a = 3 and b = 2.",
+        "incorrect": "Check the center and axes: (x − 2) means h = 2, (y + 1) means k = −1.",
+        "hint": "Move the center to (2, −1), keep it opening left/right, and set a = 3, b = 2."
+      }
+    },
+    {
+      "type": "mastery",
+      "title": "Mastery Check",
+      "goal": "Build three hyperbolas with the given orientation, size, and position — no hints.",
+      "hyperbolaSequence": [
+        {
+          "id": "horizontal-origin",
+          "label": "Opens left/right at the origin (a = 2, b = 3)",
+          "orientation": "horizontal",
+          "a": 2,
+          "b": 3
+        },
+        {
+          "id": "vertical-origin",
+          "label": "Opens up/down at the origin (a = 3, b = 2)",
+          "orientation": "vertical",
+          "a": 3,
+          "b": 2
+        },
+        {
+          "id": "shifted",
+          "label": "Opens left/right, center (−2, 1), a = 2, b = 2",
+          "orientation": "horizontal",
+          "center": { "x": -2, "y": 1 },
+          "a": 2,
+          "b": 2
+        }
+      ],
+      "hideLabels": true,
+      "completionMessage": "Congratulations! You can read, build, orient, and shift hyperbolas — and you know the foci use c² = a² + b²."
+    }
+  ]
+}

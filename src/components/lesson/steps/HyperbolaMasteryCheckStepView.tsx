@@ -1,15 +1,12 @@
 import { useState } from 'react'
-import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
-import {
-  matchesParabolaMasteryTarget,
-  type ParabolaState,
-} from '../../../lib/parabolaGeometry'
+import { HyperbolaSimulator } from '../../hyperbola/HyperbolaSimulator'
+import { matchesHyperbolaMasteryTarget, type HyperbolaState } from '../../../lib/hyperbolaGeometry'
 import type { MasteryCheckStep } from '../../../types/lesson'
 
-type ParabolaMasteryCheckStepViewProps = {
+type HyperbolaMasteryCheckStepViewProps = {
   step: MasteryCheckStep
-  parabola: ParabolaState
-  onParabolaChange: (parabola: ParabolaState) => void
+  hyperbola: HyperbolaState
+  onHyperbolaChange: (hyperbola: HyperbolaState) => void
   masteryIndex: number
   onMasteryIndexChange: (index: number) => void
   onComplete: () => void
@@ -19,7 +16,7 @@ function MasteryProgressList({
   sequence,
   masteryIndex,
 }: {
-  sequence: NonNullable<MasteryCheckStep['parabolaSequence']>
+  sequence: NonNullable<MasteryCheckStep['hyperbolaSequence']>
   masteryIndex: number
 }) {
   return (
@@ -41,33 +38,33 @@ function MasteryProgressList({
   )
 }
 
-export function ParabolaMasteryCheckStepView({
+export function HyperbolaMasteryCheckStepView({
   step,
-  parabola,
-  onParabolaChange,
+  hyperbola,
+  onHyperbolaChange,
   masteryIndex,
   onMasteryIndexChange,
   onComplete,
-}: ParabolaMasteryCheckStepViewProps) {
+}: HyperbolaMasteryCheckStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [lastCheckCorrect, setLastCheckCorrect] = useState<boolean | null>(null)
   const [verified, setVerified] = useState(false)
 
-  const sequence = step.parabolaSequence ?? []
+  const sequence = step.hyperbolaSequence ?? []
   const finished = masteryIndex >= sequence.length
   const target = finished ? null : sequence[masteryIndex]
 
   const checkShape = () => {
     if (!target) return
 
-    if (matchesParabolaMasteryTarget(parabola, target)) {
+    if (matchesHyperbolaMasteryTarget(hyperbola, target)) {
       setLastCheckCorrect(true)
       setVerified(true)
       setFeedback(`Correct! ${target.label} achieved.`)
     } else {
       setLastCheckCorrect(false)
       setVerified(false)
-      setFeedback(`Not quite — adjust the focus and directrix until you match the task.`)
+      setFeedback('Not quite — adjust the orientation, center, or the a/b handles to match the task.')
     }
   }
 
@@ -98,13 +95,14 @@ export function ParabolaMasteryCheckStepView({
         Create: <strong>{target!.label}</strong> — no hints shown.
       </p>
 
-      <ParabolaSimulator
-        parabola={parabola}
-        onParabolaChange={onParabolaChange}
+      <HyperbolaSimulator
+        hyperbola={hyperbola}
+        onHyperbolaChange={onHyperbolaChange}
         interactive
-        vertexDraggable={false}
         hideLabels={step.hideLabels}
+        showAsymptotes
         showEquation
+        allowOrientationToggle
       />
 
       {feedback && (
@@ -122,7 +120,7 @@ export function ParabolaMasteryCheckStepView({
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={checkShape}>
-            Check Parabola
+            Check Hyperbola
           </button>
         )}
       </div>

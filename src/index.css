@@ -1,15 +1,41 @@
 :root {
-  --text: #4b5563;
-  --text-h: #111827;
-  --bg: #f8fafc;
+  /* Brand palette */
+  --c-deep: #1d3d4e;
+  --c-teal-d: #246a73;
+  --c-teal: #368f8b;
+  --c-teal-l: #66a399;
+  --c-sage: #95b7a6;
+  --c-sage-l: #c4cbb4;
+  --c-cream: #f3dfc1;
+  --c-tan-l: #e8cfb5;
+  --c-tan: #ddbea8;
+
+  /* Semantic tokens */
+  --text: #34525c;
+  --text-h: #1d3d4e;
+  --text-muted: #5f7780;
+  --bg: #f6efe4;
   --surface: #ffffff;
-  --border: #e5e7eb;
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --secondary: #0ea5e9;
-  --accent-warm: #f59e0b;
-  --success: #10b981;
-  --error: #ef4444;
+  --surface-2: #faf4ea;
+  --border: #e4d8c6;
+
+  --primary: #246a73;
+  --primary-hover: #1d3d4e;
+  --primary-soft: #e1ecea;
+  --primary-soft-hover: #d0e1de;
+
+  --secondary: #368f8b;
+  --accent-warm: #ddbea8;
+  --accent-warm-soft: #f3dfc1;
+  --accent-warm-text: #8a5a3c;
+
+  --success: #3f8f6f;
+  --success-soft: #e7f1ea;
+  --success-text: #2f6f56;
+  --error: #b3543f;
+  --error-soft: #f6e7e1;
+  --error-text: #99422f;
+
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
 
   font-family: var(--sans);
@@ -56,7 +82,7 @@ input {
 
 code {
   font-family: ui-monospace, monospace;
-  background: #f3f4f6;
+  background: var(--surface-2);
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
 }

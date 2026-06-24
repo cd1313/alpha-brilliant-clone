@@ -1,34 +1,31 @@
 import { useState } from 'react'
-import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
-import {
-  matchesParabolaChallengeTarget,
-  type ParabolaState,
-} from '../../../lib/parabolaGeometry'
+import { CircleSimulator } from '../../circle/CircleSimulator'
+import { matchesCircleChallengeTarget, type CircleState } from '../../../lib/circleGeometry'
 import type { ChallengeStep } from '../../../types/lesson'
 
-type ParabolaChallengeStepViewProps = {
+type CircleChallengeStepViewProps = {
   step: ChallengeStep
-  parabola: ParabolaState
-  onParabolaChange: (parabola: ParabolaState) => void
+  circle: CircleState
+  onCircleChange: (circle: CircleState) => void
   onSuccess: () => void
 }
 
-export function ParabolaChallengeStepView({
+export function CircleChallengeStepView({
   step,
-  parabola,
-  onParabolaChange,
+  circle,
+  onCircleChange,
   onSuccess,
-}: ParabolaChallengeStepViewProps) {
+}: CircleChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [solved, setSolved] = useState(false)
-  const target = step.parabolaTarget
-  const config = step.parabolaConfig ?? {}
+  const target = step.circleTarget
+  const config = step.circleConfig ?? {}
 
   const checkAnswer = () => {
     if (!target) return
 
-    if (matchesParabolaChallengeTarget(parabola, target)) {
+    if (matchesCircleChallengeTarget(circle, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
     } else {
@@ -41,16 +38,14 @@ export function ParabolaChallengeStepView({
     <div className="step-view challenge-step">
       <p className="step-prompt">{step.prompt}</p>
 
-      <ParabolaSimulator
-        parabola={parabola}
-        onParabolaChange={onParabolaChange}
+      <CircleSimulator
+        circle={circle}
+        onCircleChange={onCircleChange}
         interactive
-        vertexDraggable={false}
+        highlightCenter={config.highlightCenter}
+        showRadius={config.showRadius ?? true}
         showEquation={config.showEquation ?? true}
-        showParameterP={config.showParameterP ?? true}
-        highlightVertex={config.highlightVertex}
-        focusVerticalOnly={config.focusVerticalOnly === true}
-        vertexAtOrigin={config.vertexAtOrigin === true}
+        centerDraggable={config.centerDraggable ?? target?.kind !== 'radius'}
         targetPoint={config.targetPoint}
       />
 

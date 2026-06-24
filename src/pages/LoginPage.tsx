@@ -41,7 +41,7 @@ export function LoginPage() {
   return (
     <div className="page login-page">
       <div className="page-card">
-        <h1>Alpha Brilliant</h1>
+        <h1>Asymptote</h1>
         <p className="subtitle">Learn precalculus by doing</p>
 
         {!isConfigured && (

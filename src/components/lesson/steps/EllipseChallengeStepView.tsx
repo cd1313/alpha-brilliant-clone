@@ -1,34 +1,31 @@
 import { useState } from 'react'
-import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
-import {
-  matchesParabolaChallengeTarget,
-  type ParabolaState,
-} from '../../../lib/parabolaGeometry'
+import { EllipseSimulator } from '../../ellipse/EllipseSimulator'
+import { matchesEllipseChallengeTarget, type EllipseState } from '../../../lib/ellipseGeometry'
 import type { ChallengeStep } from '../../../types/lesson'
 
-type ParabolaChallengeStepViewProps = {
+type EllipseChallengeStepViewProps = {
   step: ChallengeStep
-  parabola: ParabolaState
-  onParabolaChange: (parabola: ParabolaState) => void
+  ellipse: EllipseState
+  onEllipseChange: (ellipse: EllipseState) => void
   onSuccess: () => void
 }
 
-export function ParabolaChallengeStepView({
+export function EllipseChallengeStepView({
   step,
-  parabola,
-  onParabolaChange,
+  ellipse,
+  onEllipseChange,
   onSuccess,
-}: ParabolaChallengeStepViewProps) {
+}: EllipseChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [solved, setSolved] = useState(false)
-  const target = step.parabolaTarget
-  const config = step.parabolaConfig ?? {}
+  const target = step.ellipseTarget
+  const config = step.ellipseConfig ?? {}
 
   const checkAnswer = () => {
     if (!target) return
 
-    if (matchesParabolaChallengeTarget(parabola, target)) {
+    if (matchesEllipseChallengeTarget(ellipse, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
     } else {
@@ -41,16 +38,14 @@ export function ParabolaChallengeStepView({
     <div className="step-view challenge-step">
       <p className="step-prompt">{step.prompt}</p>
 
-      <ParabolaSimulator
-        parabola={parabola}
-        onParabolaChange={onParabolaChange}
+      <EllipseSimulator
+        ellipse={ellipse}
+        onEllipseChange={onEllipseChange}
         interactive
-        vertexDraggable={false}
+        highlightCenter={config.highlightCenter}
+        showAxes={config.showAxes ?? true}
         showEquation={config.showEquation ?? true}
-        showParameterP={config.showParameterP ?? true}
-        highlightVertex={config.highlightVertex}
-        focusVerticalOnly={config.focusVerticalOnly === true}
-        vertexAtOrigin={config.vertexAtOrigin === true}
+        centerDraggable={config.centerDraggable ?? true}
         targetPoint={config.targetPoint}
       />
 

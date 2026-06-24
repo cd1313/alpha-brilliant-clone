@@ -1,0 +1,150 @@
+{
+  "id": "ellipses",
+  "title": "Ellipses",
+  "order": 4,
+  "subject": "conics",
+  "simulator": "ellipse",
+  "steps": [
+    {
+      "type": "explore",
+      "title": "Meet the Ellipse",
+      "goal": "Understand the geometric definition.",
+      "introText": "An ellipse is defined by two fixed points called foci. It is the set of all points where the sum of the distances to the two foci stays constant — like a loop of string pinned at the foci.",
+      "prompt": "Drag the two foci apart and together: the string length (d₁ + d₂) stays fixed, so spreading them flattens the ellipse and bringing them together rounds it. Drag the point on the curve to check that d₁ + d₂ is the same everywhere, or use the a handle to resize.",
+      "interactive": true,
+      "successCondition": { "movedAxes": true },
+      "ellipseConfig": {
+        "fociDraggable": true,
+        "highlightCenter": true
+      }
+    },
+    {
+      "type": "explore",
+      "title": "Axes and the Equation",
+      "goal": "Connect the axes to the standard equation.",
+      "introText": "An ellipse that is centered at the origin has an equation of the form x²/a² + y²/b² = 1. Here, the parameter a is the horizontal semi-axis and the parameter is the vertical semi-axis. A semi-axis is similar to the radius of a circle, which we can see in the graph below. When a = b, the two semi-axes are equal and the ellipse is just a circle.",
+      "prompt": "Drag the a and b handles to try three different shapes. Watch how a², b², and the equation change.",
+      "interactive": true,
+      "successCondition": { "minDistinctEllipses": 3 },
+      "ellipseConfig": {
+        "highlightCenter": true,
+        "showAxes": true,
+        "showEquation": true,
+        "showSemiAxes": true,
+        "centerDraggable": false
+      }
+    },    
+    {
+      "type": "explore",
+      "title": "Finding the Foci",
+      "goal": "Use c = √(a² − b²) to locate the foci.",
+      "introText": "The foci sit on the major axis, a distance c from the center. To find c, subtract the squares of the semi-axes and take the square root: c = √(a² − b²).",
+      "prompt": "Drag the a and b handles and watch the foci move. The green segment is c — the distance from the center to each focus — and the readout updates c = √(a² − b²) as you go.",
+      "interactive": true,
+      "successCondition": { "movedAxes": true },
+      "ellipseConfig": {
+        "highlightCenter": true,
+        "showAxes": true,
+        "showFociDistance": true,
+        "centerDraggable": false
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Match the Equation",
+      "goal": "Determine the major and minor axes of an ellipse based on its equation.",
+      "prompt": "Build the ellipse x²/25 + y²/9 = 1 (centered at the origin), then press Check.",
+      "hideTarget": true,
+      "ellipseTarget": {
+        "kind": "axes",
+        "centerX": 0,
+        "centerY": 0,
+        "a": 5,
+        "b": 3
+      },
+      "ellipseConfig": {
+        "highlightCenter": true,
+        "showAxes": true,
+        "showEquation": false,
+        "centerDraggable": false
+      },
+      "feedback": {
+        "correct": "Perfect! √25 = 5 and √9 = 3, so a = 5 and b = 3.",
+        "incorrect": "Not yet — the denominators are a² and b². Take their square roots.",
+        "hint": "a² = 25 → a = 5; b² = 9 → b = 3. Stretch the a and b handles to match."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Where Are the Foci?",
+      "goal": "Locate the foci using c² = a² − b².",
+      "prompt": "Consider the ellipse you just graph: centered at the origin with a = 5 (horizontal) and b = 3. Using what you learned previously, where are its foci? If you are stuck, you can also return to the previous step and use the graph to help you.",
+      "choices": [
+        { "id": "a", "label": "(±4, 0)" },
+        { "id": "b", "label": "(0, ±4)" },
+        { "id": "c", "label": "(±2, 0)" },
+        { "id": "d", "label": "(±8, 0)" }
+      ],
+      "correctChoiceId": "a",
+      "feedback": "Right — c² = 25 − 9 = 16, so c = 4 and the foci sit on the major (horizontal) axis at (±4, 0)."
+    },
+    {
+      "type": "challenge",
+      "title": "Shifted Ellipse",
+      "goal": "Be able to graph an ellipse that is not centered at the origin.",
+      "info": "An ellipse that is not centered at the origin has an equation of the form (x − h)²/a² + (y − k)²/b² = 1. Here, the parameters and a and b are the same as before, but we have two new parameters h and k. The center of the ellipse is at (h, k).",
+      "prompt": "Build the ellipse (x + 3)²/16 + (y − 2)²/4 = 1.",
+      "hideTarget": true,
+      "ellipseTarget": {
+        "kind": "axes",
+        "centerX": -3,
+        "centerY": 2,
+        "a": 4,
+        "b": 2
+      },
+      "ellipseConfig": {
+        "highlightCenter": true,
+        "showAxes": false,
+        "showEquation": false,
+        "centerDraggable": true
+      },
+      "feedback": {
+        "correct": "Nice! (x + 3) means h = −3 and (y − 2) means k = 2, with a = √16 = 4 and b = √4 = 2.",
+        "incorrect": "Check the center and both axes: (x + 3) gives h = −3, (y − 2) gives k = 2.",
+        "hint": "Move the center to (−3, 2), then set a = 4 and b = 2."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Check Your Understanding",
+      "goal": "Summarize what defines an ellipse.",
+      "prompt": "Which statement is always true for an ellipse?",
+      "choices": [
+        { "id": "a", "label": "The sum of the distances from any point to the two foci is constant." },
+        { "id": "b", "label": "The two semi-axes a and b are always equal." },
+        { "id": "c", "label": "The foci lie outside the ellipse." },
+        { "id": "d", "label": "An ellipse is defined by a single focus." }
+      ],
+      "correctChoiceId": "a",
+      "feedback": "Correct — that constant-sum property is the definition. When a = b the foci merge at the center and the ellipse becomes a circle."
+    },
+    {
+      "type": "mastery",
+      "title": "Mastery Check",
+      "goal": "Build three ellipses with the given size and position — no hints.",
+      "ellipseSequence": [
+        { "id": "wide-origin", "label": "Wide ellipse at the origin (a = 6, b = 3)", "a": 6, "b": 3 },
+        { "id": "tall-origin", "label": "Tall ellipse at the origin (a = 3, b = 5)", "a": 3, "b": 5 },
+        {
+          "id": "shifted",
+          "label": "Ellipse centered at (−2, 1) with a = 4, b = 2",
+          "center": { "x": -2, "y": 1 },
+          "a": 4,
+          "b": 2
+        }
+      ],
+      "hideLabels": true,
+      "completionMessage": "Congratulations! You can now read, build, and shift ellipses using a, b, and the focus relationship c² = a² − b²."
+    }
+  ]
+}

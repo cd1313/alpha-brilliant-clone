@@ -3,7 +3,7 @@ import { FirebaseError } from 'firebase/app'
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/invalid-credential': 'Incorrect email or password.',
   'auth/wrong-password': 'Incorrect email or password.',
-  'auth/user-not-found': 'No account found with this email.',
+  'auth/user-not-found': 'Incorrect email or password.',
   'auth/email-already-in-use': 'An account with this email already exists.',
   'auth/weak-password': 'Password must be at least 6 characters.',
   'auth/invalid-email': 'Enter a valid email address.',

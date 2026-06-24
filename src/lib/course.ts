@@ -28,6 +28,22 @@ export function lessonUsesParabolaSimulator(lesson: Lesson): boolean {
   return lesson.simulator === 'parabola'
 }
 
+export function lessonUsesCircleSimulator(lesson: Lesson): boolean {
+  return lesson.simulator === 'circle'
+}
+
+export function lessonUsesEllipseSimulator(lesson: Lesson): boolean {
+  return lesson.simulator === 'ellipse'
+}
+
+export function lessonUsesHyperbolaSimulator(lesson: Lesson): boolean {
+  return lesson.simulator === 'hyperbola'
+}
+
+export function lessonUsesConeSimulator(lesson: Lesson): boolean {
+  return !lesson.simulator || lesson.simulator === 'cone'
+}
+
 export function isParabolaChallenge(step: Step): step is Step & {
   type: 'challenge'
   parabolaTarget: ParabolaChallengeTarget

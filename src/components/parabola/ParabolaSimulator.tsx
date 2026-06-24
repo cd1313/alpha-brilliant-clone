@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react'
 import {
+  adjustParabolaWithVertexAtOrigin,
   clampParabolaState,
   deriveParabola,
   distanceToHorizontalLine,
@@ -9,6 +10,7 @@ import {
   moveVertex,
   PARABOLA_MIN_P,
   parabolaPath,
+  parabolaVisibleXHalf,
   pointOnParabola,
   type ParabolaState,
 } from '../../lib/parabolaGeometry'
@@ -25,6 +27,8 @@ type ParabolaSimulatorProps = {
   vertexDraggable?: boolean
   hideLabels?: boolean
   focusVerticalOnly?: boolean
+  vertexAtOrigin?: boolean
+  targetPoint?: { x: number; y: number }
 }
 
 const WIDTH = 520
@@ -33,7 +37,7 @@ const SCALE = 36
 const ORIGIN_X = WIDTH / 2
 const ORIGIN_Y = HEIGHT / 2
 
-type DragTarget = 'focus' | 'directrix' | 'vertex' | null
+type DragTarget = 'focus' | 'directrix' | 'vertex' | 'demo' | null
 
 function toSvg(x: number, y: number) {
   return { x: ORIGIN_X + x * SCALE, y: ORIGIN_Y - y * SCALE }
@@ -58,6 +62,8 @@ export function ParabolaSimulator({
   vertexDraggable = false,
   hideLabels = false,
   focusVerticalOnly = false,
+  vertexAtOrigin = false,
+  targetPoint,
 }: ParabolaSimulatorProps) {
   const gridPatternId = `parabola-grid${useId().replace(/:/g, '')}`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -67,6 +73,8 @@ export function ParabolaSimulator({
     directrix: true,
     vertex: true,
   })
+  const [demoXOverride, setDemoXOverride] = useState<number | null>(null)
+  const demoPointDraggable = interactive && showDistanceDemo
 
   const derived = deriveParabola(parabola)
   const { vertexX, vertexY, p, opens } = derived
@@ -82,7 +90,14 @@ export function ParabolaSimulator({
     })
     .trim()
 
-  const demoX = vertexX + Math.min(2.5, p + 0.5)
+  const targetSvg = targetPoint ? toSvg(targetPoint.x, targetPoint.y) : null
+  const targetLabelOnLeft = targetSvg !== null && targetSvg.x > WIDTH - 90
+  const demoXHalf = parabolaVisibleXHalf(p)
+  const baseDemoX = vertexX + Math.min(2.5, p + 0.5)
+  const demoX =
+    demoXOverride === null
+      ? baseDemoX
+      : Math.max(vertexX - demoXHalf, Math.min(vertexX + demoXHalf, demoXOverride))
   const demoPoint = pointOnParabola(vertexX, vertexY, p, opens, demoX)
   const demoSvg = toSvg(demoPoint.x, demoPoint.y)
   const distFocus = distanceToPoint(
@@ -128,6 +143,13 @@ export function ParabolaSimulator({
     event.currentTarget.setPointerCapture(event.pointerId)
   }
 
+  const startDemoDrag = (event: React.PointerEvent) => {
+    if (!demoPointDraggable) return
+    event.preventDefault()
+    dragTargetRef.current = 'demo'
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
   const handlePointerMove = (event: React.PointerEvent) => {
     const target = dragTargetRef.current
     if (!target) return
@@ -138,28 +160,39 @@ export function ParabolaSimulator({
     const math = fromSvg(point.x, point.y)
 
     if (target === 'focus') {
+      const next = {
+        ...parabola,
+        focusX: focusVerticalOnly || vertexAtOrigin ? 0 : math.x,
+        focusY: math.y,
+      }
       onParabolaChange(
-        clampParabolaState({
-          ...parabola,
-          focusX: focusVerticalOnly ? parabola.focusX : math.x,
-          focusY: math.y,
-        }),
+        vertexAtOrigin
+          ? adjustParabolaWithVertexAtOrigin(next, 'focus')
+          : clampParabolaState(next),
       )
       return
     }
 
     if (target === 'directrix') {
+      const next = {
+        ...parabola,
+        directrixY: math.y,
+      }
       onParabolaChange(
-        clampParabolaState({
-          ...parabola,
-          directrixY: math.y,
-        }),
+        vertexAtOrigin
+          ? adjustParabolaWithVertexAtOrigin(next, 'directrix')
+          : clampParabolaState(next),
       )
       return
     }
 
     if (target === 'vertex') {
       onParabolaChange(moveVertex(parabola, math.x, math.y))
+      return
+    }
+
+    if (target === 'demo') {
+      setDemoXOverride(math.x)
     }
   }
 
@@ -296,6 +329,29 @@ export function ParabolaSimulator({
           strokeDasharray="8 6"
         />
 
+        {targetSvg && (
+          <g>
+            <circle
+              cx={targetSvg.x}
+              cy={targetSvg.y}
+              r={8}
+              fill="#fff"
+              stroke="#9333ea"
+              strokeWidth="3"
+            />
+            <circle cx={targetSvg.x} cy={targetSvg.y} r={2.5} fill="#9333ea" />
+            <text
+              x={targetLabelOnLeft ? targetSvg.x - 12 : targetSvg.x + 12}
+              y={targetSvg.y - 8}
+              textAnchor={targetLabelOnLeft ? 'end' : 'start'}
+              className="parabola-label"
+              fill="#9333ea"
+            >
+              ({targetPoint!.x}, {targetPoint!.y})
+            </text>
+          </g>
+        )}
+
         {showDistanceDemo && p >= PARABOLA_MIN_P && (
           <>
             <line
@@ -316,8 +372,17 @@ export function ParabolaSimulator({
               strokeWidth="2"
               strokeDasharray="4 4"
             />
-            <circle cx={demoSvg.x} cy={demoSvg.y} r={5} fill="#0f172a" />
-            <text x={demoSvg.x + 10} y={demoSvg.y - 8} className="parabola-label">
+            <circle
+              cx={demoSvg.x}
+              cy={demoSvg.y}
+              r={demoPointDraggable ? 9 : 5}
+              fill="#0f172a"
+              stroke="#fff"
+              strokeWidth={demoPointDraggable ? 2 : 0}
+              className={demoPointDraggable ? 'parabola-handle' : ''}
+              onPointerDown={startDemoDrag}
+            />
+            <text x={demoSvg.x + 12} y={demoSvg.y - 10} className="parabola-label">
               d₁ = {formatMeasuredValue(distFocus)}, d₂ = {formatMeasuredValue(distDirectrix)}
             </text>
           </>

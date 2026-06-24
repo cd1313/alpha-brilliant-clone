@@ -24,6 +24,7 @@ const RENDER_P_EPSILON = 1e-3
 const MEASURED_DECIMALS = 1
 
 export { MIN_P as PARABOLA_MIN_P }
+export { MAX_P as PARABOLA_MAX_P }
 
 export function roundMeasured(value: number): number {
   const factor = 10 ** MEASURED_DECIMALS
@@ -92,6 +93,12 @@ export function parabolaPath(
   return points.join(' ')
 }
 
+export function parabolaVisibleXHalf(p: number): number {
+  const renderP = Math.max(p, RENDER_P_EPSILON)
+  const ySpan = 11
+  return Math.min(6, Math.max(0.35, Math.sqrt(4 * renderP * ySpan)))
+}
+
 export function pointOnParabola(
   h: number,
   k: number,
@@ -129,6 +136,59 @@ export function clampParabolaState(state: ParabolaState): ParabolaState {
   }
 
   return { focusX, focusY, directrixY }
+}
+
+export function adjustParabolaWithVertexAtOrigin(
+  state: ParabolaState,
+  changed: 'focus' | 'directrix',
+): ParabolaState {
+  let focusY = changed === 'focus' ? state.focusY : -state.directrixY
+
+  if (Math.abs(focusY) < MIN_P) {
+    focusY = focusY >= 0 ? MIN_P : -MIN_P
+  } else if (Math.abs(focusY) > MAX_P) {
+    focusY = focusY >= 0 ? MAX_P : -MAX_P
+  }
+
+  focusY = Math.max(-4, Math.min(8, focusY))
+  if (Math.abs(focusY) < MIN_P) {
+    focusY = focusY >= 0 ? MIN_P : -MIN_P
+  }
+
+  return {
+    focusX: 0,
+    focusY,
+    directrixY: -focusY,
+  }
+}
+
+export function snapParabolaVertexAtOrigin(state: ParabolaState): ParabolaState {
+  const { p, opens } = deriveParabola(state)
+  const clampedP = Math.max(MIN_P, Math.min(MAX_P, p))
+
+  if (opens === 'up') {
+    return {
+      focusX: 0,
+      focusY: clampedP,
+      directrixY: -clampedP,
+    }
+  }
+
+  return {
+    focusX: 0,
+    focusY: -clampedP,
+    directrixY: clampedP,
+  }
+}
+
+export function isParabolaVertexAtOrigin(state: ParabolaState, tolerance = 0.001): boolean {
+  const { vertexX, vertexY } = deriveParabola(state)
+  return (
+    Math.abs(vertexX) <= tolerance &&
+    Math.abs(vertexY) <= tolerance &&
+    Math.abs(state.focusX) <= tolerance &&
+    Math.abs(state.focusY + state.directrixY) <= tolerance
+  )
 }
 
 export function moveVertex(
@@ -199,7 +259,7 @@ export function matchesParabolaMasteryTarget(
 
   if (opens === 'up' && derived.opens !== 'up') return false
   if (opens === 'down' && derived.opens !== 'down') return false
-  if (target.wide && derived.p < 2) return false
+  if (target.wide && derived.p < 2.5) return false
   if (target.narrow && derived.p > 1.25) return false
 
   if (target.vertex) {

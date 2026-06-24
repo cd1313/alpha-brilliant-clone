@@ -1,34 +1,31 @@
 import { useState } from 'react'
-import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
-import {
-  matchesParabolaChallengeTarget,
-  type ParabolaState,
-} from '../../../lib/parabolaGeometry'
+import { HyperbolaSimulator } from '../../hyperbola/HyperbolaSimulator'
+import { matchesHyperbolaChallengeTarget, type HyperbolaState } from '../../../lib/hyperbolaGeometry'
 import type { ChallengeStep } from '../../../types/lesson'
 
-type ParabolaChallengeStepViewProps = {
+type HyperbolaChallengeStepViewProps = {
   step: ChallengeStep
-  parabola: ParabolaState
-  onParabolaChange: (parabola: ParabolaState) => void
+  hyperbola: HyperbolaState
+  onHyperbolaChange: (hyperbola: HyperbolaState) => void
   onSuccess: () => void
 }
 
-export function ParabolaChallengeStepView({
+export function HyperbolaChallengeStepView({
   step,
-  parabola,
-  onParabolaChange,
+  hyperbola,
+  onHyperbolaChange,
   onSuccess,
-}: ParabolaChallengeStepViewProps) {
+}: HyperbolaChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [solved, setSolved] = useState(false)
-  const target = step.parabolaTarget
-  const config = step.parabolaConfig ?? {}
+  const target = step.hyperbolaTarget
+  const config = step.hyperbolaConfig ?? {}
 
   const checkAnswer = () => {
     if (!target) return
 
-    if (matchesParabolaChallengeTarget(parabola, target)) {
+    if (matchesHyperbolaChallengeTarget(hyperbola, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
     } else {
@@ -41,17 +38,17 @@ export function ParabolaChallengeStepView({
     <div className="step-view challenge-step">
       <p className="step-prompt">{step.prompt}</p>
 
-      <ParabolaSimulator
-        parabola={parabola}
-        onParabolaChange={onParabolaChange}
+      <HyperbolaSimulator
+        hyperbola={hyperbola}
+        onHyperbolaChange={onHyperbolaChange}
         interactive
-        vertexDraggable={false}
+        highlightVertices={config.highlightVertices}
+        showAsymptotes={config.showAsymptotes ?? true}
+        showBox={config.showBox}
+        showAxes={config.showAxes ?? true}
         showEquation={config.showEquation ?? true}
-        showParameterP={config.showParameterP ?? true}
-        highlightVertex={config.highlightVertex}
-        focusVerticalOnly={config.focusVerticalOnly === true}
-        vertexAtOrigin={config.vertexAtOrigin === true}
-        targetPoint={config.targetPoint}
+        centerDraggable={config.centerDraggable ?? true}
+        allowOrientationToggle={config.allowOrientationToggle}
       />
 
       {feedback && (

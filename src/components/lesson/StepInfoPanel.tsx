@@ -35,13 +35,13 @@ export function StepInfoPanel({ step, stepNumber, totalSteps }: StepInfoPanelPro
 
       {step.title && <h2 className="step-info-title">{step.title}</h2>}
 
-      {step.type === 'challenge' && step.targetConic && (
+      {step.type === 'challenge' && !step.hideTarget && step.targetConic && (
         <p className="step-target-badge">
           Target shape: <strong>{CONIC_LABELS[step.targetConic]}</strong>
         </p>
       )}
 
-      {step.type === 'challenge' && step.parabolaTarget?.kind === 'vertex' && (
+      {step.type === 'challenge' && !step.hideTarget && step.parabolaTarget?.kind === 'vertex' && (
         <p className="step-target-badge">
           Target vertex:{' '}
           <strong>
@@ -50,18 +50,65 @@ export function StepInfoPanel({ step, stepNumber, totalSteps }: StepInfoPanelPro
         </p>
       )}
 
-      {step.type === 'challenge' && step.parabolaTarget?.kind === 'focus' && (
+      {step.type === 'challenge' && !step.hideTarget && step.parabolaTarget?.kind === 'focus' && (
         <p className="step-target-badge">
           Target: vertex ({step.parabolaTarget.vertexX}, {step.parabolaTarget.vertexY}), focus (
           {step.parabolaTarget.focusX}, {step.parabolaTarget.focusY})
         </p>
       )}
 
-      {step.type === 'challenge' && step.parabolaTarget?.kind === 'narrow' && (
+      {step.type === 'challenge' && !step.hideTarget && step.parabolaTarget?.kind === 'narrow' && (
         <p className="step-target-badge">
           Target: narrow parabola, vertex ({step.parabolaTarget.vertexX},{' '}
           {step.parabolaTarget.vertexY})
         </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.circleTarget?.kind === 'center' && (
+        <p className="step-target-badge">
+          Target center:{' '}
+          <strong>
+            ({step.circleTarget.x}, {step.circleTarget.y})
+          </strong>
+        </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.circleTarget?.kind === 'radius' && (
+        <p className="step-target-badge">
+          Target: center ({step.circleTarget.centerX}, {step.circleTarget.centerY}), r ={' '}
+          {step.circleTarget.radius}
+        </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.circleTarget?.kind === 'small' && (
+        <p className="step-target-badge">
+          Target: small circle, center ({step.circleTarget.centerX},{' '}
+          {step.circleTarget.centerY})
+        </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.ellipseTarget?.kind === 'axes' && (
+        <p className="step-target-badge">
+          Target: center ({step.ellipseTarget.centerX}, {step.ellipseTarget.centerY}), a ={' '}
+          {step.ellipseTarget.a}, b = {step.ellipseTarget.b}
+        </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.hyperbolaTarget?.kind === 'axes' && (
+        <p className="step-target-badge">
+          Target: {step.hyperbolaTarget.orientation} hyperbola, center ({step.hyperbolaTarget.centerX},{' '}
+          {step.hyperbolaTarget.centerY}), a = {step.hyperbolaTarget.a}, b = {step.hyperbolaTarget.b}
+        </p>
+      )}
+
+      {step.type === 'mastery' && step.circleSequence && (
+        <div className="step-info-block step-info-tip">
+          <h3 className="step-info-label">How it works</h3>
+          <p>
+            Labels are hidden. Build each circle in order, then press{' '}
+            <strong>Check Circle</strong> to verify.
+          </p>
+        </div>
       )}
 
       {step.goal && (

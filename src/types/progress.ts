@@ -13,8 +13,11 @@ export type LessonProgress = {
   completed: boolean
   distinctConicsSeen?: string[]
   distinctPValues?: number[]
+  distinctRValues?: number[]
   movedFocus?: boolean
   movedDirectrix?: boolean
+  movedCenter?: boolean
+  movedRadius?: boolean
   masteryIndex?: number
 }
 

@@ -14,14 +14,22 @@ import {
   type UserProgress,
 } from '../types/progress'
 
+/** Local calendar date (YYYY-MM-DD) so the streak boundary is the user's midnight, not UTC. */
+function localDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function todayString(): string {
-  return new Date().toISOString().slice(0, 10)
+  return localDateString(new Date())
 }
 
 function yesterdayString(): string {
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
-  return yesterday.toISOString().slice(0, 10)
+  return localDateString(yesterday)
 }
 
 function computeStreak(lastActiveDate: string | null, currentStreak: number, today: string): number {
@@ -51,8 +59,11 @@ function completedLessonProgress(): LessonProgress {
     masteryIndex: 0,
     distinctConicsSeen: [],
     distinctPValues: [],
+    distinctRValues: [],
     movedFocus: false,
     movedDirectrix: false,
+    movedCenter: false,
+    movedRadius: false,
   }
 }
 

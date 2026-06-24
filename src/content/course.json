@@ -18,19 +18,19 @@
       "id": "circles",
       "title": "Circles",
       "order": 3,
-      "comingSoon": true
+      "unlockAfter": "parabolas"
     },
     {
       "id": "ellipses",
       "title": "Ellipses",
       "order": 4,
-      "comingSoon": true
+      "unlockAfter": "circles"
     },
     {
       "id": "hyperbolas",
       "title": "Hyperbolas",
       "order": 5,
-      "comingSoon": true
+      "unlockAfter": "ellipses"
     }
   ]
 }

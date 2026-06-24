@@ -1,6 +1,8 @@
 export type ConicType = 'circle' | 'ellipse' | 'parabola' | 'hyperbola' | 'none'
 
-export type LessonSimulator = 'cone' | 'parabola'
+export type LessonSimulator = 'cone' | 'parabola' | 'circle' | 'ellipse' | 'hyperbola'
+
+export type HyperbolaOrientation = 'horizontal' | 'vertical'
 
 export type Feedback = {
   correct: string
@@ -22,16 +24,63 @@ export type ParabolaSimulatorConfig = {
   labelToggles?: boolean
   vertexDraggable?: boolean
   focusVerticalOnly?: boolean
+  vertexAtOrigin?: boolean
+  pInputMode?: boolean
+  /** A fixed point the curve should pass through, drawn as a marker. */
+  targetPoint?: { x: number; y: number }
 }
 
 /** @deprecated Use ParabolaSimulatorConfig */
 export type ParabolaExploreConfig = ParabolaSimulatorConfig
+
+export type CircleSimulatorConfig = {
+  showRadiusDemo?: boolean
+  highlightCenter?: boolean
+  showRadius?: boolean
+  showEquation?: boolean
+  centerDraggable?: boolean
+  hkrInputMode?: boolean
+  /** A fixed point the circle should pass through, drawn as a marker. */
+  targetPoint?: { x: number; y: number }
+}
+
+export type EllipseSimulatorConfig = {
+  /** Make the two foci draggable (the "string and pins" model) and show the constant sum. */
+  fociDraggable?: boolean
+  highlightCenter?: boolean
+  showAxes?: boolean
+  showEquation?: boolean
+  /** Draw line indicators from the center to the a and b handles. */
+  showSemiAxes?: boolean
+  /** Mark the foci and the distance c from the center, with the c = √(a² − b²) readout. */
+  showFociDistance?: boolean
+  centerDraggable?: boolean
+  /** A fixed point the ellipse should pass through, drawn as a marker. */
+  targetPoint?: { x: number; y: number }
+}
+
+export type HyperbolaSimulatorConfig = {
+  showDifferenceDemo?: boolean
+  highlightVertices?: boolean
+  showAsymptotes?: boolean
+  showBox?: boolean
+  showAxes?: boolean
+  showEquation?: boolean
+  centerDraggable?: boolean
+  allowOrientationToggle?: boolean
+}
 
 export type ExploreSuccessCondition =
   | 'continue'
   | { minDistinctConics: number }
   | { movedFocusAndDirectrix: true }
   | { minDistinctP: number }
+  | { movedCenterAndRadius: true }
+  | { minDistinctR: number }
+  | { minDistinctCircles: number }
+  | { movedAxes: true }
+  | { minDistinctEllipses: number }
+  | { minDistinctHyperbolas: number }
 
 export type ExploreStep = StepMeta & {
   type: 'explore'
@@ -42,6 +91,9 @@ export type ExploreStep = StepMeta & {
   successCondition: ExploreSuccessCondition
   hints?: string[]
   parabolaConfig?: ParabolaExploreConfig
+  circleConfig?: CircleSimulatorConfig
+  ellipseConfig?: EllipseSimulatorConfig
+  hyperbolaConfig?: HyperbolaSimulatorConfig
 }
 
 export type ParabolaChallengeTarget =
@@ -62,16 +114,60 @@ export type ParabolaChallengeTarget =
       tolerance?: number
     }
 
+export type CircleChallengeTarget =
+  | { kind: 'center'; x: number; y: number; tolerance?: number }
+  | {
+      kind: 'radius'
+      centerX: number
+      centerY: number
+      radius: number
+      tolerance?: number
+    }
+  | {
+      kind: 'small'
+      centerX: number
+      centerY: number
+      maxR?: number
+      tolerance?: number
+    }
+
+export type EllipseChallengeTarget = {
+  kind: 'axes'
+  centerX: number
+  centerY: number
+  a: number
+  b: number
+  tolerance?: number
+}
+
+export type HyperbolaChallengeTarget = {
+  kind: 'axes'
+  centerX: number
+  centerY: number
+  a: number
+  b: number
+  orientation: HyperbolaOrientation
+  tolerance?: number
+}
+
 export type ChallengeStep = StepMeta & {
   type: 'challenge'
   prompt: string
   targetConic?: ConicType
   parabolaTarget?: ParabolaChallengeTarget
+  circleTarget?: CircleChallengeTarget
+  ellipseTarget?: EllipseChallengeTarget
+  hyperbolaTarget?: HyperbolaChallengeTarget
+  /** Hide the coordinate "Target:" badge so it doesn't reveal the answer. */
+  hideTarget?: boolean
   feedback: Feedback
   miniReflection?: string
   visualReward?: 'glow'
   visualCue?: 'highlightConeEdge'
   parabolaConfig?: ParabolaSimulatorConfig
+  circleConfig?: CircleSimulatorConfig
+  ellipseConfig?: EllipseSimulatorConfig
+  hyperbolaConfig?: HyperbolaSimulatorConfig
 }
 
 export type ReflectionStep = StepMeta & {
@@ -92,10 +188,38 @@ export type ParabolaMasteryTarget = {
   opens?: 'up' | 'down' | 'either'
 }
 
+export type CircleMasteryTarget = {
+  id: string
+  label: string
+  large?: boolean
+  small?: boolean
+  center?: { x: number; y: number }
+}
+
+export type EllipseMasteryTarget = {
+  id: string
+  label: string
+  center?: { x: number; y: number }
+  a?: number
+  b?: number
+}
+
+export type HyperbolaMasteryTarget = {
+  id: string
+  label: string
+  center?: { x: number; y: number }
+  a?: number
+  b?: number
+  orientation?: HyperbolaOrientation
+}
+
 export type MasteryCheckStep = StepMeta & {
   type: 'mastery'
   sequence?: ConicType[]
   parabolaSequence?: ParabolaMasteryTarget[]
+  circleSequence?: CircleMasteryTarget[]
+  ellipseSequence?: EllipseMasteryTarget[]
+  hyperbolaSequence?: HyperbolaMasteryTarget[]
   hideLabels: boolean
   completionMessage: string
 }

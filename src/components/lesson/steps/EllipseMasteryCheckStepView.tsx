@@ -1,15 +1,12 @@
 import { useState } from 'react'
-import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
-import {
-  matchesParabolaMasteryTarget,
-  type ParabolaState,
-} from '../../../lib/parabolaGeometry'
+import { EllipseSimulator } from '../../ellipse/EllipseSimulator'
+import { matchesEllipseMasteryTarget, type EllipseState } from '../../../lib/ellipseGeometry'
 import type { MasteryCheckStep } from '../../../types/lesson'
 
-type ParabolaMasteryCheckStepViewProps = {
+type EllipseMasteryCheckStepViewProps = {
   step: MasteryCheckStep
-  parabola: ParabolaState
-  onParabolaChange: (parabola: ParabolaState) => void
+  ellipse: EllipseState
+  onEllipseChange: (ellipse: EllipseState) => void
   masteryIndex: number
   onMasteryIndexChange: (index: number) => void
   onComplete: () => void
@@ -19,7 +16,7 @@ function MasteryProgressList({
   sequence,
   masteryIndex,
 }: {
-  sequence: NonNullable<MasteryCheckStep['parabolaSequence']>
+  sequence: NonNullable<MasteryCheckStep['ellipseSequence']>
   masteryIndex: number
 }) {
   return (
@@ -41,33 +38,33 @@ function MasteryProgressList({
   )
 }
 
-export function ParabolaMasteryCheckStepView({
+export function EllipseMasteryCheckStepView({
   step,
-  parabola,
-  onParabolaChange,
+  ellipse,
+  onEllipseChange,
   masteryIndex,
   onMasteryIndexChange,
   onComplete,
-}: ParabolaMasteryCheckStepViewProps) {
+}: EllipseMasteryCheckStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [lastCheckCorrect, setLastCheckCorrect] = useState<boolean | null>(null)
   const [verified, setVerified] = useState(false)
 
-  const sequence = step.parabolaSequence ?? []
+  const sequence = step.ellipseSequence ?? []
   const finished = masteryIndex >= sequence.length
   const target = finished ? null : sequence[masteryIndex]
 
   const checkShape = () => {
     if (!target) return
 
-    if (matchesParabolaMasteryTarget(parabola, target)) {
+    if (matchesEllipseMasteryTarget(ellipse, target)) {
       setLastCheckCorrect(true)
       setVerified(true)
       setFeedback(`Correct! ${target.label} achieved.`)
     } else {
       setLastCheckCorrect(false)
       setVerified(false)
-      setFeedback(`Not quite — adjust the focus and directrix until you match the task.`)
+      setFeedback('Not quite — adjust the center or the a/b handles until you match the task.')
     }
   }
 
@@ -98,11 +95,10 @@ export function ParabolaMasteryCheckStepView({
         Create: <strong>{target!.label}</strong> — no hints shown.
       </p>
 
-      <ParabolaSimulator
-        parabola={parabola}
-        onParabolaChange={onParabolaChange}
+      <EllipseSimulator
+        ellipse={ellipse}
+        onEllipseChange={onEllipseChange}
         interactive
-        vertexDraggable={false}
         hideLabels={step.hideLabels}
         showEquation
       />
@@ -122,7 +118,7 @@ export function ParabolaMasteryCheckStepView({
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={checkShape}>
-            Check Parabola
+            Check Ellipse
           </button>
         )}
       </div>

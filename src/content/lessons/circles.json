@@ -1,0 +1,156 @@
+{
+  "id": "circles",
+  "title": "Circles",
+  "order": 3,
+  "subject": "conics",
+  "simulator": "circle",
+  "steps": [
+    {
+      "type": "explore",
+      "title": "Meet the Circle",
+      "goal": "Understand the geometric definition.",
+      "introText": "A circle is the set of all points in a plane that are the same distance r from a fixed point called the center.",
+      "prompt": "Drag the center, resize with the orange handle, and drag the black point around the circle. Wherever it sits, its distance r to the center stays the same.",
+      "interactive": true,
+      "successCondition": { "movedCenterAndRadius": true },
+      "circleConfig": {
+        "showRadiusDemo": true
+      }
+    },
+    {
+      "type": "explore",
+      "title": "The Equation of a Circle",
+      "goal": "Connect the geometry to the standard equation.",
+      "introText": "Given a circle whose center is at (h, k) and that has a radius of r, its equation can be expressed in the form (x − h)² + (y − k)² = r². This is derived from the distance formula.",
+      "prompt": "Type at least three different combinations of h, k, and r and press Try. Watch how the center, radius, and equation change each time.",
+      "interactive": false,
+      "successCondition": { "minDistinctCircles": 3 },
+      "circleConfig": {
+        "highlightCenter": true,
+        "showRadius": true,
+        "showEquation": true,
+        "hkrInputMode": true
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Match the Equation",
+      "hideTarget": true,
+      "goal": "Now that we learned how the equation of a circle is derived, see if you can work backwards to determine what the radius should be",
+      "prompt": "Create a circle with equation x² + y² = 49.",
+      "circleTarget": {
+        "kind": "radius",
+        "centerX": 0,
+        "centerY": 0,
+        "radius": 7
+      },
+      "circleConfig": {
+        "highlightCenter": true,
+        "showRadius": true,
+        "showEquation": false
+      },
+      "feedback": {
+        "correct": "Perfect! With r = 7, the equation is x² + y² = 49.",
+        "incorrect": "The equation isn't x² + y² = 49 yet.",
+        "hint": "In this equation, r² = 49, so r = 7. Place the center at the origin and set the radius to 7."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Center and Radius",
+      "goal": "Reiterate what h, k, and r represent in the standard equation.",
+      "prompt": "A circle has center (3, −2) and radius 4. Which equation is correct?",
+      "choices": [
+        { "id": "a", "label": "(x − 3)² + (y + 2)² = 4" },
+        { "id": "b", "label": "(x − 3)² + (y + 2)² = 16" },
+        { "id": "c", "label": "(x + 3)² + (y − 2)² = 16" },
+        { "id": "d", "label": "(x − 3)² + (y − 2)² = 16" }
+      ],
+      "correctChoiceId": "b",
+      "feedback": "Exactly. (h, k) = (3, −2) and r² = 4² = 16."
+    },
+    {
+      "type": "challenge",
+      "title": "Shifted Circle",
+      "goal": "Graph a circle given its center and radius.",
+      "prompt": "Graph a circle whose center is at(3, −2) and radius is 5.",
+      "circleTarget": {
+        "kind": "radius",
+        "centerX": 3,
+        "centerY": -2,
+        "radius": 5
+      },
+      "circleConfig": {
+        "highlightCenter": true,
+        "showRadius": false,
+        "showEquation": true,
+        "centerDraggable": true
+      },
+      "feedback": {
+        "correct": "Nice! The equation is (x − 3)² + (y + 2)² = 25.",
+        "incorrect": "Double check your center and radius and try again.",
+        "hint": "Move the red center handle to (3, −2), then set r = 5 with the orange handle."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Small Shifted Circle",
+      "goal": "Build a small circle with a non-origin center.",
+      "prompt": "Graph a circle with center (−2, 1) and r ≤ 1.5, then press Check.",
+      "circleTarget": {
+        "kind": "small",
+        "centerX": -2,
+        "centerY": 1,
+        "maxR": 1.5
+      },
+      "circleConfig": {
+        "highlightCenter": true,
+        "showRadius": false,
+        "showEquation": true,
+        "centerDraggable": true
+      },
+      "feedback": {
+        "correct": "Well done! A small r gives a tight circle even when the center is shifted.",
+        "incorrect": "Double check your center and radius and try again.",
+        "hint": "Set the center first, then drag the orange handle inward."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Check Your Understanding",
+      "goal": "Summarize what defines a circle.",
+      "prompt": "Which statement is always true for a circle in standard form?",
+      "choices": [
+        { "id": "a", "label": "The center is at the origin." },
+        { "id": "b", "label": "r appears on the right side of the equation." },
+        { "id": "c", "label": "Every point on the circle is distance r from the center (h, k)." },
+        { "id": "d", "label": "h and k are always positive." }
+      ],
+      "correctChoiceId": "c",
+      "feedback": "Nice job remembering! The center and radius together define every point on the circle."
+    },
+    {
+      "type": "mastery",
+      "title": "Mastery Check",
+      "goal": "Construct four circles with specific size and position — no hints.",
+      "circleSequence": [
+        { "id": "large-origin", "label": "Large circle at the origin (r ≥ 6)", "large": true },
+        { "id": "small-origin", "label": "Small circle at the origin (r ≤ 2)", "small": true },
+        {
+          "id": "large-shifted",
+          "label": "Large circle centered at (−4, −1), r ≥ 6",
+          "large": true,
+          "center": { "x": -4, "y": -1 }
+        },
+        {
+          "id": "small-shifted",
+          "label": "Small circle centered at (4, −3), r ≤ 2",
+          "small": true,
+          "center": { "x": 4, "y": -3 }
+        }
+      ],
+      "hideLabels": true,
+      "completionMessage": "Congratulations! You now understand the basics of circles."
+    }
+  ]
+}

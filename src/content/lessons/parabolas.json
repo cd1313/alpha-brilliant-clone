@@ -8,12 +8,12 @@
     {
       "type": "explore",
       "title": "Meet the Parabola",
-      "goal": "Understand the geometric definition.",
-      "info": "The shape of a parabola is defined by two components: its focus and its directrix.",
-      "introText": "The first conic section we will explore is the parabola. A parabola is the set of all points that are the same distance from the focus (a fixed point) and the directrix (a fixed line).",
-      "prompt": "Drag around the focus and directrix. Watch the highlighted point, and note that the two dashed distances always remain equal.",
+      "goal": "See how the focus and directrix define the curve.",
+      "info": "Satellite dishes and car headlights are parabolic — their shape gathers incoming signals (or focuses outgoing light) at a single point called the focus.",
+      "introText": "A parabola is the set of all points equidistant from a fixed point (the focus) and a fixed line (the directrix). Changing either one reshapes the curve.",
+      "prompt": "Drag the focus, the directrix, or the point on the curve. Wherever the point sits, its distance to the focus (d₁) always equals its distance to the directrix (d₂).",
       "interactive": true,
-      "successCondition": "continue",
+      "successCondition": { "movedFocusAndDirectrix": true },
       "parabolaConfig": {
         "showDistanceDemo": true
       }
@@ -22,163 +22,182 @@
       "type": "explore",
       "title": "The Equation of a Parabola",
       "goal": "Connect the geometry to the standard equation.",
-      "info": "When the vertex of a parabola is at the origin, its equation can be expressed in the form x² = 4py. The parameter p represents the distance from the vertex to the focus, while 4p is the coefficient that actually appears in front of y.",
-      "introText": "Drag the focus and directrix separately. When the vertex is at the origin, an upward-opening parabola has equation x² = 4py; downward-opening uses x² = −4py.",
-      "prompt": "Try a few positions, then continue once you can comfortably see how p and the equation are linked.",
-      "interactive": true,
-      "successCondition": "continue",
+      "info": "Watch the coefficient: it's 4p — four times the focus distance — not p itself. That detail trips up a lot of people.",
+      "introText": "With the vertex at the origin, an upward-opening parabola follows x² = 4py. Here p is the distance from the vertex to the focus.",
+      "prompt": "Type at least three different values of p and press Try. Watch how each value reshapes the parabola and changes its equation.",
+      "interactive": false,
+      "successCondition": { "minDistinctP": 3 },
       "parabolaConfig": {
         "highlightVertex": true,
         "showParameterP": true,
         "showEquation": true,
-        "focusVerticalOnly": true
+        "focusVerticalOnly": true,
+        "vertexAtOrigin": true,
+        "pInputMode": true
       }
     },
     {
       "type": "challenge",
       "title": "Match the Equation",
-      "goal": "Build a parabola whose equation is exactly x² = 4y.",
-      "prompt": "Create a parabola with equation x² = 4y, then press Check.",
+      "goal": "Based on what you just learned, graph a parabola with equation x² = 14y",
+      "hideTarget": true,
       "parabolaTarget": {
         "kind": "focus",
         "vertexX": 0,
         "vertexY": 0,
         "focusX": 0,
-        "focusY": 1
+        "focusY": 3.5
       },
       "parabolaConfig": {
         "highlightVertex": true,
         "showParameterP": true,
         "showEquation": false,
-        "focusVerticalOnly": true
+        "focusVerticalOnly": true,
+        "vertexAtOrigin": true
       },
       "feedback": {
-        "correct": "Perfect! With p = 1, the equation is x² = 4(1)y = 4y.",
-        "incorrect": "The equation isn't x² = 4y yet. Remember: p is the distance from the vertex to the focus.",
-        "hint": "p = 1, so the focus should be distance 1 away from the vertex."
+        "correct": "Perfect! With p = 3.5, the equation is x² = 4(3.5)y = 14y.",
+        "incorrect": "The equation isn't x² = 14y yet. Remember: 4p is the coefficient on y.",
+        "hint": "4p = 14, so p = 3.5. Place the focus 3.5 units above the vertex."
       }
     },
     {
-      "type": "reflection",
-      "title": "Discover the Vertex",
-      "goal": "Recognize where the vertex is in relation to the focus and directrix.",
-      "prompt": "Where is the vertex located?",
-      "choices": [
-        { "id": "a", "label": "At the focus" },
-        { "id": "b", "label": "Halfway between the focus and directrix" },
-        { "id": "c", "label": "On the directrix" }
-      ],
-      "correctChoiceId": "b",
-      "feedback": "Exactly. The vertex is the midpoint between the focus and the directrix."
+      "type": "challenge",
+      "title": "Vertex Form",
+      "goal": "Shift the parabola by placing the vertex at a non-origin point.",
+      "info": "The general form for the equation of a parabola is (x − h)² = 4p(y − k). We still have the same paramater p, and we have two new parameters h and k. The point (h, k) gives us the vertex of the parabola.",
+      "prompt": "Place the vertex at (−2, 3) by moving the focus and directrix. While doing so, pay attention to how the equation of the parabola changes.",
+      "parabolaTarget": { "kind": "vertex", "x": -2, "y": 3 },
+      "parabolaConfig": {
+        "highlightVertex": true,
+        "showParameterP": true,
+        "showEquation": true,
+        "focusVerticalOnly": false
+      },
+      "feedback": {
+        "correct": "Nice! The vertex is at (−2, 3) — the equation now includes (x + 2)² and (y − 3).",
+        "incorrect": "The vertex isn't at (−2, 3) yet — adjust the focus and directrix.",
+        "hint": "Move the focus to x = −2, then balance the focus height and directrix so the vertex sits at y = 3."
+      }
     },
     {
       "type": "challenge",
-      "title": "Wider Parabola",
-      "goal": "Place the focus at a specific point with the vertex still at the origin.",
-      "info": "When p = 5, the focus sits five units from the vertex and the parabola opens wider.",
-      "prompt": "Create a parabola with vertex at (0, 0) and focus at (0, 5), then press Check.",
+      "title": "Graph the Equation",
+      "goal": "Graph a parabola given its equation.",
+      "prompt": "Graph the parabola (x − 2)² = 8(y − 1).",
+      "hideTarget": true,
+      "parabolaTarget": {
+        "kind": "focus",
+        "vertexX": 2,
+        "vertexY": 1,
+        "focusX": 2,
+        "focusY": 3
+      },
+      "parabolaConfig": {
+        "highlightVertex": true,
+        "showParameterP": true,
+        "showEquation": false,
+        "focusVerticalOnly": false
+      },
+      "feedback": {
+        "correct": "Nice! (x − 2) and (y − 1) put the vertex at (2, 1), and 4p = 8 → p = 2, so the focus sits at (2, 3).",
+        "incorrect": "Not yet — (x − 2) means h = 2, (y − 1) means k = 1, and 4p = 8 gives p = 2.",
+        "hint": "Put the vertex at (2, 1), then place the focus 2 units above it at (2, 3)."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Downward Opening",
+      "prompt": "Graph a downward-opening parabola with p = -2 and vertex at the origin. Recall that a downward-opening parabola has a negative coefficient on y.",
       "parabolaTarget": {
         "kind": "focus",
         "vertexX": 0,
         "vertexY": 0,
         "focusX": 0,
-        "focusY": 5
+        "focusY": -2
+      },
+      "hideTarget": true,
+      "parabolaConfig": {
+        "highlightVertex": true,
+        "showParameterP": true,
+        "showEquation": false,
+        "focusVerticalOnly": false
+      },
+      "feedback": {
+        "correct": "Excellent! p = 2 below the vertex gives x² = −8y.",
+        "incorrect": "Not quite — the focus should be below the vertex for a downward opening.",
+        "hint": "Place the focus at (0, −2). The directrix should be at y = 2."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Shifted Narrow Parabola",
+      "prompt": "Create a narrow upward-opening parabola with vertex at (−1, 2) and p ≤ 1.25.",
+      "parabolaTarget": {
+        "kind": "narrow",
+        "vertexX": -1,
+        "vertexY": 2
       },
       "parabolaConfig": {
         "highlightVertex": true,
         "showParameterP": true,
         "showEquation": true,
-        "focusVerticalOnly": true
+        "focusVerticalOnly": false
       },
       "feedback": {
-        "correct": "Great! p = 5, so the equation is x² = 20y.",
-        "incorrect": "Not quite — place the focus at (0, 5) with the vertex at the origin.",
-        "hint": "Keep the vertex at (0, 0) and move the focus to (0, 5). The directrix should be at y = −5."
-      },
-      "miniReflection": "Larger p → wider parabola."
-    },
-    {
-      "type": "reflection",
-      "title": "Read the Equation",
-      "goal": "Predict how the equation changes when p changes.",
-      "prompt": "A parabola has vertex at the origin and p = 3. Which equation is correct?",
-      "choices": [
-        { "id": "a", "label": "x² = 3y" },
-        { "id": "b", "label": "x² = 7y" },
-        { "id": "c", "label": "x² = 12y" },
-        { "id": "d", "label": "x² = 4y" }
-      ],
-      "correctChoiceId": "c",
-      "feedback": "Right — 4p = 4(3) = 12, so the equation is x² = 12y."
-    },
-    {
-      "type": "challenge",
-      "title": "Vertex Form",
-      "goal": "Shift the parabola by placing the vertex at a target location.",
-      "info": "A more generalized equation for a parabola is (x − h)² = 4p(y − k). The parameter p still means the same thing, but we add two new parameters: h and k. (h, k) is the vertex of the parabola.",
-      "prompt": "Move the vertex to (2, 1), then press Check.",
-      "parabolaTarget": { "kind": "vertex", "x": 2, "y": 1 },
-      "feedback": {
-        "correct": "Nice! The vertex is at (2, 1) — note how the equation reflects this, where h represents horizontal shift, k represents vertical shift.",
-        "incorrect": "The vertex isn't at (2, 1) yet — drag the dashed vertex handle.",
-        "hint": "Grab the dashed circle at the vertex and drag it to x = 2, y = 1 on the grid."
-      }
-    },
-    {
-      "type": "challenge",
-      "title": "Narrow Parabola",
-      "goal": "Build a steep, narrow upward-opening parabola.",
-      "info": "A narrow parabola has a small p — the focus sits close to the vertex.",
-      "prompt": "Create a narrow upward-opening parabola with vertex at (0, 0) and p ≤ 1.25, then press Check.",
-      "parabolaTarget": {
-        "kind": "narrow",
-        "vertexX": 0,
-        "vertexY": 0
-      },
-      "feedback": {
-        "correct": "Well done! A small p gives a narrow, steep parabola.",
-        "incorrect": "Try moving the focus closer to the vertex to make the curve narrower.",
-        "hint": "Keep the vertex at (0, 0) and place the focus at (0, 1) or closer."
+        "correct": "Well done! A small p keeps the curve narrow even when the vertex is shifted.",
+        "incorrect": "Adjust the focus and directrix until the vertex is at (−1, 2) with a small p.",
+        "hint": "Move the focus to x = −1, set the vertex height with the directrix, then place the focus about one unit above the vertex."
       }
     },
     {
       "type": "reflection",
       "title": "Check Your Understanding",
       "goal": "Summarize what defines a parabola.",
-      "prompt": "Which statement is true?",
+      "prompt": "Which statement is always true for a standard parabola?",
       "choices": [
-        { "id": "a", "label": "A parabola is determined only by its focus." },
-        { "id": "b", "label": "A parabola is determined only by its directrix." },
-        { "id": "c", "label": "A parabola is determined by both the focus and directrix." },
-        { "id": "d", "label": "A parabola is determined by its vertex alone." }
+        { "id": "a", "label": "The vertex is at the origin." },
+        { "id": "b", "label": "The focus and directrix are equidistant from every point on the curve." },
+        { "id": "c", "label": "The parabola always opens upward." },
+        { "id": "d", "label": "p equals the coefficient in front of y." }
       ],
-      "correctChoiceId": "c",
-      "feedback": "The focus and directrix together define every point on the parabola."
+      "correctChoiceId": "b",
+      "feedback": "As we learned, the focus–directrix distance property defines the parabola."
     },
     {
       "type": "mastery",
       "title": "Mastery Check",
-      "goal": "Construct four parabolas with specific width and position — no hints.",
+      "goal": "Construct four parabolas with specific width, direction, and position — no hints.",
       "parabolaSequence": [
-        { "id": "wide-up", "label": "Wide upward-opening parabola", "wide": true },
-        { "id": "narrow-up", "label": "Narrow upward-opening parabola", "narrow": true },
+        {
+          "id": "wide-down",
+          "label": "Wide downward-opening parabola at the origin",
+          "wide": true,
+          "opens": "down"
+        },
+        {
+          "id": "narrow-up",
+          "label": "Narrow upward-opening parabola at the origin",
+          "narrow": true,
+          "opens": "up"
+        },
         {
           "id": "wide-shifted",
-          "label": "Wide parabola with vertex at (2, 1)",
+          "label": "Wide parabola with vertex at (−2, 1)",
           "wide": true,
           "opens": "either",
-          "vertex": { "x": 2, "y": 1 }
+          "vertex": { "x": -2, "y": 1 }
         },
         {
           "id": "narrow-shifted",
-          "label": "Narrow parabola with vertex at (−3, 2)",
+          "label": "Narrow parabola with vertex at (3, −1)",
           "narrow": true,
           "opens": "either",
-          "vertex": { "x": -3, "y": 2 }
+          "vertex": { "x": 3, "y": -1 }
         }
       ],
       "hideLabels": true,
-      "completionMessage": "Congratulations! You now understand the basics of parabolas."
+      "completionMessage": "Congratulations! You now understand the basics of parabolas — including shifted and downward-opening cases."
     }
   ]
 }
