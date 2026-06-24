@@ -1,36 +1,61 @@
 {
-  "id": "conics",
-  "title": "Conic Sections",
+  "id": "precalculus",
+  "title": "Precalculus",
   "subject": "precalculus",
-  "lessons": [
+  "sections": [
     {
-      "id": "introduction",
-      "title": "Introduction",
-      "order": 1
+      "id": "conics",
+      "title": "Conic Sections",
+      "lessons": [
+        {
+          "id": "introduction",
+          "title": "Introduction",
+          "order": 1
+        },
+        {
+          "id": "parabolas",
+          "title": "Parabolas",
+          "order": 2,
+          "unlockAfter": "introduction"
+        },
+        {
+          "id": "circles",
+          "title": "Circles",
+          "order": 3,
+          "unlockAfter": "parabolas"
+        },
+        {
+          "id": "ellipses",
+          "title": "Ellipses",
+          "order": 4,
+          "unlockAfter": "circles"
+        },
+        {
+          "id": "hyperbolas",
+          "title": "Hyperbolas",
+          "order": 5,
+          "unlockAfter": "ellipses"
+        }
+      ]
     },
     {
-      "id": "parabolas",
-      "title": "Parabolas",
-      "order": 2,
-      "unlockAfter": "introduction"
-    },
-    {
-      "id": "circles",
-      "title": "Circles",
-      "order": 3,
-      "unlockAfter": "parabolas"
-    },
-    {
-      "id": "ellipses",
-      "title": "Ellipses",
-      "order": 4,
-      "unlockAfter": "circles"
-    },
-    {
-      "id": "hyperbolas",
-      "title": "Hyperbolas",
-      "order": 5,
-      "unlockAfter": "ellipses"
+      "id": "trigonometry",
+      "title": "Trigonometric Functions",
+      "comingSoon": true,
+      "lessons": [
+        {
+          "id": "trig-unit-circle",
+          "title": "Angles & the Unit Circle",
+          "order": 1,
+          "comingSoon": true
+        },
+        {
+          "id": "trig-sine-cosine",
+          "title": "Sine & Cosine Graphs",
+          "order": 2,
+          "comingSoon": true
+        }
+      ]
     }
   ]
 }

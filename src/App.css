@@ -150,6 +150,38 @@
   margin-bottom: 1rem;
 }
 
+.course-section {
+  margin-bottom: 1.75rem;
+}
+
+.course-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.85rem;
+}
+
+.course-section-title {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.course-section-badge {
+  background: var(--accent-warm-soft);
+  color: var(--accent-warm-text);
+  border: 1px solid var(--accent-warm);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.course-section.coming-soon .course-section-title {
+  color: var(--text-muted);
+}
+
 .lesson-path {
   display: flex;
   flex-direction: column;
@@ -190,13 +222,48 @@
   box-shadow: 0 0 0 2px rgba(36, 106, 115, 0.18);
 }
 
-.course-map-cta {
-  margin: 0 0 1.25rem;
-  padding: 0.75rem 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.95rem;
+.course-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0 0 1.5rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(29, 61, 78, 0.18);
+}
+
+.course-cta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.course-cta-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+.course-cta-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.course-cta-btn {
+  background: #fff;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.course-cta-btn:hover:not(:disabled) {
+  background: #eef3f2;
 }
 
 .lesson-order {
@@ -221,7 +288,7 @@
   text-align: left;
 }
 
-.lesson-node-body h2 {
+.lesson-node-body h3 {
   font-size: 1.1rem;
 }
 

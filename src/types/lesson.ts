@@ -243,9 +243,16 @@ export type CourseLesson = {
   comingSoon?: boolean
 }
 
+export type CourseSection = {
+  id: string
+  title: string
+  comingSoon?: boolean
+  lessons: CourseLesson[]
+}
+
 export type Course = {
   id: string
   title: string
   subject: string
-  lessons: CourseLesson[]
+  sections: CourseSection[]
 }

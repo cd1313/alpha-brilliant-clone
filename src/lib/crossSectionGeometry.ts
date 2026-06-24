@@ -50,15 +50,12 @@ function ellipseRadii(offset: number, angleDeg: number): { rx: number; ry: numbe
   }
 }
 
-function parabolaExtent(offset: number, angleDeg: number): number {
-  const points = collectIntersections(offset, angleDeg)
-  if (points.length === 0) {
-    return Math.max(coneRadiusAtOffset(offset) * DISPLAY_SCALE, MIN_RADIUS * 2)
-  }
-
-  const maxX = Math.max(...points.map((p) => Math.abs(p.x)))
-  const maxY = Math.max(...points.map((p) => Math.abs(p.y)))
-  return Math.max(maxX, maxY * 0.6) * DISPLAY_SCALE * 1.1
+function parabolaExtent(offset: number): number {
+  // Size grows with how far the slice sits from the apex, so the parabola
+  // visibly changes as the plane moves while staying readable (floor) and
+  // contained in the preview (cap).
+  const base = coneRadiusAtOffset(offset) * DISPLAY_SCALE
+  return Math.min(Math.max(base * 1.5, 20), 64)
 }
 
 function hyperbolaParams(offset: number, angleDeg: number): { gap: number; branch: number } {
@@ -84,15 +81,29 @@ function circlePath(cx: number, cy: number, r: number): string {
 
 function parabolaPath(cx: number, cy: number, width: number): string {
   const w = Math.max(width, MIN_RADIUS * 2)
-  return `M ${cx - w} ${cy + w * 0.55} Q ${cx} ${cy - w * 0.85} ${cx + w} ${cy + w * 0.55}`
+  return `M ${cx - w} ${cy + w * 0.5} Q ${cx} ${cy - w * 1.1} ${cx + w} ${cy + w * 0.5} Z`
 }
 
 function hyperbolaPath(cx: number, cy: number, gap: number, branch: number): string {
   const g = Math.max(gap, MIN_RADIUS)
   const b = Math.max(branch, 16)
+  const height = b
+  const spread = b * 0.8
+  const rx = cx + g
+  const lx = cx - g
+
+  // Two symmetric branches that open outward, each with its vertex on the axis
+  // at distance g from center. A cubic per branch gives the characteristic
+  // hyperbola flare rather than a plain bent line.
   return [
-    `M ${cx - g} ${cy - b} Q ${cx - g - b * 0.55} ${cy} ${cx - g - b} ${cy + b * 0.75}`,
-    `M ${cx + g} ${cy - b} Q ${cx + g + b * 0.55} ${cy} ${cx + g + b} ${cy + b * 0.75}`,
+    // right branch, opening right
+    `M ${rx + spread} ${cy - height}`,
+    `C ${rx - spread * 0.35} ${cy - height * 0.42} ${rx - spread * 0.35} ${cy + height * 0.42} ${rx + spread} ${cy + height}`,
+    'Z',
+    // left branch, opening left
+    `M ${lx - spread} ${cy - height}`,
+    `C ${lx + spread * 0.35} ${cy - height * 0.42} ${lx + spread * 0.35} ${cy + height * 0.42} ${lx - spread} ${cy + height}`,
+    'Z',
   ].join(' ')
 }
 
@@ -120,7 +131,7 @@ export function computeCrossSectionPath(
       return { path: ellipsePath(cx, cy, rx, ry), type }
     }
     case 'parabola': {
-      const width = parabolaExtent(offset, angle)
+      const width = parabolaExtent(offset)
       return { path: parabolaPath(cx, cy, width), type }
     }
     case 'hyperbola': {

@@ -223,7 +223,13 @@ export function ConeSimulator({
         <g className="cross-section-group">
           <path
             d={crossSection.path}
-            fill="none"
+            fill={
+              crossSection.type === 'none'
+                ? 'none'
+                : shouldGlow
+                  ? 'rgba(63, 143, 111, 0.22)'
+                  : 'rgba(54, 143, 139, 0.18)'
+            }
             stroke={shouldGlow ? 'var(--success)' : crossSection.type === 'none' ? 'var(--border)' : 'var(--secondary)'}
             strokeWidth={shouldGlow ? 5 : crossSection.type === 'none' ? 2 : 3}
             strokeDasharray={crossSection.type === 'none' ? '6 4' : undefined}

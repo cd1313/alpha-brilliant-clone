@@ -62,6 +62,16 @@ function angularDistance(a: number, b: number): number {
   return Math.min(diff, 360 - diff)
 }
 
+/**
+ * Distance between two undirected line orientations. A plane at angle θ is the
+ * same line as θ + 180, so a generator at e.g. 127° is parallel to a plane at
+ * 307°. Folding by 180 makes both directions count as parallel.
+ */
+function generatorLineDistance(a: number, b: number): number {
+  const diff = angularDistance(a, b)
+  return Math.min(diff, 180 - diff)
+}
+
 /** Generator directions visible in the side view for each nappe. */
 export function generatorAngles(nappe: Nappe): [number, number] {
   const slope = CONE_SLOPE_ANGLE
@@ -74,13 +84,13 @@ export function generatorAngles(nappe: Nappe): [number, number] {
 export function isParallelToGenerator(angleDeg: number, nappe: Nappe): boolean {
   const angle = normalizePlaneAngle360(angleDeg)
   return generatorAngles(nappe).some(
-    (generator) => angularDistance(angle, generator) <= PARABOLA_TOLERANCE,
+    (generator) => generatorLineDistance(angle, generator) <= PARABOLA_TOLERANCE,
   )
 }
 
 export function distanceToNearestGenerator(angleDeg: number, nappe: Nappe): number {
   const angle = normalizePlaneAngle360(angleDeg)
-  return Math.min(...generatorAngles(nappe).map((g) => angularDistance(angle, g)))
+  return Math.min(...generatorAngles(nappe).map((g) => generatorLineDistance(angle, g)))
 }
 
 function planeDirection(angleDeg: number): Point {

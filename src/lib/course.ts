@@ -16,10 +16,18 @@ export function isLessonUnlocked(
   return completedLessons.includes(lesson.unlockAfter)
 }
 
+/** All lessons across every section, in order. */
+export function getCourseLessons(course: Course): CourseLesson[] {
+  return course.sections.flatMap((section) => section.lessons)
+}
+
 export function getNextLessonId(course: Course, completedLessons: string[]): string | null {
-  for (const lesson of course.lessons) {
-    if (!isLessonUnlocked(lesson, completedLessons)) continue
-    if (!completedLessons.includes(lesson.id)) return lesson.id
+  for (const section of course.sections) {
+    if (section.comingSoon) continue
+    for (const lesson of section.lessons) {
+      if (!isLessonUnlocked(lesson, completedLessons)) continue
+      if (!completedLessons.includes(lesson.id)) return lesson.id
+    }
   }
   return null
 }
