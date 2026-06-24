@@ -39,7 +39,7 @@
       "type": "explore",
       "title": "Finding the Foci",
       "info": "The major axis of an ellipse is the longer of the two axes. The minor axis is the shorter of the two axes.",
-      "goal": "Be able to locate the foci of an ellipse given information about its axes",
+      "goal": "Be able to locate the foci of an ellipse given information about its axes.",
       "introText": "The foci of an ellipse are located on its major axis, a distance c from both sides of the center. To find c, subtract the square of the minor semi-axis from the square of the major semi-axis then take the square root: **c = √(a² − b²)**. Sometimes, it may also be useful to keep the equation in the form **c² = a² − b²**.",
       "prompt": "Let's try and visualize this. Drag the a and b handles and watch the foci move. The distance from the center to one focus is labeled in green. Observe how the value of c changes along with a and b.",
       "successCondition": { "movedAxes": true },
@@ -53,7 +53,7 @@
     {
       "type": "challenge",
       "title": "Match the Equation",
-      "goal": "Given the equaiton of an ellipse, determine its major and minor semiaxes and graph it.",
+      "goal": "Given the equation of an ellipse, determine its major and minor semiaxes and graph it.",
       "prompt": "Graph the ellipse x²/25 + y²/9 = 1.",
       "hideTarget": true,
       "ellipseTarget": {
@@ -94,7 +94,7 @@
       "type": "challenge",
       "title": "Shifted Ellipse",
       "goal": "Be able to graph an ellipse that is not centered at the origin.",
-      "info": "An ellipse that is not necessarily centered at the origin has an equation of the form **(x − h)²/a² + (y − k)²/b² = 1**. Here, the parameters and a and b remain the same while we have two new parameters h and k. The center of the ellipse is at (h, k). This should look very similar to the structure of the circle equation.",
+      "info": "An ellipse that is not necessarily centered at the origin has an equation of the form **(x − h)²/a² + (y − k)²/b² = 1**. Here, the parameters a and b remain the same while we have two new parameters h and k. The center of the ellipse is at (h, k). This should look very similar to the structure of the circle equation.",
       "prompt": "Build the ellipse (x + 3)²/16 + (y − 2)²/4 = 1.",
       "hideTarget": true,
       "ellipseTarget": {
@@ -112,7 +112,7 @@
       },
       "feedback": {
         "correct": "Nice! (x + 3) means h = −3 and (y − 2) means k = 2, while a = √16 = 4 and b = √4 = 2.",
-        "incorrect": "Double check your center and axes. In this equation, h = -3, h = 2, a² = 16, and b² = 4. How do you get the center and axes from this information?",
+        "incorrect": "Double check your center and axes. In this equation, h = -3, k = 2, a² = 16, and b² = 4. How do you get the center and axes from this information?",
         "hint": "Try and match the outline provided in the graph. What are the values of h, k, a, and b? Does this make sense with what you've learned?"
       }
     },
@@ -129,7 +129,7 @@
       ],
       "correctChoiceId": "a",
       "feedback": "Correct! The constant-sum property is what makes an ellipse (in addition to its eccentricity, which we will cover in a future lesson).",
-      "incorrectFeedback": "Not quite. Try and recall, what key feature of an ellipse did we define at the beginning?"
+      "incorrectFeedback": "Not quite. Try and recall: what key feature of an ellipse did we define at the beginning?"
     },
     {
       "type": "mastery",

@@ -38,7 +38,7 @@
     {
       "type": "challenge",
       "title": "Match the Equation",
-      "goal": "Graph a hyperbola by identifying given its equation.",
+      "goal": "Graph a hyperbola given its equation.",
       "prompt": "Graph the hyperbola x²/9 − y²/4 = 1.",
       "hideTarget": true,
       "hyperbolaTarget": {

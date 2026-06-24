@@ -55,7 +55,7 @@
         "vertexAtOrigin": true
       },
       "feedback": {
-        "correct": "Perfect! Now lets see what happens when the vertex doesn't have to be at the origin.",
+        "correct": "Perfect! Now let's see what happens when the vertex doesn't have to be at the origin.",
         "incorrect": "The equation isn't quite there yet. Remember that 4p is the coefficient on y, so here 4p = 14. Then, what should p be?",
         "hint": "In our equation, 4p = 14 so p = 3.5. This means you should place the focus 3.5 units above the vertex."
       }
@@ -64,7 +64,7 @@
       "type": "challenge",
       "title": "Vertex Form",
       "goal": "Shift the parabola by placing the vertex at a non-origin point.",
-      "info": "When the vertex isn't necessarily fixed at the origin, the general form for the equation of a parabola is **(x − h)² = 4p(y − k)**. We still have the same paramater p, but we have two new parameters h and k. The point (h, k) gives us the vertex of the parabola.",
+      "info": "When the vertex isn't necessarily fixed at the origin, the general form for the equation of a parabola is **(x − h)² = 4p(y − k)**. We still have the same parameter p, but we have two new parameters h and k. The point (h, k) gives us the vertex of the parabola.",
       "prompt": "Place the vertex at (−2, 3) by moving the focus and directrix. While doing so, pay attention to how the equation of the parabola changes.",
       "parabolaTarget": { "kind": "vertex", "x": -2, "y": 3 },
       "parabolaConfig": {
@@ -100,7 +100,7 @@
       },
       "feedback": {
         "correct": "Nice! Great job extracting key information from the equation.",
-        "incorrect": "Not yet: remember that (x − 2) and (y − 1) means the vertex is at (2, 1), then 4p = 8 tells us that p should be 2.",
+        "incorrect": "Not yet: remember that (x − 2) and (y − 1) mean the vertex is at (2, 1), then 4p = 8 tells us that p should be 2.",
         "hint": "Try and match the curve provided above. As extra guidance, you can do so by moving the focus to (2, 3), then the directrix to y = -1."
       }
     },
@@ -125,7 +125,7 @@
         "focusVerticalOnly": false
       },
       "feedback": {
-        "correct": "Excellent! p = 2 below the vertex gives x² = −8y.",
+        "correct": "Excellent! With p = −2 (the focus 2 units below the vertex), the equation is x² = −8y.",
         "incorrect": "Not quite — remember, the focus should be below the vertex for a downward opening parabola. Otherwise, it is very similar to an upward opening parabola.",
         "hint": "Try and follow the curve shown above. Place the focus at (0, −2), then the directrix should be above it at y = 2."
       }

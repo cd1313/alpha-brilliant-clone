@@ -16,7 +16,3 @@ const lessons: Record<string, Lesson> = {
 export function getLesson(lessonId: string): Lesson | undefined {
   return lessons[lessonId]
 }
-
-export function getAllLessons(): Lesson[] {
-  return Object.values(lessons)
-}

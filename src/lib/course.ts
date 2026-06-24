@@ -1,11 +1,4 @@
-import type {
-  Course,
-  CourseLesson,
-  Lesson,
-  ParabolaChallengeTarget,
-  ParabolaMasteryTarget,
-  Step,
-} from '../types/lesson'
+import type { Course, CourseLesson, Lesson } from '../types/lesson'
 
 export function isLessonUnlocked(
   lesson: CourseLesson,
@@ -50,18 +43,4 @@ export function lessonUsesHyperbolaSimulator(lesson: Lesson): boolean {
 
 export function lessonUsesConeSimulator(lesson: Lesson): boolean {
   return !lesson.simulator || lesson.simulator === 'cone'
-}
-
-export function isParabolaChallenge(step: Step): step is Step & {
-  type: 'challenge'
-  parabolaTarget: ParabolaChallengeTarget
-} {
-  return step.type === 'challenge' && Boolean(step.parabolaTarget)
-}
-
-export function isParabolaMastery(step: Step): step is Step & {
-  type: 'mastery'
-  parabolaSequence: ParabolaMasteryTarget[]
-} {
-  return step.type === 'mastery' && Boolean(step.parabolaSequence?.length)
 }

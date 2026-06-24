@@ -33,14 +33,6 @@ export function formatMeasuredValue(value: number): string {
   return rounded.toFixed(MEASURED_DECIMALS).replace(/\.?0+$/, '')
 }
 
-export function deriveCircle(state: CircleState): CircleState {
-  return {
-    centerX: roundMeasured(state.centerX),
-    centerY: roundMeasured(state.centerY),
-    radius: roundMeasured(state.radius),
-  }
-}
-
 export function formatCircleEquation(h: number, k: number, r: number): string {
   const hr = roundMeasured(h)
   const kr = roundMeasured(k)

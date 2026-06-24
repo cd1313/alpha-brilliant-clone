@@ -48,11 +48,6 @@ export function acuteTiltFromHorizontal(angle: number): number {
   return tilt
 }
 
-/** @deprecated Use normalizePlaneAngle360 or acuteTiltFromHorizontal */
-export function normalizePlaneAngle(angle: number): number {
-  return acuteTiltFromHorizontal(angle)
-}
-
 export function clampPlaneOffset(offset: number): number {
   return Math.max(PLANE_OFFSET_MIN, Math.min(PLANE_OFFSET_MAX, offset))
 }

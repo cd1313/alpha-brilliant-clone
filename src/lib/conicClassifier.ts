@@ -14,7 +14,6 @@ export {
   intersectPlaneWithEdge,
   isParallelToGenerator,
   matchesTarget,
-  normalizePlaneAngle,
   normalizePlaneAngle360,
   type PlaneCutAnalysis,
   type PlaneState,

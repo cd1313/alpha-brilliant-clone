@@ -8,7 +8,7 @@
       "type": "explore",
       "title": "What Are Conic Sections?",
       "goal": "See how a plane slicing through a double cone creates different curves.",
-      "introText": "Conic sections are shapes created when a flat plane cuts through a double cone. By changing the angle of the plane, we can create circles, ellipses, parabolas, and hyperbolas. You may have learned about these in your previoius math classes, but now we will reinforce your knowledge of these curves and where they come from.",
+      "introText": "Conic sections are shapes created when a flat plane cuts through a double cone. By changing the angle of the plane, we can create circles, ellipses, parabolas, and hyperbolas. You may have learned about these in your previous math classes, but now we will reinforce your knowledge of these curves and where they come from.",
       "showConicGallery": true,
       "prompt": "Toggle the labels to identify the cone, plane, and cross section, then continue when you're ready.",
       "showLabels": true,
@@ -49,14 +49,14 @@
         "incorrect": "You're close, but this slice is producing a different conic.",
         "hint": "Start out similar to when you made the circle, but now tilt the plane slightly."
       },
-      "miniReflection": "Notice how the circle from before is nowstretched into an oval shape.",
+      "miniReflection": "Notice how the circle from before is now stretched into an oval shape.",
       "visualReward": "glow"
     },
     {
       "type": "challenge",
       "title": "Create a Parabola",
       "goal": "Match the plane's angle to the slope of the cone's edge to form a parabola.",
-      "info": "The parabola is a borderline case: the plane is parallel to the cone's side, so it still only cuts through one cone. For the purposes of this lesson, we will have a slight range where we will consider the plane close enough to parallel.",
+      "info": "The parabola is a borderline case: the plane is parallel to the cone's side, so it still only cuts through one cone. For the purposes of this lesson, we will have a slight range where we will consider the plane close enough to being parallel.",
       "targetConic": "parabola",
       "hideTarget": true,
       "feedback": {
