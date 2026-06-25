@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { EllipseSimulator } from '../../ellipse/EllipseSimulator'
 import { matchesEllipseChallengeTarget, type EllipseState } from '../../../lib/ellipseGeometry'
+import { adaptiveMismatchMessage } from '../../../lib/feedback'
 import type { ChallengeStep, EllipseChallengeTarget } from '../../../types/lesson'
 
 function ghostFromTarget(target: EllipseChallengeTarget | undefined): EllipseState | null {
@@ -27,6 +28,20 @@ export function EllipseChallengeStepView({
   const target = step.ellipseTarget
   const config = step.ellipseConfig ?? {}
 
+  const buildIncorrectFeedback = (t: EllipseChallengeTarget): string => {
+    const tol = t.tolerance ?? 0.35
+    const centerOk =
+      Math.abs(ellipse.centerX - t.centerX) <= tol && Math.abs(ellipse.centerY - t.centerY) <= tol
+    return adaptiveMismatchMessage(
+      [
+        { label: 'center', ok: centerOk },
+        { label: 'a', ok: Math.abs(ellipse.a - t.a) <= tol },
+        { label: 'b', ok: Math.abs(ellipse.b - t.b) <= tol },
+      ],
+      step.feedback.incorrect,
+    )
+  }
+
   const checkAnswer = () => {
     if (!target) return
 
@@ -34,7 +49,7 @@ export function EllipseChallengeStepView({
       setFeedback(step.feedback.correct)
       setSolved(true)
     } else {
-      setFeedback(step.feedback.incorrect)
+      setFeedback(buildIncorrectFeedback(target))
       setSolved(false)
     }
   }

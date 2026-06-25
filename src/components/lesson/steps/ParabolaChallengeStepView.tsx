@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
 import {
+  deriveParabola,
   matchesParabolaChallengeTarget,
   type ParabolaState,
 } from '../../../lib/parabolaGeometry'
+import { adaptiveMismatchMessage } from '../../../lib/feedback'
 import type { ChallengeStep, ParabolaChallengeTarget } from '../../../types/lesson'
 
 type ParabolaChallengeStepViewProps = {
@@ -51,6 +53,41 @@ export function ParabolaChallengeStepView({
   const target = step.parabolaTarget
   const config = step.parabolaConfig ?? {}
 
+  const buildIncorrectFeedback = (t: ParabolaChallengeTarget): string => {
+    const d = deriveParabola(parabola)
+    const tol = t.tolerance ?? 0.35
+
+    if (t.kind === 'vertex') {
+      const vertexOk = Math.abs(d.vertexX - t.x) <= tol && Math.abs(d.vertexY - t.y) <= tol
+      return adaptiveMismatchMessage([{ label: 'vertex', ok: vertexOk }], step.feedback.incorrect)
+    }
+
+    if (t.kind === 'narrow') {
+      const vertexOk =
+        Math.abs(d.vertexX - t.vertexX) <= tol && Math.abs(d.vertexY - t.vertexY) <= tol
+      return adaptiveMismatchMessage(
+        [
+          { label: 'opening direction', ok: d.opens === 'up' },
+          { label: 'vertex', ok: vertexOk },
+          { label: 'width', ok: d.p <= (t.maxP ?? 1.25) },
+        ],
+        step.feedback.incorrect,
+      )
+    }
+
+    const vertexOk =
+      Math.abs(d.vertexX - t.vertexX) <= tol && Math.abs(d.vertexY - t.vertexY) <= tol
+    const focusOk =
+      Math.abs(parabola.focusX - t.focusX) <= tol && Math.abs(parabola.focusY - t.focusY) <= tol
+    return adaptiveMismatchMessage(
+      [
+        { label: 'vertex', ok: vertexOk },
+        { label: 'focus', ok: focusOk },
+      ],
+      step.feedback.incorrect,
+    )
+  }
+
   const checkAnswer = () => {
     if (!target) return
 
@@ -58,7 +95,7 @@ export function ParabolaChallengeStepView({
       setFeedback(step.feedback.correct)
       setSolved(true)
     } else {
-      setFeedback(step.feedback.incorrect)
+      setFeedback(buildIncorrectFeedback(target))
       setSolved(false)
     }
   }

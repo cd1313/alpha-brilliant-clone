@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CircleSimulator } from '../../circle/CircleSimulator'
 import { matchesCircleChallengeTarget, type CircleState } from '../../../lib/circleGeometry'
+import { adaptiveMismatchMessage } from '../../../lib/feedback'
 import type { ChallengeStep, CircleChallengeTarget } from '../../../types/lesson'
 
 type CircleChallengeStepViewProps = {
@@ -34,6 +35,30 @@ export function CircleChallengeStepView({
   const target = step.circleTarget
   const config = step.circleConfig ?? {}
 
+  const buildIncorrectFeedback = (t: CircleChallengeTarget): string => {
+    const tol = t.tolerance ?? 0.35
+    if (t.kind === 'center') {
+      const centerOk =
+        Math.abs(circle.centerX - t.x) <= tol && Math.abs(circle.centerY - t.y) <= tol
+      return adaptiveMismatchMessage([{ label: 'center', ok: centerOk }], step.feedback.incorrect)
+    }
+
+    const centerOk =
+      Math.abs(circle.centerX - t.centerX) <= tol && Math.abs(circle.centerY - t.centerY) <= tol
+    const radiusOk =
+      t.kind === 'small'
+        ? circle.radius <= (t.maxR ?? 2) + tol
+        : Math.abs(circle.radius - t.radius) <= tol
+
+    return adaptiveMismatchMessage(
+      [
+        { label: 'center', ok: centerOk },
+        { label: 'radius', ok: radiusOk },
+      ],
+      step.feedback.incorrect,
+    )
+  }
+
   const checkAnswer = () => {
     if (!target) return
 
@@ -41,7 +66,7 @@ export function CircleChallengeStepView({
       setFeedback(step.feedback.correct)
       setSolved(true)
     } else {
-      setFeedback(step.feedback.incorrect)
+      setFeedback(buildIncorrectFeedback(target))
       setSolved(false)
     }
   }

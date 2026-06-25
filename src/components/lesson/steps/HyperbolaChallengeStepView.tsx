@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { HyperbolaSimulator } from '../../hyperbola/HyperbolaSimulator'
 import { matchesHyperbolaChallengeTarget, type HyperbolaState } from '../../../lib/hyperbolaGeometry'
+import { adaptiveMismatchMessage } from '../../../lib/feedback'
 import type { ChallengeStep, HyperbolaChallengeTarget } from '../../../types/lesson'
 
 type HyperbolaChallengeStepViewProps = {
@@ -36,6 +37,22 @@ export function HyperbolaChallengeStepView({
   const target = step.hyperbolaTarget
   const config = step.hyperbolaConfig ?? {}
 
+  const buildIncorrectFeedback = (t: HyperbolaChallengeTarget): string => {
+    const tol = t.tolerance ?? 0.35
+    const centerOk =
+      Math.abs(hyperbola.centerX - t.centerX) <= tol &&
+      Math.abs(hyperbola.centerY - t.centerY) <= tol
+    return adaptiveMismatchMessage(
+      [
+        { label: 'opening direction', ok: hyperbola.orientation === t.orientation },
+        { label: 'center', ok: centerOk },
+        { label: 'a', ok: Math.abs(hyperbola.a - t.a) <= tol },
+        { label: 'b', ok: Math.abs(hyperbola.b - t.b) <= tol },
+      ],
+      step.feedback.incorrect,
+    )
+  }
+
   const checkAnswer = () => {
     if (!target) return
 
@@ -43,7 +60,7 @@ export function HyperbolaChallengeStepView({
       setFeedback(step.feedback.correct)
       setSolved(true)
     } else {
-      setFeedback(step.feedback.incorrect)
+      setFeedback(buildIncorrectFeedback(target))
       setSolved(false)
     }
   }
