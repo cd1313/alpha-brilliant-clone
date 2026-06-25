@@ -91,7 +91,7 @@
       "feedback": {
         "correct": "Nice! Double check that the correct equation (x − 3)² + (y + 2)² = 25 makes sense to you.",
         "incorrect": "Double check your center and radius and try again.",
-        "hint": "Move the red center handle to (3, −2), then set r = 5 with the orange handle."
+        "hint": "Try and guide the circle to the target shown on the graph."
       }
     },
     {

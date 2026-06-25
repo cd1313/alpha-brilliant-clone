@@ -86,7 +86,7 @@
       "feedback": {
         "correct": "Yes! The positive y-term means it opens up and down, with a = 3 and b = 2.",
         "incorrect": "Use the toggle so the branches open up and down, then set a = 3 and b = 2.",
-        "hint": "Tap “Opens up/down”, then make a = 3 (vertex) and b = 2."
+        "hint": "Make sure to change the hyperbola orientation to “Opens up/down”, then try and match the outline provided in the graph."
       }
     },
     {
@@ -144,7 +144,7 @@
       "feedback": {
         "correct": "Nice! The vertex is at (2, -1) while a = 3 and b = 2.",
         "incorrect": "Double check the center and your values of a, b. Make sure you are square rooting the denominators to get the values of a and b.",
-        "hint": "Try and follow the outline provided in the graph. For further guidance, you can move the center to (2, −1) and set a = 3, b = 2."
+        "hint": "Try and follow the outline provided in the graph."
       }
     },
     {

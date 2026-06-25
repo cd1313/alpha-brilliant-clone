@@ -113,7 +113,7 @@
       "feedback": {
         "correct": "Nice! (x + 3) means h = −3 and (y − 2) means k = 2, while a = √16 = 4 and b = √4 = 2.",
         "incorrect": "Double check your center and axes. In this equation, h = -3, k = 2, a² = 16, and b² = 4. How do you get the center and axes from this information?",
-        "hint": "Try and match the outline provided in the graph. What are the values of h, k, a, and b? Does this make sense with what you've learned?"
+        "hint": "Try and match the outline provided in the graph. What are the values of h, k, a, and b?"
       }
     },
     {

@@ -76,7 +76,7 @@
       "feedback": {
         "correct": "Nice! The vertex is at (−2, 3). Note how the equation reflects this by including (x + 2)² and (y − 3).",
         "incorrect": "The vertex isn't at (−2, 3) yet — adjust the focus and directrix until it is!",
-        "hint": "See if you can match the curve provided above. As extra guidance, you can do so by moving the focus to (-2, 5), then the directrix to y = 1."
+        "hint": "See if you can match the curve provided above."
       }
     },
     {
@@ -101,7 +101,7 @@
       "feedback": {
         "correct": "Nice! Great job extracting key information from the equation.",
         "incorrect": "Not yet: remember that (x − 2) and (y − 1) mean the vertex is at (2, 1), then 4p = 8 tells us that p should be 2.",
-        "hint": "Try and match the curve provided above. As extra guidance, you can do so by moving the focus to (2, 3), then the directrix to y = -1."
+        "hint": "Try and match the curve provided above."
       }
     },
     {
@@ -127,7 +127,7 @@
       "feedback": {
         "correct": "Excellent! With p = −2 (the focus 2 units below the vertex), the equation is x² = −8y.",
         "incorrect": "Not quite — remember, the focus should be below the vertex for a downward opening parabola. Otherwise, it is very similar to an upward opening parabola.",
-        "hint": "Try and follow the curve shown above. Place the focus at (0, −2), then the directrix should be above it at y = 2."
+        "hint": "Try and follow the curve shown above."
       }
     },
     {
@@ -151,7 +151,7 @@
       "feedback": {
         "correct": "Well done! A small p keeps the curve narrow even when the vertex is shifted.",
         "incorrect": "Adjust the focus and directrix until the vertex is at (−1, 2) with a small p.",
-        "hint": "Try and match the curve. Move the focus to (-1, 3), and set the directrix to y = 1."
+        "hint": "Try and match the curve shown above."
       }
     },
     {
