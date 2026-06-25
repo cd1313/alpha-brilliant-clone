@@ -20,8 +20,11 @@ rules_version = '2';
 //   - masteryIndex: int (optional, 0–19)
 //   - distinctConicsSeen: list<string> (optional)
 //   - distinctPValues: list<number> (optional)
+//   - distinctRValues: list<number> (optional)
 //   - movedFocus: bool (optional)
 //   - movedDirectrix: bool (optional)
+//   - movedCenter: bool (optional)
+//   - movedRadius: bool (optional)
 //
 // ===============================================================
 
@@ -113,8 +116,11 @@ service cloud.firestore {
           'masteryIndex',
           'distinctConicsSeen',
           'distinctPValues',
+          'distinctRValues',
           'movedFocus',
           'movedDirectrix',
+          'movedCenter',
+          'movedRadius',
         ])
         && data.currentStepIndex is int
         && data.currentStepIndex >= 0
@@ -123,8 +129,11 @@ service cloud.firestore {
         && (!('masteryIndex' in data) || (data.masteryIndex is int && data.masteryIndex >= 0 && data.masteryIndex < 20))
         && (!('distinctConicsSeen' in data) || isValidConicList(data.distinctConicsSeen))
         && (!('distinctPValues' in data) || isValidPValueList(data.distinctPValues))
+        && (!('distinctRValues' in data) || isValidPValueList(data.distinctRValues))
         && (!('movedFocus' in data) || data.movedFocus is bool)
-        && (!('movedDirectrix' in data) || data.movedDirectrix is bool);
+        && (!('movedDirectrix' in data) || data.movedDirectrix is bool)
+        && (!('movedCenter' in data) || data.movedCenter is bool)
+        && (!('movedRadius' in data) || data.movedRadius is bool);
     }
 
   // ===============================================================
