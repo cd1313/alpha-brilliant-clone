@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "alpha-brilliant-clone"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

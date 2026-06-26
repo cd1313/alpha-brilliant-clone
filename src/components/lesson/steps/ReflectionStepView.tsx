@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { HyperbolaSimulator } from '../../hyperbola/HyperbolaSimulator'
 import { clampHyperbolaState, type HyperbolaState } from '../../../lib/hyperbolaGeometry'
+import type { AttemptResult } from '../../../lib/feedback'
 import type { ReflectionStep } from '../../../types/lesson'
 
 type ReflectionStepViewProps = {
   step: ReflectionStep
   onSuccess: () => void
+  onAttempt?: (result: AttemptResult) => void
 }
 
-export function ReflectionStepView({ step, onSuccess }: ReflectionStepViewProps) {
+export function ReflectionStepView({ step, onSuccess, onAttempt }: ReflectionStepViewProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [correct, setCorrect] = useState(false)
@@ -25,6 +27,10 @@ export function ReflectionStepView({ step, onSuccess }: ReflectionStepViewProps)
         ? step.feedback
         : step.incorrectFeedback ?? 'Not quite — take another look at the question and try again.',
     )
+    onAttempt?.({
+      correct: isCorrect,
+      weakComponents: !isCorrect && step.weakComponent ? [step.weakComponent] : undefined,
+    })
   }
 
   return (

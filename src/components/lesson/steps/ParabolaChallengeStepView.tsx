@@ -5,7 +5,12 @@ import {
   matchesParabolaChallengeTarget,
   type ParabolaState,
 } from '../../../lib/parabolaGeometry'
-import { adaptiveMismatchMessage } from '../../../lib/feedback'
+import {
+  adaptiveMismatchMessage,
+  weakComponentsOf,
+  type AttemptResult,
+  type FeedbackPart,
+} from '../../../lib/feedback'
 import type { ChallengeStep, ParabolaChallengeTarget } from '../../../types/lesson'
 
 type ParabolaChallengeStepViewProps = {
@@ -13,6 +18,7 @@ type ParabolaChallengeStepViewProps = {
   parabola: ParabolaState
   onParabolaChange: (parabola: ParabolaState) => void
   onSuccess: () => void
+  onAttempt?: (result: AttemptResult) => void
 }
 
 function ghostFromTarget(
@@ -46,6 +52,7 @@ export function ParabolaChallengeStepView({
   parabola,
   onParabolaChange,
   onSuccess,
+  onAttempt,
 }: ParabolaChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
@@ -53,39 +60,33 @@ export function ParabolaChallengeStepView({
   const target = step.parabolaTarget
   const config = step.parabolaConfig ?? {}
 
-  const buildIncorrectFeedback = (t: ParabolaChallengeTarget): string => {
+  const computeParts = (t: ParabolaChallengeTarget): FeedbackPart[] => {
     const d = deriveParabola(parabola)
     const tol = t.tolerance ?? 0.35
 
     if (t.kind === 'vertex') {
       const vertexOk = Math.abs(d.vertexX - t.x) <= tol && Math.abs(d.vertexY - t.y) <= tol
-      return adaptiveMismatchMessage([{ label: 'vertex', ok: vertexOk }], step.feedback.incorrect)
+      return [{ label: 'vertex', ok: vertexOk }]
     }
 
     if (t.kind === 'narrow') {
       const vertexOk =
         Math.abs(d.vertexX - t.vertexX) <= tol && Math.abs(d.vertexY - t.vertexY) <= tol
-      return adaptiveMismatchMessage(
-        [
-          { label: 'opening direction', ok: d.opens === 'up' },
-          { label: 'vertex', ok: vertexOk },
-          { label: 'width', ok: d.p <= (t.maxP ?? 1.25) },
-        ],
-        step.feedback.incorrect,
-      )
+      return [
+        { label: 'opening direction', ok: d.opens === 'up' },
+        { label: 'vertex', ok: vertexOk },
+        { label: 'width', ok: d.p <= (t.maxP ?? 1.25) },
+      ]
     }
 
     const vertexOk =
       Math.abs(d.vertexX - t.vertexX) <= tol && Math.abs(d.vertexY - t.vertexY) <= tol
     const focusOk =
       Math.abs(parabola.focusX - t.focusX) <= tol && Math.abs(parabola.focusY - t.focusY) <= tol
-    return adaptiveMismatchMessage(
-      [
-        { label: 'vertex', ok: vertexOk },
-        { label: 'focus', ok: focusOk },
-      ],
-      step.feedback.incorrect,
-    )
+    return [
+      { label: 'vertex', ok: vertexOk },
+      { label: 'focus', ok: focusOk },
+    ]
   }
 
   const checkAnswer = () => {
@@ -94,9 +95,12 @@ export function ParabolaChallengeStepView({
     if (matchesParabolaChallengeTarget(parabola, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
+      onAttempt?.({ correct: true })
     } else {
-      setFeedback(buildIncorrectFeedback(target))
+      const parts = computeParts(target)
+      setFeedback(adaptiveMismatchMessage(parts, step.feedback.incorrect))
       setSolved(false)
+      onAttempt?.({ correct: false, weakComponents: weakComponentsOf(parts) })
     }
   }
 

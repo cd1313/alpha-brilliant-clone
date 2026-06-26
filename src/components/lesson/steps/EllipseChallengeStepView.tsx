@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { EllipseSimulator } from '../../ellipse/EllipseSimulator'
 import { matchesEllipseChallengeTarget, type EllipseState } from '../../../lib/ellipseGeometry'
-import { adaptiveMismatchMessage } from '../../../lib/feedback'
+import {
+  adaptiveMismatchMessage,
+  weakComponentsOf,
+  type AttemptResult,
+  type FeedbackPart,
+} from '../../../lib/feedback'
 import type { ChallengeStep, EllipseChallengeTarget } from '../../../types/lesson'
 
 function ghostFromTarget(target: EllipseChallengeTarget | undefined): EllipseState | null {
@@ -14,6 +19,7 @@ type EllipseChallengeStepViewProps = {
   ellipse: EllipseState
   onEllipseChange: (ellipse: EllipseState) => void
   onSuccess: () => void
+  onAttempt?: (result: AttemptResult) => void
 }
 
 export function EllipseChallengeStepView({
@@ -21,6 +27,7 @@ export function EllipseChallengeStepView({
   ellipse,
   onEllipseChange,
   onSuccess,
+  onAttempt,
 }: EllipseChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
@@ -28,18 +35,15 @@ export function EllipseChallengeStepView({
   const target = step.ellipseTarget
   const config = step.ellipseConfig ?? {}
 
-  const buildIncorrectFeedback = (t: EllipseChallengeTarget): string => {
+  const computeParts = (t: EllipseChallengeTarget): FeedbackPart[] => {
     const tol = t.tolerance ?? 0.35
     const centerOk =
       Math.abs(ellipse.centerX - t.centerX) <= tol && Math.abs(ellipse.centerY - t.centerY) <= tol
-    return adaptiveMismatchMessage(
-      [
-        { label: 'center', ok: centerOk },
-        { label: 'a', ok: Math.abs(ellipse.a - t.a) <= tol },
-        { label: 'b', ok: Math.abs(ellipse.b - t.b) <= tol },
-      ],
-      step.feedback.incorrect,
-    )
+    return [
+      { label: 'center', ok: centerOk },
+      { label: 'a', ok: Math.abs(ellipse.a - t.a) <= tol },
+      { label: 'b', ok: Math.abs(ellipse.b - t.b) <= tol },
+    ]
   }
 
   const checkAnswer = () => {
@@ -48,9 +52,12 @@ export function EllipseChallengeStepView({
     if (matchesEllipseChallengeTarget(ellipse, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
+      onAttempt?.({ correct: true })
     } else {
-      setFeedback(buildIncorrectFeedback(target))
+      const parts = computeParts(target)
+      setFeedback(adaptiveMismatchMessage(parts, step.feedback.incorrect))
       setSolved(false)
+      onAttempt?.({ correct: false, weakComponents: weakComponentsOf(parts) })
     }
   }
 

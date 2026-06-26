@@ -35,6 +35,9 @@ import {
 } from '../../lib/parabolaGeometry'
 import type { ConicType, Lesson, Step } from '../../types/lesson'
 import type { LessonProgress } from '../../types/progress'
+import type { AttemptResult } from '../../lib/feedback'
+import { skillForStep } from '../../lib/reviewSkills'
+import type { SessionAttempt } from '../../lib/ai/tutorClient'
 import { ProgressBar } from './ProgressBar'
 import { StepInfoPanel } from './StepInfoPanel'
 import { ChallengeStepView } from './steps/ChallengeStepView'
@@ -59,6 +62,8 @@ type LessonEngineProps = {
   initialProgress: LessonProgress | null
   onSaveProgress: (progress: LessonProgress) => void
   onCompleteLesson: () => void
+  /** Optional struggle-tracking sink; no-op when omitted so the engine works standalone. */
+  onRecordAttempt?: (skillId: string, result: AttemptResult) => void
 }
 
 const DEFAULT_PLANE: PlaneState = { angle: 0, offset: -55 }
@@ -130,6 +135,7 @@ export function LessonEngine({
   initialProgress,
   onSaveProgress,
   onCompleteLesson,
+  onRecordAttempt,
 }: LessonEngineProps) {
   const navigate = useNavigate()
   const usesParabola = lessonUsesParabolaSimulator(lesson)
@@ -168,8 +174,18 @@ export function LessonEngine({
   const isReviewing = stepIndex < furthestStepIndex
   const prevStepIndexRef = useRef(stepIndex)
   const stepIndexRef = useRef(stepIndex)
-  stepIndexRef.current = stepIndex
+  const sessionAttemptsRef = useRef<SessionAttempt[]>([])
 
+  // Mirror the current step index into a ref for use inside change handlers,
+  // without writing to the ref during render.
+  useEffect(() => {
+    stepIndexRef.current = stepIndex
+  }, [stepIndex])
+
+  // Reset per-step working state when the step changes. This intentionally sets state
+  // inside an effect (resetting shared simulator state that lives here, not in the child),
+  // so the React-compiler set-state-in-effect rule is disabled for just this block.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (prevStepIndexRef.current === stepIndex) return
     prevStepIndexRef.current = stepIndex
@@ -224,6 +240,7 @@ export function LessonEngine({
       }
     }
   }, [stepIndex, lesson.steps, usesParabola, usesCircle, usesEllipse, usesHyperbola])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const persistProgress = useCallback(
     (nextStepIndex: number, extra?: Partial<LessonProgress>) => {
@@ -323,11 +340,17 @@ export function LessonEngine({
     setHyperbola(clampHyperbolaState(nextHyperbola))
   }, [])
 
+  const finishLesson = () => {
+    onCompleteLesson()
+    navigate(`/lesson/${lesson.id}/complete`, {
+      state: { sessionAttempts: sessionAttemptsRef.current },
+    })
+  }
+
   const goToNextStep = () => {
     const next = stepIndex + 1
     if (next >= lesson.steps.length) {
-      onCompleteLesson()
-      navigate(`/lesson/${lesson.id}/complete`)
+      finishLesson()
       return
     }
     const newFurthest = Math.max(furthestStepIndex, next)
@@ -358,8 +381,19 @@ export function LessonEngine({
   }
 
   const handleComplete = () => {
-    onCompleteLesson()
-    navigate(`/lesson/${lesson.id}/complete`)
+    finishLesson()
+  }
+
+  const handleAttempt = (result: AttemptResult) => {
+    if (!step) return
+    const skillId = skillForStep(lesson, step)
+    if (!skillId) return
+    sessionAttemptsRef.current.push({
+      skillId,
+      correct: result.correct,
+      weakComponents: result.weakComponents,
+    })
+    onRecordAttempt?.(skillId, result)
   }
 
   if (!step) {
@@ -466,6 +500,7 @@ export function LessonEngine({
           parabola={parabola}
           onParabolaChange={handleParabolaChange}
           onSuccess={goToNextStep}
+          onAttempt={handleAttempt}
         />
       )}
 
@@ -476,6 +511,7 @@ export function LessonEngine({
           circle={circle}
           onCircleChange={handleCircleChange}
           onSuccess={goToNextStep}
+          onAttempt={handleAttempt}
         />
       )}
 
@@ -486,6 +522,7 @@ export function LessonEngine({
           ellipse={ellipse}
           onEllipseChange={handleEllipseChange}
           onSuccess={goToNextStep}
+          onAttempt={handleAttempt}
         />
       )}
 
@@ -496,6 +533,7 @@ export function LessonEngine({
           hyperbola={hyperbola}
           onHyperbolaChange={handleHyperbolaChange}
           onSuccess={goToNextStep}
+          onAttempt={handleAttempt}
         />
       )}
 
@@ -510,7 +548,12 @@ export function LessonEngine({
       )}
 
       {step.type === 'reflection' && (
-        <ReflectionStepView key={stepIndex} step={step} onSuccess={goToNextStep} />
+        <ReflectionStepView
+          key={stepIndex}
+          step={step}
+          onSuccess={goToNextStep}
+          onAttempt={handleAttempt}
+        />
       )}
 
       {usesParabola && step.type === 'mastery' && (

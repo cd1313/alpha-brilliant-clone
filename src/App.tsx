@@ -4,6 +4,8 @@ import { CourseMapPage } from './pages/CourseMapPage'
 import { LessonCompletePage } from './pages/LessonCompletePage'
 import { LessonPage } from './pages/LessonPage'
 import { LoginPage } from './pages/LoginPage'
+import { PracticePage } from './pages/PracticePage'
+import { ReviewPage } from './pages/ReviewPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import './App.css'
 
@@ -22,10 +24,26 @@ function App() {
           }
         />
         <Route
+          path="/review"
+          element={
+            <ProtectedRoute>
+              <ReviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/lesson/:lessonId"
           element={
             <ProtectedRoute>
               <LessonPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/lesson/:lessonId/practice"
+          element={
+            <ProtectedRoute>
+              <PracticePage />
             </ProtectedRoute>
           }
         />

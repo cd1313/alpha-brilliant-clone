@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { CircleSimulator } from '../../circle/CircleSimulator'
 import { matchesCircleChallengeTarget, type CircleState } from '../../../lib/circleGeometry'
-import { adaptiveMismatchMessage } from '../../../lib/feedback'
+import {
+  adaptiveMismatchMessage,
+  weakComponentsOf,
+  type AttemptResult,
+  type FeedbackPart,
+} from '../../../lib/feedback'
 import type { ChallengeStep, CircleChallengeTarget } from '../../../types/lesson'
 
 type CircleChallengeStepViewProps = {
@@ -9,6 +14,7 @@ type CircleChallengeStepViewProps = {
   circle: CircleState
   onCircleChange: (circle: CircleState) => void
   onSuccess: () => void
+  onAttempt?: (result: AttemptResult) => void
 }
 
 function deriveGhost(target: CircleChallengeTarget | undefined): CircleState | null {
@@ -28,6 +34,7 @@ export function CircleChallengeStepView({
   circle,
   onCircleChange,
   onSuccess,
+  onAttempt,
 }: CircleChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
@@ -35,12 +42,12 @@ export function CircleChallengeStepView({
   const target = step.circleTarget
   const config = step.circleConfig ?? {}
 
-  const buildIncorrectFeedback = (t: CircleChallengeTarget): string => {
+  const computeParts = (t: CircleChallengeTarget): FeedbackPart[] => {
     const tol = t.tolerance ?? 0.35
     if (t.kind === 'center') {
       const centerOk =
         Math.abs(circle.centerX - t.x) <= tol && Math.abs(circle.centerY - t.y) <= tol
-      return adaptiveMismatchMessage([{ label: 'center', ok: centerOk }], step.feedback.incorrect)
+      return [{ label: 'center', ok: centerOk }]
     }
 
     const centerOk =
@@ -50,13 +57,10 @@ export function CircleChallengeStepView({
         ? circle.radius <= (t.maxR ?? 2) + tol
         : Math.abs(circle.radius - t.radius) <= tol
 
-    return adaptiveMismatchMessage(
-      [
-        { label: 'center', ok: centerOk },
-        { label: 'radius', ok: radiusOk },
-      ],
-      step.feedback.incorrect,
-    )
+    return [
+      { label: 'center', ok: centerOk },
+      { label: 'radius', ok: radiusOk },
+    ]
   }
 
   const checkAnswer = () => {
@@ -65,9 +69,12 @@ export function CircleChallengeStepView({
     if (matchesCircleChallengeTarget(circle, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
+      onAttempt?.({ correct: true })
     } else {
-      setFeedback(buildIncorrectFeedback(target))
+      const parts = computeParts(target)
+      setFeedback(adaptiveMismatchMessage(parts, step.feedback.incorrect))
       setSolved(false)
+      onAttempt?.({ correct: false, weakComponents: weakComponentsOf(parts) })
     }
   }
 

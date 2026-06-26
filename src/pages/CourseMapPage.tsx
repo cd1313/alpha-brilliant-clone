@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import courseData from '../content/course.json'
 import { getLesson } from '../lib/lessons'
 import { getCourseLessons, getNextLessonId, isLessonUnlocked } from '../lib/course'
+import { availableReviewSkills, getPracticeSkill } from '../lib/reviewSkills'
+import { dailyReviewRequired } from '../lib/reviewGate'
 import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
 import type { Course } from '../types/lesson'
@@ -30,6 +32,9 @@ export function CourseMapPage() {
   }
 
   const completedIds = userProgress.completedLessons
+  const gated = dailyReviewRequired(userProgress)
+  const nextIsResume = !!nextLessonId && userProgress.currentLesson?.lessonId === nextLessonId
+  const blockNextLesson = gated && !!nextLessonId && !nextIsResume
   const countCompleted = (lessons: { id: string }[]) =>
     lessons.filter((l) => completedIds.includes(l.id)).length
   const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : 0)
@@ -56,6 +61,11 @@ export function CourseMapPage() {
           <p className="subtitle">Work through each section to build mastery</p>
         </div>
         <div className="header-actions">
+          {availableReviewSkills(completedIds).length > 0 && (
+            <Link to="/review" className="btn btn-secondary">
+              Smart Review
+            </Link>
+          )}
           <button type="button" className="btn btn-secondary" onClick={() => void logOut()}>
             Sign Out
           </button>
@@ -100,6 +110,20 @@ export function CourseMapPage() {
 
       {error && <p className="error-banner">{error}</p>}
 
+      {gated && (
+        <div className="daily-review-banner">
+          <div className="daily-review-text">
+            <span className="daily-review-label">Daily review</span>
+            <span className="daily-review-desc">
+              Finish one Smart Review or Practice session to unlock your next new lesson.
+            </span>
+          </div>
+          <Link to="/review" className="btn btn-primary">
+            Smart Review
+          </Link>
+        </div>
+      )}
+
       {nextLessonId && (
         <div className="course-cta">
           <div className="course-cta-text">
@@ -110,9 +134,15 @@ export function CourseMapPage() {
               {getLesson(nextLessonId)?.title ?? nextLessonId}
             </span>
           </div>
-          <Link to={`/lesson/${nextLessonId}`} className="btn course-cta-btn">
-            {userProgress.currentLesson?.lessonId === nextLessonId ? 'Resume' : 'Start'}
-          </Link>
+          {blockNextLesson ? (
+            <Link to="/review" className="btn course-cta-btn">
+              Review to unlock
+            </Link>
+          ) : (
+            <Link to={`/lesson/${nextLessonId}`} className="btn course-cta-btn">
+              {nextIsResume ? 'Resume' : 'Start'}
+            </Link>
+          )}
         </div>
       )}
 
@@ -153,10 +183,34 @@ export function CourseMapPage() {
                       )}
                       {completed && <p className="lesson-status">Completed ✓</p>}
                       {inProgress && <p className="lesson-status">In progress — resume</p>}
+                      {!locked && !completed && !inProgress && gated && (
+                        <p className="lesson-status">Do today's review to unlock</p>
+                      )}
                       {!locked && (
-                        <Link to={`/lesson/${lesson.id}`} className="btn btn-primary btn-sm">
-                          {completed ? 'Review' : inProgress ? 'Resume' : 'Start'}
-                        </Link>
+                        <div className="lesson-node-actions">
+                          {!completed && !inProgress && gated ? (
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              disabled
+                              title="Finish today's Smart Review or Practice first"
+                            >
+                              Start
+                            </button>
+                          ) : (
+                            <Link to={`/lesson/${lesson.id}`} className="btn btn-primary btn-sm">
+                              {completed ? 'Review' : inProgress ? 'Resume' : 'Start'}
+                            </Link>
+                          )}
+                          {completed && getPracticeSkill(lesson.id) && (
+                            <Link
+                              to={`/lesson/${lesson.id}/practice`}
+                              className="btn btn-secondary btn-sm"
+                            >
+                              Practice
+                            </Link>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

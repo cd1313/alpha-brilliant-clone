@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
 import {
   clampParabolaState,
@@ -41,6 +41,12 @@ export function ParabolaExploreStepView({
   const pInputMode = config.pInputMode === true
   const { p } = deriveParabola(parabola)
 
+  // Refs so the effect below can read current values without them as deps.
+  const parabolaRef = useRef(parabola)
+  parabolaRef.current = parabola
+  const onParabolaChangeRef = useRef(onParabolaChange)
+  onParabolaChangeRef.current = onParabolaChange
+
   const handleParabolaChange = (next: ParabolaState) => {
     onParabolaChange(
       lockFocusToYAxis
@@ -71,16 +77,22 @@ export function ParabolaExploreStepView({
 
   const triedValues = [...distinctPValues].sort((a, b) => a - b)
 
+  // Enforce position constraints on mount and when constraint flags change.
+  // The simulator's vertexAtOrigin / focusVerticalOnly props already handle
+  // these constraints on every drag, so including `parabola` in the dep array
+  // would cause a state-update-in-effect loop on every pointer move.
   useEffect(() => {
-    if (lockVertexAtOrigin && !isParabolaVertexAtOrigin(parabola)) {
-      onParabolaChange(snapParabolaVertexAtOrigin(parabola))
+    const current = parabolaRef.current
+    const onChange = onParabolaChangeRef.current
+    if (lockVertexAtOrigin && !isParabolaVertexAtOrigin(current)) {
+      onChange(snapParabolaVertexAtOrigin(current))
       return
     }
-
-    if (lockFocusToYAxis && Math.abs(parabola.focusX) > 0.001) {
-      onParabolaChange(clampParabolaState({ ...parabola, focusX: 0 }))
+    if (lockFocusToYAxis && Math.abs(current.focusX) > 0.001) {
+      onChange(clampParabolaState({ ...current, focusX: 0 }))
     }
-  }, [lockVertexAtOrigin, lockFocusToYAxis, onParabolaChange, parabola])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockVertexAtOrigin, lockFocusToYAxis])
 
   const canContinue = (() => {
     const condition = step.successCondition

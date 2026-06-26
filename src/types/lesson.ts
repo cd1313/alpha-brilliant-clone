@@ -186,6 +186,8 @@ export type ReflectionStep = StepMeta & {
   feedback: string
   /** Shown when the answer is wrong; falls back to a generic message. */
   incorrectFeedback?: string
+  /** Tags a wrong answer with a struggle component (e.g. 'foci') for Smart Review targeting. */
+  weakComponent?: string
   /** Optional non-interactive hyperbola shown as a reference grid to reason on. */
   referenceHyperbola?: {
     centerX: number

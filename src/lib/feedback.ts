@@ -1,5 +1,13 @@
 export type FeedbackPart = { label: string; ok: boolean }
 
+/** One graded attempt, with the coarse components the learner missed (for struggle tracking). */
+export type AttemptResult = { correct: boolean; weakComponents?: string[] }
+
+/** Labels of the components that were not yet correct. */
+export function weakComponentsOf(parts: FeedbackPart[]): string[] {
+  return parts.filter((p) => !p.ok).map((p) => p.label)
+}
+
 function joinList(items: string[]): string {
   if (items.length === 0) return ''
   if (items.length === 1) return items[0]

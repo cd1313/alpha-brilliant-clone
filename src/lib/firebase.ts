@@ -6,6 +6,7 @@ import {
   persistentLocalCache,
   type Firestore,
 } from 'firebase/firestore'
+import { connectFunctionsEmulator, getFunctions, type Functions } from 'firebase/functions'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -25,6 +26,7 @@ export const useFirebaseEmulators = import.meta.env.VITE_USE_FIREBASE_EMULATORS 
 let app: FirebaseApp | null = null
 let auth: Auth | null = null
 let db: Firestore | null = null
+let functions: Functions | null = null
 
 if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig)
@@ -32,11 +34,13 @@ if (isFirebaseConfigured) {
   db = initializeFirestore(app, {
     localCache: persistentLocalCache(),
   })
+  functions = getFunctions(app)
 
   if (useFirebaseEmulators) {
     connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
     connectFirestoreEmulator(db, '127.0.0.1', 8080)
+    connectFunctionsEmulator(functions, '127.0.0.1', 5001)
   }
 }
 
-export { auth, db }
+export { app, auth, db, functions }

@@ -39,8 +39,10 @@ export function formatCircleEquation(h: number, k: number, r: number): string {
   const rr = roundMeasured(r)
   const rSquared = roundMeasured(rr * rr)
 
-  const xTerm = Math.abs(hr) < 1e-6 ? 'x²' : `(x − ${formatMeasuredValue(hr)})²`
-  const yTerm = Math.abs(kr) < 1e-6 ? 'y²' : `(y − ${formatMeasuredValue(kr)})²`
+  const xTerm =
+    Math.abs(hr) < 1e-6 ? 'x²' : `(x ${hr > 0 ? '−' : '+'} ${formatMeasuredValue(Math.abs(hr))})²`
+  const yTerm =
+    Math.abs(kr) < 1e-6 ? 'y²' : `(y ${kr > 0 ? '−' : '+'} ${formatMeasuredValue(Math.abs(kr))})²`
 
   return `${xTerm} + ${yTerm} = ${formatMeasuredValue(rSquared)}`
 }

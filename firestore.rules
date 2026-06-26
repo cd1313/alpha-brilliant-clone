@@ -11,6 +11,7 @@ rules_version = '2';
 //   - lastActiveDate: string | null (required, YYYY-MM-DD or null)
 //   - completedLessons: list<string> (required, max 50 slugs)
 //   - currentLesson: map | null (optional, lessonId + stepIndex)
+//   - lastReviewDate: string | null (optional, YYYY-MM-DD or null; last review/practice day)
 //
 // Subcollection: users/{uid}/lessonProgress
 // Document ID: {lessonId}
@@ -25,6 +26,15 @@ rules_version = '2';
 //   - movedDirectrix: bool (optional)
 //   - movedCenter: bool (optional)
 //   - movedRadius: bool (optional)
+//
+// Subcollection: users/{uid}/skillStats
+// Document ID: {skillId}
+// Fields:
+//   - attempts: int (required, 0–100000)
+//   - misses: int (required, 0–100000)
+//   - lastResult: string ('correct' | 'incorrect')
+//   - weakComponents: list<string> (optional, max 16)
+//   - recentMissRate: number (optional, 0–1; EMA of recent misses)
 //
 // ===============================================================
 
@@ -100,13 +110,27 @@ service cloud.firestore {
     }
 
     function isValidUserProgress(data) {
-      return hasOnlyAllowedFields(['streak', 'lastActiveDate', 'completedLessons', 'currentLesson'])
+      return hasOnlyAllowedFields(['streak', 'lastActiveDate', 'completedLessons', 'currentLesson', 'lastReviewDate'])
         && data.streak is int
         && data.streak >= 0
         && data.streak <= 10000
         && (data.lastActiveDate == null || isValidDateString(data.lastActiveDate))
         && isValidCompletedLessons(data.completedLessons)
-        && isValidCurrentLesson(data.get('currentLesson', null));
+        && isValidCurrentLesson(data.get('currentLesson', null))
+        && (data.get('lastReviewDate', null) == null || isValidDateString(data.lastReviewDate));
+    }
+
+    function isValidSkillStat(data) {
+      return hasOnlyAllowedFields(['attempts', 'misses', 'lastResult', 'weakComponents', 'recentMissRate'])
+        && data.attempts is int
+        && data.attempts >= 0
+        && data.attempts <= 100000
+        && data.misses is int
+        && data.misses >= 0
+        && data.misses <= 100000
+        && data.lastResult in ['correct', 'incorrect']
+        && (!('weakComponents' in data) || (data.weakComponents is list && data.weakComponents.size() <= 16))
+        && (!('recentMissRate' in data) || (data.recentMissRate is number && data.recentMissRate >= 0 && data.recentMissRate <= 1));
     }
 
     function isValidLessonProgress(data) {
@@ -159,6 +183,16 @@ service cloud.firestore {
         allow update: if isOwner(userId)
           && isValidLessonSlug(lessonId)
           && isValidLessonProgress(request.resource.data);
+
+        allow delete: if false;
+      }
+
+      match /skillStats/{skillId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) && isValidSkillStat(request.resource.data);
+
+        allow update: if isOwner(userId) && isValidSkillStat(request.resource.data);
 
         allow delete: if false;
       }

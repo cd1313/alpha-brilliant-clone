@@ -20,6 +20,11 @@ const CENTER_X_BOUND = 5
 const CENTER_Y_BOUND = 4
 const MEASURED_DECIMALS = 1
 
+export { MIN_AXIS as ELLIPSE_MIN_AXIS }
+export { MAX_AXIS as ELLIPSE_MAX_AXIS }
+export { CENTER_X_BOUND as ELLIPSE_CENTER_X_BOUND }
+export { CENTER_Y_BOUND as ELLIPSE_CENTER_Y_BOUND }
+
 export function roundMeasured(value: number): number {
   const factor = 10 ** MEASURED_DECIMALS
   return Math.round(value * factor) / factor

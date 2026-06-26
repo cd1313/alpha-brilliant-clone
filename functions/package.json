@@ -1,0 +1,22 @@
+{
+  "name": "functions",
+  "description": "Cloud Functions for Asymptote (AI tutor + tailored practice via OpenAI)",
+  "type": "module",
+  "main": "lib/index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-functions": "^6.6.0",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "private": true
+}

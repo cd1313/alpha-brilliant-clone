@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { HyperbolaSimulator } from '../../hyperbola/HyperbolaSimulator'
 import { matchesHyperbolaChallengeTarget, type HyperbolaState } from '../../../lib/hyperbolaGeometry'
-import { adaptiveMismatchMessage } from '../../../lib/feedback'
+import {
+  adaptiveMismatchMessage,
+  weakComponentsOf,
+  type AttemptResult,
+  type FeedbackPart,
+} from '../../../lib/feedback'
 import type { ChallengeStep, HyperbolaChallengeTarget } from '../../../types/lesson'
 
 type HyperbolaChallengeStepViewProps = {
@@ -9,6 +14,7 @@ type HyperbolaChallengeStepViewProps = {
   hyperbola: HyperbolaState
   onHyperbolaChange: (hyperbola: HyperbolaState) => void
   onSuccess: () => void
+  onAttempt?: (result: AttemptResult) => void
 }
 
 function deriveGhostHyperbola(target: HyperbolaChallengeTarget | undefined): HyperbolaState | null {
@@ -30,6 +36,7 @@ export function HyperbolaChallengeStepView({
   hyperbola,
   onHyperbolaChange,
   onSuccess,
+  onAttempt,
 }: HyperbolaChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
@@ -37,20 +44,17 @@ export function HyperbolaChallengeStepView({
   const target = step.hyperbolaTarget
   const config = step.hyperbolaConfig ?? {}
 
-  const buildIncorrectFeedback = (t: HyperbolaChallengeTarget): string => {
+  const computeParts = (t: HyperbolaChallengeTarget): FeedbackPart[] => {
     const tol = t.tolerance ?? 0.35
     const centerOk =
       Math.abs(hyperbola.centerX - t.centerX) <= tol &&
       Math.abs(hyperbola.centerY - t.centerY) <= tol
-    return adaptiveMismatchMessage(
-      [
-        { label: 'opening direction', ok: hyperbola.orientation === t.orientation },
-        { label: 'center', ok: centerOk },
-        { label: 'a', ok: Math.abs(hyperbola.a - t.a) <= tol },
-        { label: 'b', ok: Math.abs(hyperbola.b - t.b) <= tol },
-      ],
-      step.feedback.incorrect,
-    )
+    return [
+      { label: 'opening direction', ok: hyperbola.orientation === t.orientation },
+      { label: 'center', ok: centerOk },
+      { label: 'a', ok: Math.abs(hyperbola.a - t.a) <= tol },
+      { label: 'b', ok: Math.abs(hyperbola.b - t.b) <= tol },
+    ]
   }
 
   const checkAnswer = () => {
@@ -59,9 +63,12 @@ export function HyperbolaChallengeStepView({
     if (matchesHyperbolaChallengeTarget(hyperbola, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
+      onAttempt?.({ correct: true })
     } else {
-      setFeedback(buildIncorrectFeedback(target))
+      const parts = computeParts(target)
+      setFeedback(adaptiveMismatchMessage(parts, step.feedback.incorrect))
       setSolved(false)
+      onAttempt?.({ correct: false, weakComponents: weakComponentsOf(parts) })
     }
   }
 
