@@ -146,6 +146,7 @@ export function useProgress(uid: string | undefined) {
             completedLessons: data.completedLessons ?? [],
             currentLesson: data.currentLesson ?? null,
             lastReviewDate: data.lastReviewDate ?? null,
+            passedUnitTests: data.passedUnitTests ?? [],
           })
         } else {
           try {
@@ -339,12 +340,14 @@ export function useProgress(uid: string | undefined) {
                 lastActiveDate: userSnap.data().lastActiveDate ?? null,
                 completedLessons: (userSnap.data().completedLessons ?? []) as string[],
                 lastReviewDate: (userSnap.data().lastReviewDate ?? null) as string | null,
+                passedUnitTests: (userSnap.data().passedUnitTests ?? []) as string[],
               }
             : {
                 streak: 0,
                 lastActiveDate: null,
                 completedLessons: [] as string[],
                 lastReviewDate: null as string | null,
+                passedUnitTests: [] as string[],
               }
 
           const newStreak = computeStreak(existing.lastActiveDate, existing.streak, today)
@@ -371,22 +374,44 @@ export function useProgress(uid: string | undefined) {
             })
           }
 
-          return { newStreak, completedLessons, lastReviewDate: existing.lastReviewDate }
+          return { newStreak, completedLessons, lastReviewDate: existing.lastReviewDate, passedUnitTests: existing.passedUnitTests }
         })
 
-        setUserProgress({
+        setUserProgress((prev) => ({
+          ...prev,
           streak: result.newStreak,
           lastActiveDate: today,
           completedLessons: result.completedLessons,
           currentLesson: null,
           lastReviewDate: result.lastReviewDate,
-        })
+          passedUnitTests: result.passedUnitTests,
+        }))
         setLessonProgressMap((prev) => ({ ...prev, [lessonId]: lessonProgress }))
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to complete lesson')
       }
     },
     [uid, cancelPendingSave],
+  )
+
+  const markUnitTestPassed = useCallback(
+    (sectionId: string) => {
+      if (!uid || !db) return
+      setUserProgress((prev) => ({
+        ...prev,
+        passedUnitTests: prev.passedUnitTests.includes(sectionId)
+          ? prev.passedUnitTests
+          : [...prev.passedUnitTests, sectionId],
+      }))
+      void setDoc(
+        userDocRef(uid),
+        { passedUnitTests: arrayUnion(sectionId) },
+        { merge: true },
+      ).catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to record unit test result')
+      })
+    },
+    [uid],
   )
 
   return {
@@ -401,5 +426,6 @@ export function useProgress(uid: string | undefined) {
     recordSkillAttempt,
     completeLesson,
     markReviewDone,
+    markUnitTestPassed,
   }
 }

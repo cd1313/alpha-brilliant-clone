@@ -1,8 +1,19 @@
 export type ConicType = 'circle' | 'ellipse' | 'parabola' | 'hyperbola' | 'none'
 
-export type LessonSimulator = 'cone' | 'parabola' | 'circle' | 'ellipse' | 'hyperbola'
+export type LessonSimulator =
+  | 'cone'
+  | 'parabola'
+  | 'circle'
+  | 'ellipse'
+  | 'hyperbola'
+  | 'unit-circle'
+  | 'trig-graph'
 
 export type HyperbolaOrientation = 'horizontal' | 'vertical'
+
+export type TrigFunction = 'sin' | 'cos' | 'tan'
+
+export type Quadrant = 1 | 2 | 3 | 4
 
 export type Feedback = {
   correct: string
@@ -74,6 +85,33 @@ export type HyperbolaSimulatorConfig = {
   showSemiAxes?: boolean
 }
 
+export type UnitCircleSimulatorConfig = {
+  showCoordinates?: boolean
+  showAngle?: boolean
+  showReferenceAngle?: boolean
+  /** Draw the cosine (horizontal) and sine (vertical) legs of the right triangle. */
+  showLegs?: boolean
+  /** Snap the terminal point to common special angles (multiples of 30° and 45°). */
+  snapSpecial?: boolean
+  /** Show a typed angle-entry panel instead of (or alongside) free dragging. */
+  angleInputMode?: boolean
+  /** A fixed angle (radians) to mark on the circle as a target guide. */
+  targetAngle?: number
+}
+
+export type TrigGraphSimulatorConfig = {
+  /** Fix the function the grapher draws; defaults to 'sin'. */
+  fn?: TrigFunction
+  /** Allow toggling between sine and cosine. */
+  allowFunctionToggle?: boolean
+  showEquation?: boolean
+  showMidline?: boolean
+  showPeriod?: boolean
+  showAmplitude?: boolean
+  /** Lock amplitude/vertical so only horizontal (period/phase) handles move. */
+  horizontalOnly?: boolean
+}
+
 export type ExploreSuccessCondition =
   | 'continue'
   | { minDistinctConics: number }
@@ -85,6 +123,10 @@ export type ExploreSuccessCondition =
   | { movedAxes: true }
   | { minDistinctEllipses: number }
   | { minDistinctHyperbolas: number }
+  | { movedAngle: true }
+  | { minDistinctAngles: number }
+  | { movedGraph: true }
+  | { minDistinctGraphs: number }
 
 export type ExploreStep = StepMeta & {
   type: 'explore'
@@ -100,6 +142,8 @@ export type ExploreStep = StepMeta & {
   circleConfig?: CircleSimulatorConfig
   ellipseConfig?: EllipseSimulatorConfig
   hyperbolaConfig?: HyperbolaSimulatorConfig
+  unitCircleConfig?: UnitCircleSimulatorConfig
+  trigGraphConfig?: TrigGraphSimulatorConfig
 }
 
 export type ParabolaChallengeTarget =
@@ -156,6 +200,21 @@ export type HyperbolaChallengeTarget = {
   tolerance?: number
 }
 
+export type UnitCircleChallengeTarget =
+  | { kind: 'angle'; angle: number; tolerance?: number }
+  | { kind: 'coordinate'; cos: number; sin: number; tolerance?: number }
+  | { kind: 'quadrant'; quadrant: Quadrant }
+
+export type TrigGraphChallengeTarget = {
+  kind: 'transform'
+  fn?: TrigFunction
+  amplitude: number
+  b: number
+  phase: number
+  vertical: number
+  tolerance?: number
+}
+
 export type ChallengeStep = StepMeta & {
   type: 'challenge'
   prompt: string
@@ -164,6 +223,8 @@ export type ChallengeStep = StepMeta & {
   circleTarget?: CircleChallengeTarget
   ellipseTarget?: EllipseChallengeTarget
   hyperbolaTarget?: HyperbolaChallengeTarget
+  unitCircleTarget?: UnitCircleChallengeTarget
+  trigGraphTarget?: TrigGraphChallengeTarget
   /** Hide the coordinate "Target:" badge so it doesn't reveal the answer. */
   hideTarget?: boolean
   feedback: Feedback
@@ -176,6 +237,8 @@ export type ChallengeStep = StepMeta & {
   circleConfig?: CircleSimulatorConfig
   ellipseConfig?: EllipseSimulatorConfig
   hyperbolaConfig?: HyperbolaSimulatorConfig
+  unitCircleConfig?: UnitCircleSimulatorConfig
+  trigGraphConfig?: TrigGraphSimulatorConfig
 }
 
 export type ReflectionStep = StepMeta & {
@@ -234,6 +297,23 @@ export type HyperbolaMasteryTarget = {
   orientation?: HyperbolaOrientation
 }
 
+export type UnitCircleMasteryTarget = {
+  id: string
+  label: string
+  angle?: number
+  quadrant?: Quadrant
+}
+
+export type TrigGraphMasteryTarget = {
+  id: string
+  label: string
+  fn?: TrigFunction
+  amplitude?: number
+  b?: number
+  phase?: number
+  vertical?: number
+}
+
 export type MasteryCheckStep = StepMeta & {
   type: 'mastery'
   sequence?: ConicType[]
@@ -241,6 +321,8 @@ export type MasteryCheckStep = StepMeta & {
   circleSequence?: CircleMasteryTarget[]
   ellipseSequence?: EllipseMasteryTarget[]
   hyperbolaSequence?: HyperbolaMasteryTarget[]
+  unitCircleSequence?: UnitCircleMasteryTarget[]
+  trigGraphSequence?: TrigGraphMasteryTarget[]
   hideLabels: boolean
   completionMessage: string
 }
@@ -251,7 +333,7 @@ export type Lesson = {
   id: string
   title: string
   order: number
-  subject: 'conics'
+  subject: 'conics' | 'trig'
   simulator?: LessonSimulator
   steps: Step[]
 }

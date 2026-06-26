@@ -8,6 +8,8 @@ export type UserProgress = {
   } | null
   /** Local date (YYYY-MM-DD) of the last completed Smart Review/Practice session, or null. */
   lastReviewDate: string | null
+  /** Section ids whose unit test has been passed, e.g. ['conics']. */
+  passedUnitTests: string[]
 }
 
 export type LessonProgress = {
@@ -40,4 +42,5 @@ export const defaultUserProgress = (): UserProgress => ({
   completedLessons: [],
   currentLesson: null,
   lastReviewDate: null,
+  passedUnitTests: [],
 })

@@ -6,6 +6,7 @@ import { LessonPage } from './pages/LessonPage'
 import { LoginPage } from './pages/LoginPage'
 import { PracticePage } from './pages/PracticePage'
 import { ReviewPage } from './pages/ReviewPage'
+import { UnitTestPage } from './pages/UnitTestPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import './App.css'
 
@@ -55,6 +56,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/unit-test/:sectionId" element={<UnitTestPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

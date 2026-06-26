@@ -7,9 +7,11 @@ import {
 } from '../../../lib/parabolaGeometry'
 import {
   adaptiveMismatchMessage,
+  axisDirection,
   weakComponentsOf,
   type AttemptResult,
   type FeedbackPart,
+  type HintDetail,
 } from '../../../lib/feedback'
 import type { ChallengeStep, ParabolaChallengeTarget } from '../../../types/lesson'
 
@@ -19,6 +21,9 @@ type ParabolaChallengeStepViewProps = {
   onParabolaChange: (parabola: ParabolaState) => void
   onSuccess: () => void
   onAttempt?: (result: AttemptResult) => void
+  onRequestHint?: (wrongComponents: string[], details: HintDetail[]) => Promise<string | null>
+  /** When false, the first Check attempt is final — no retries, no hints. */
+  allowRetry?: boolean
 }
 
 function ghostFromTarget(
@@ -53,10 +58,15 @@ export function ParabolaChallengeStepView({
   onParabolaChange,
   onSuccess,
   onAttempt,
+  onRequestHint,
+  allowRetry = true,
 }: ParabolaChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
+  const [hintLoading, setHintLoading] = useState(false)
+  const [activeHint, setActiveHint] = useState<string | null>(null)
   const [solved, setSolved] = useState(false)
+  const [attempted, setAttempted] = useState(false)
   const target = step.parabolaTarget
   const config = step.parabolaConfig ?? {}
 
@@ -89,6 +99,53 @@ export function ParabolaChallengeStepView({
     ]
   }
 
+  const computeHintDetails = (t: ParabolaChallengeTarget): HintDetail[] => {
+    const d = deriveParabola(parabola)
+    const tol = t.tolerance ?? 0.35
+    const details: HintDetail[] = []
+
+    if (t.kind === 'vertex') {
+      if (Math.abs(d.vertexX - t.x) > tol) {
+        details.push({ component: 'vertex', direction: axisDirection(d.vertexX, t.x, 'x') })
+      }
+      if (Math.abs(d.vertexY - t.y) > tol) {
+        details.push({ component: 'vertex', direction: axisDirection(d.vertexY, t.y, 'y') })
+      }
+      return details
+    }
+
+    if (t.kind === 'narrow') {
+      if (d.opens !== 'up') {
+        details.push({ component: 'opening direction', direction: 'should open upward' })
+      }
+      if (Math.abs(d.vertexX - t.vertexX) > tol) {
+        details.push({ component: 'vertex', direction: axisDirection(d.vertexX, t.vertexX, 'x') })
+      }
+      if (Math.abs(d.vertexY - t.vertexY) > tol) {
+        details.push({ component: 'vertex', direction: axisDirection(d.vertexY, t.vertexY, 'y') })
+      }
+      if (d.p > (t.maxP ?? 1.25)) {
+        details.push({ component: 'width', direction: 'too wide' })
+      }
+      return details
+    }
+
+    if (Math.abs(d.vertexX - t.vertexX) > tol) {
+      details.push({ component: 'vertex', direction: axisDirection(d.vertexX, t.vertexX, 'x') })
+    }
+    if (Math.abs(d.vertexY - t.vertexY) > tol) {
+      details.push({ component: 'vertex', direction: axisDirection(d.vertexY, t.vertexY, 'y') })
+    }
+    if (Math.abs(parabola.focusX - t.focusX) > tol) {
+      details.push({ component: 'focus', direction: axisDirection(parabola.focusX, t.focusX, 'x') })
+    }
+    if (Math.abs(parabola.focusY - t.focusY) > tol) {
+      details.push({ component: 'focus', direction: axisDirection(parabola.focusY, t.focusY, 'y') })
+    }
+
+    return details
+  }
+
   const checkAnswer = () => {
     if (!target) return
 
@@ -102,7 +159,10 @@ export function ParabolaChallengeStepView({
       setSolved(false)
       onAttempt?.({ correct: false, weakComponents: weakComponentsOf(parts) })
     }
+    if (!allowRetry) setAttempted(true)
   }
+
+  const done = solved || (!allowRetry && attempted)
 
   return (
     <div className="step-view challenge-step">
@@ -128,24 +188,43 @@ export function ParabolaChallengeStepView({
         </p>
       )}
 
-      {showHint && <p className="hint-text">{step.feedback.hint}</p>}
+      {showHint && <p className="hint-text">{activeHint ?? step.feedback.hint}</p>}
 
       {step.miniReflection && solved && (
         <p className="mini-reflection">{step.miniReflection}</p>
       )}
 
       <div className="step-actions">
-        {!solved && (
+        {!done && (
           <>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowHint((show) => !show)}>
-              {showHint ? 'Hide Hint' : 'Hint'}
-            </button>
+            {allowRetry && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={hintLoading}
+                onClick={async () => {
+                  if (showHint) { setShowHint(false); return }
+                  if (onRequestHint && target) {
+                    setHintLoading(true)
+                    const wrong = weakComponentsOf(computeParts(target))
+                    const aiHint = await onRequestHint(wrong, computeHintDetails(target))
+                    setActiveHint(aiHint ?? step.feedback.hint)
+                    setHintLoading(false)
+                  } else {
+                    setActiveHint(step.feedback.hint)
+                  }
+                  setShowHint(true)
+                }}
+              >
+                {hintLoading ? 'Loading hint…' : showHint ? 'Hide Hint' : 'Hint'}
+              </button>
+            )}
             <button type="button" className="btn btn-primary" onClick={checkAnswer}>
               Check
             </button>
           </>
         )}
-        {solved && (
+        {done && (
           <button type="button" className="btn btn-primary" onClick={onSuccess}>
             Continue
           </button>

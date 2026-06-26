@@ -1,86 +1,81 @@
 import { useState } from 'react'
-import { EllipseSimulator } from '../../ellipse/EllipseSimulator'
-import { matchesEllipseChallengeTarget, type EllipseState } from '../../../lib/ellipseGeometry'
+import { UnitCircleSimulator } from '../../trig/UnitCircleSimulator'
+import {
+  matchesUnitCircleChallengeTarget,
+  normalizeAngle,
+  type UnitCircleState,
+} from '../../../lib/unitCircleGeometry'
 import {
   adaptiveMismatchMessage,
-  axisDirection,
-  scalarDirection,
   weakComponentsOf,
   type AttemptResult,
   type FeedbackPart,
   type HintDetail,
 } from '../../../lib/feedback'
-import type { ChallengeStep, EllipseChallengeTarget } from '../../../types/lesson'
+import type { ChallengeStep, UnitCircleChallengeTarget } from '../../../types/lesson'
 
-function ghostFromTarget(target: EllipseChallengeTarget | undefined): EllipseState | null {
-  if (!target) return null
-  return { centerX: target.centerX, centerY: target.centerY, a: target.a, b: target.b }
-}
-
-type EllipseChallengeStepViewProps = {
+type UnitCircleChallengeStepViewProps = {
   step: ChallengeStep
-  ellipse: EllipseState
-  onEllipseChange: (ellipse: EllipseState) => void
+  unitCircle: UnitCircleState
+  onUnitCircleChange: (next: UnitCircleState) => void
   onSuccess: () => void
   onAttempt?: (result: AttemptResult) => void
   onRequestHint?: (wrongComponents: string[], details: HintDetail[]) => Promise<string | null>
-  /** When false, the first Check attempt is final — no retries, no hints. */
   allowRetry?: boolean
 }
 
-export function EllipseChallengeStepView({
+/** Direction to rotate toward a target angle, without revealing the target value. */
+function rotationDirection(current: number, targetAngle: number): string {
+  const delta = normalizeAngle(targetAngle - current)
+  return delta <= Math.PI ? 'rotate counterclockwise' : 'rotate clockwise'
+}
+
+function ghostFromTarget(target: UnitCircleChallengeTarget | undefined): UnitCircleState | null {
+  if (!target) return null
+  if (target.kind === 'angle') return { angle: target.angle }
+  if (target.kind === 'coordinate') return { angle: Math.atan2(target.sin, target.cos) }
+  return null
+}
+
+export function UnitCircleChallengeStepView({
   step,
-  ellipse,
-  onEllipseChange,
+  unitCircle,
+  onUnitCircleChange,
   onSuccess,
   onAttempt,
   onRequestHint,
   allowRetry = true,
-}: EllipseChallengeStepViewProps) {
+}: UnitCircleChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [hintLoading, setHintLoading] = useState(false)
   const [activeHint, setActiveHint] = useState<string | null>(null)
   const [solved, setSolved] = useState(false)
   const [attempted, setAttempted] = useState(false)
-  const target = step.ellipseTarget
-  const config = step.ellipseConfig ?? {}
+  const target = step.unitCircleTarget
+  const config = step.unitCircleConfig ?? {}
 
-  const computeParts = (t: EllipseChallengeTarget): FeedbackPart[] => {
-    const tol = t.tolerance ?? 0.35
-    const centerOk =
-      Math.abs(ellipse.centerX - t.centerX) <= tol && Math.abs(ellipse.centerY - t.centerY) <= tol
-    return [
-      { label: 'center', ok: centerOk },
-      { label: 'a', ok: Math.abs(ellipse.a - t.a) <= tol },
-      { label: 'b', ok: Math.abs(ellipse.b - t.b) <= tol },
-    ]
+  const computeParts = (t: UnitCircleChallengeTarget): FeedbackPart[] => {
+    const ok = matchesUnitCircleChallengeTarget(unitCircle, t)
+    const label = t.kind === 'angle' ? 'angle' : t.kind === 'coordinate' ? 'coordinates' : 'quadrant'
+    return [{ label, ok }]
   }
 
-  const computeHintDetails = (t: EllipseChallengeTarget): HintDetail[] => {
-    const tol = t.tolerance ?? 0.35
-    const details: HintDetail[] = []
-
-    if (Math.abs(ellipse.centerX - t.centerX) > tol) {
-      details.push({ component: 'center', direction: axisDirection(ellipse.centerX, t.centerX, 'x') })
+  const computeHintDetails = (t: UnitCircleChallengeTarget): HintDetail[] => {
+    if (matchesUnitCircleChallengeTarget(unitCircle, t)) return []
+    if (t.kind === 'angle') {
+      return [{ component: 'angle', direction: rotationDirection(unitCircle.angle, t.angle) }]
     }
-    if (Math.abs(ellipse.centerY - t.centerY) > tol) {
-      details.push({ component: 'center', direction: axisDirection(ellipse.centerY, t.centerY, 'y') })
+    if (t.kind === 'coordinate') {
+      const targetAngle = Math.atan2(t.sin, t.cos)
+      return [{ component: 'coordinates', direction: rotationDirection(unitCircle.angle, targetAngle) }]
     }
-    if (Math.abs(ellipse.a - t.a) > tol) {
-      details.push({ component: 'a', direction: scalarDirection(ellipse.a, t.a) })
-    }
-    if (Math.abs(ellipse.b - t.b) > tol) {
-      details.push({ component: 'b', direction: scalarDirection(ellipse.b, t.b) })
-    }
-
-    return details
+    return [{ component: 'quadrant', direction: 'move to a different quadrant' }]
   }
 
   const checkAnswer = () => {
     if (!target) return
-
-    if (matchesEllipseChallengeTarget(ellipse, target)) {
+    if (matchesUnitCircleChallengeTarget(unitCircle, target)) {
       setFeedback(step.feedback.correct)
       setSolved(true)
       onAttempt?.({ correct: true })
@@ -99,15 +94,16 @@ export function EllipseChallengeStepView({
     <div className="step-view challenge-step">
       <p className="step-prompt">{step.prompt}</p>
 
-      <EllipseSimulator
-        ellipse={ellipse}
-        onEllipseChange={onEllipseChange}
+      <UnitCircleSimulator
+        unitCircle={unitCircle}
+        onUnitCircleChange={onUnitCircleChange}
         interactive
-        highlightCenter={config.highlightCenter}
-        showAxes={config.showAxes ?? true}
-        showEquation={config.showEquation ?? true}
-        centerDraggable={config.centerDraggable ?? true}
-        targetPoint={config.targetPoint}
+        showCoordinates={config.showCoordinates ?? true}
+        showAngle={config.showAngle ?? true}
+        showReferenceAngle={config.showReferenceAngle}
+        showLegs={config.showLegs}
+        snapSpecial={config.snapSpecial}
+        targetAngle={config.targetAngle}
         ghost={showHint ? ghostFromTarget(target) : null}
       />
 
@@ -119,9 +115,7 @@ export function EllipseChallengeStepView({
 
       {showHint && <p className="hint-text">{activeHint ?? step.feedback.hint}</p>}
 
-      {step.miniReflection && solved && (
-        <p className="mini-reflection">{step.miniReflection}</p>
-      )}
+      {step.miniReflection && solved && <p className="mini-reflection">{step.miniReflection}</p>}
 
       <div className="step-actions">
         {!done && (
@@ -132,7 +126,10 @@ export function EllipseChallengeStepView({
                 className="btn btn-secondary"
                 disabled={hintLoading}
                 onClick={async () => {
-                  if (showHint) { setShowHint(false); return }
+                  if (showHint) {
+                    setShowHint(false)
+                    return
+                  }
                   if (onRequestHint && target) {
                     setHintLoading(true)
                     const wrong = weakComponentsOf(computeParts(target))

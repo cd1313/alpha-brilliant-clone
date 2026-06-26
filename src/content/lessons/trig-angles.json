@@ -1,0 +1,115 @@
+{
+  "id": "trig-angles",
+  "title": "Angles & Radians",
+  "order": 1,
+  "subject": "trig",
+  "simulator": "unit-circle",
+  "steps": [
+    {
+      "type": "explore",
+      "title": "Angles in Standard Position",
+      "goal": "See how an angle is swept out from the positive x-axis.",
+      "introText": "An angle in **standard position** has its vertex at the origin and its initial side along the positive x-axis. Sweeping counterclockwise gives a positive angle; the ray you end on is the **terminal side**.",
+      "prompt": "Drag the orange point around the circle. Watch how the swept angle θ grows from 0 and how the same rotation can be measured in degrees or radians.",
+      "interactive": true,
+      "successCondition": { "movedAngle": true },
+      "unitCircleConfig": {
+        "showAngle": true
+      }
+    },
+    {
+      "type": "explore",
+      "title": "Radians & Degrees",
+      "goal": "Connect common special angles in degrees to their radian measures.",
+      "introText": "One full turn is 360° or **2π radians**, so 180° = π. That makes the common special angles 30° = **π/6**, 45° = **π/4**, 60° = **π/3**, and 90° = **π/2**.",
+      "prompt": "Visit at least three different special angles. The point snaps to common angles so you can read each one in both degrees and radians.",
+      "interactive": true,
+      "successCondition": { "minDistinctAngles": 3 },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "snapSpecial": true
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Sweep to a Right Angle",
+      "goal": "Place the terminal side at a quarter turn.",
+      "prompt": "Drag the terminal point to θ = π/2 (90°).",
+      "hideTarget": true,
+      "unitCircleTarget": { "kind": "angle", "angle": 1.5707963267948966 },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "snapSpecial": true
+      },
+      "feedback": {
+        "correct": "Exactly! A quarter turn is π/2 radians, which equals 90°.",
+        "incorrect": "Not yet — π/2 is a quarter of a full turn, straight up the positive y-axis.",
+        "hint": "π/2 radians = 90°. Sweep counterclockwise until the point sits on the positive y-axis."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Find the Quadrant",
+      "goal": "Identify where an angle's terminal side lands.",
+      "info": "The axes split the plane into four **quadrants**, numbered counterclockwise starting from the upper right (Quadrant I).",
+      "prompt": "Place the terminal point anywhere in Quadrant II (between 90° and 180°).",
+      "unitCircleTarget": { "kind": "quadrant", "quadrant": 2 },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "showCoordinates": true,
+        "snapSpecial": true
+      },
+      "feedback": {
+        "correct": "Nice! Quadrant II holds angles between π/2 and π.",
+        "incorrect": "Quadrant II is the upper-left region — angles between 90° and 180°.",
+        "hint": "Sweep past 90° (π/2) but stop before 180° (π) to land in the upper-left quadrant."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "A Bigger Angle",
+      "goal": "Reach a special angle beyond 90°.",
+      "prompt": "Drag the terminal point to θ = 5π/6 (150°).",
+      "hideTarget": true,
+      "unitCircleTarget": { "kind": "angle", "angle": 2.6179938779914944 },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "showCoordinates": true,
+        "snapSpecial": true
+      },
+      "feedback": {
+        "correct": "Great! 5π/6 is 150°, just 30° short of a half turn.",
+        "incorrect": "Not quite — 5π/6 is 150°, in Quadrant II.",
+        "hint": "5π/6 = 150°. It is the reflection of π/6 (30°) across the y-axis."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Check Your Understanding",
+      "goal": "Reinforce the radian–degree relationship.",
+      "prompt": "How many radians is a full turn (360°)?",
+      "choices": [
+        { "id": "a", "label": "π radians" },
+        { "id": "b", "label": "2π radians" },
+        { "id": "c", "label": "180 radians" },
+        { "id": "d", "label": "360 radians" }
+      ],
+      "correctChoiceId": "b",
+      "feedback": "Correct! One full revolution is 2π radians, so 180° = π radians.",
+      "incorrectFeedback": "Not quite. A half turn (180°) is π radians, so a full turn is twice that."
+    },
+    {
+      "type": "mastery",
+      "title": "Mastery Check",
+      "goal": "Reach four target angles — no hints.",
+      "unitCircleSequence": [
+        { "id": "m1", "label": "Angle θ = π/4 (45°)", "angle": 0.7853981633974483 },
+        { "id": "m2", "label": "Angle θ = 2π/3 (120°)", "angle": 2.0943951023931953 },
+        { "id": "m3", "label": "Any angle in Quadrant III", "quadrant": 3 },
+        { "id": "m4", "label": "Angle θ = 3π/2 (270°)", "angle": 4.71238898038469 }
+      ],
+      "hideLabels": true,
+      "completionMessage": "Excellent! You can now measure angles in radians and locate them on the unit circle. Next, we'll read sine and cosine straight off the circle."
+    }
+  ]
+}

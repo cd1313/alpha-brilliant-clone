@@ -1,0 +1,116 @@
+{
+  "id": "trig-tangent",
+  "title": "Tangent & Reciprocal Functions",
+  "order": 4,
+  "subject": "trig",
+  "simulator": "trig-graph",
+  "steps": [
+    {
+      "type": "explore",
+      "title": "The Tangent Curve",
+      "goal": "See that tangent is sin/cos, with vertical asymptotes where cos = 0.",
+      "introText": "Since **tan θ = sin θ / cos θ**, the tangent function blows up to ±∞ wherever cos θ = 0. Those gaps are **vertical asymptotes**, and tangent repeats every **π** (not 2π).",
+      "prompt": "Drag the handles and watch the dashed asymptotes. Notice the curve passes through the midline once per period and shoots toward the asymptotes on either side.",
+      "interactive": true,
+      "successCondition": { "movedGraph": true },
+      "trigGraphConfig": {
+        "fn": "tan",
+        "showEquation": true,
+        "showPeriod": true
+      }
+    },
+    {
+      "type": "explore",
+      "title": "Stretch & Period",
+      "goal": "Explore how a and b reshape the tangent curve.",
+      "introText": "In **y = a·tan(b(x − c)) + d**, a scales the steepness, the period is **π/b**, c shifts horizontally, and d shifts the midline. Tangent has no amplitude in the sine/cosine sense, but a still stretches it vertically.",
+      "prompt": "Try at least three different tangent graphs, changing the stretch, period, and midline.",
+      "interactive": true,
+      "successCondition": { "minDistinctGraphs": 3 },
+      "trigGraphConfig": {
+        "fn": "tan",
+        "showEquation": true,
+        "showPeriod": true
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Stretch the Tangent",
+      "goal": "Scale tangent vertically.",
+      "prompt": "Graph y = 2 tan(x).",
+      "hideTarget": true,
+      "trigGraphTarget": { "kind": "transform", "fn": "tan", "amplitude": 2, "b": 1, "phase": 0, "vertical": 0 },
+      "trigGraphConfig": {
+        "fn": "tan",
+        "showPeriod": true
+      },
+      "feedback": {
+        "correct": "Nice! The curve is twice as steep, but the asymptotes and period are unchanged.",
+        "incorrect": "The vertical stretch isn't 2 yet — drag the orange handle to height 2.",
+        "hint": "Drag the orange handle so the curve passes through height 2 a quarter period after the midline crossing."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Shorten the Period",
+      "goal": "Compress the tangent curve.",
+      "info": "Tangent's period is **π/b**, so b = 2 halves the period to π/2 and doubles the number of branches.",
+      "prompt": "Graph y = tan(2x), whose period is π/2.",
+      "hideTarget": true,
+      "trigGraphTarget": { "kind": "transform", "fn": "tan", "amplitude": 1, "b": 2, "phase": 0, "vertical": 0 },
+      "trigGraphConfig": {
+        "fn": "tan",
+        "showPeriod": true
+      },
+      "feedback": {
+        "correct": "Great! With b = 2 the period is π/2, so asymptotes appear twice as often.",
+        "incorrect": "The period isn't π/2 yet — drag the blue handle to compress the curve.",
+        "hint": "Period = π/b. For a period of π/2 you need b = 2, so drag the blue handle to x ≈ 1.57."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Shift the Midline",
+      "goal": "Move tangent vertically.",
+      "prompt": "Graph y = tan(x) + 1.",
+      "hideTarget": true,
+      "trigGraphTarget": { "kind": "transform", "fn": "tan", "amplitude": 1, "b": 1, "phase": 0, "vertical": 1 },
+      "trigGraphConfig": {
+        "fn": "tan",
+        "showMidline": true
+      },
+      "feedback": {
+        "correct": "Exactly! Adding 1 lifts the whole curve so it crosses its midline at y = 1.",
+        "incorrect": "The midline isn't at y = 1 yet — drag the green handle up.",
+        "hint": "The +1 raises the midline. Drag the green handle to y = 1."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Reciprocal Functions",
+      "goal": "Relate the reciprocal functions to sine and cosine.",
+      "prompt": "The secant function is sec θ = 1/cos θ. Where is sec θ undefined?",
+      "choices": [
+        { "id": "a", "label": "Wherever sin θ = 0" },
+        { "id": "b", "label": "Wherever cos θ = 0" },
+        { "id": "c", "label": "Wherever tan θ = 0" },
+        { "id": "d", "label": "Nowhere — it is defined everywhere" }
+      ],
+      "correctChoiceId": "b",
+      "feedback": "Right! sec θ = 1/cos θ is undefined exactly where cos θ = 0, giving it vertical asymptotes just like tangent.",
+      "incorrectFeedback": "A reciprocal is undefined when its denominator is 0. Since sec θ = 1/cos θ, look for where cos θ = 0."
+    },
+    {
+      "type": "mastery",
+      "title": "Mastery Check",
+      "goal": "Build three tangent graphs — no hints.",
+      "trigGraphSequence": [
+        { "id": "m1", "label": "y = 2 tan(x)", "fn": "tan", "amplitude": 2, "b": 1, "phase": 0, "vertical": 0 },
+        { "id": "m2", "label": "y = tan(2x)", "fn": "tan", "amplitude": 1, "b": 2, "phase": 0, "vertical": 0 },
+        { "id": "m3", "label": "y = tan(x) − 1", "fn": "tan", "amplitude": 1, "b": 1, "phase": 0, "vertical": -1 }
+      ],
+      "hideLabels": true,
+      "completionMessage": "Congratulations! You've completed the Trigonometric Functions unit — angles, the unit circle, sine and cosine graphs, and tangent. Take the unit test when you're ready!"
+    }
+  ]
+}

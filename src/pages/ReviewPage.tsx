@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
 import { availableReviewSkills, pickReviewSkills } from '../lib/reviewSkills'
-import { generateReviewItem, type GeneratedItem } from '../lib/reviewGenerator'
+import { generateReviewItem, reflectionStepFromAi, type GeneratedItem } from '../lib/reviewGenerator'
+import { callAiAssist } from '../lib/ai/aiAssist'
+import { requestHint } from '../lib/ai/hintClient'
 import { ReviewSession } from '../components/review/ReviewSession'
 
 const SESSION_LENGTH = 6
@@ -24,8 +26,32 @@ export function ReviewPage() {
     setItems(null)
     const stats = await loadSkillStats()
     const available = availableReviewSkills(userProgress.completedLessons)
-    const skills = pickReviewSkills(available, stats, SESSION_LENGTH)
-    setItems(skills.map((skill) => generateReviewItem(skill, stats[skill.id])))
+    const skills = pickReviewSkills(available, stats, SESSION_LENGTH, 1)
+    const items = await Promise.all(
+      skills.map(async (skill) => {
+        if (skill.kind === 'reflection') {
+          try {
+            const result = await callAiAssist<{
+              stem: string
+              correct: string
+              distractors: string[]
+              explanation: string
+            }>({
+              kind: 'reflect',
+              conic: skill.conic,
+              weakComponent: stats[skill.id]?.weakComponents?.[0],
+            })
+            if (result && result.stem) {
+              return { ...generateReviewItem(skill, stats[skill.id]), step: reflectionStepFromAi(skill, result) }
+            }
+          } catch {
+            // fall through to deterministic fallback
+          }
+        }
+        return generateReviewItem(skill, stats[skill.id])
+      }),
+    )
+    setItems(items)
     setBuilding(false)
   }, [loadSkillStats, userProgress.completedLessons])
 
@@ -41,6 +67,12 @@ export function ReviewPage() {
     startedRef.current = true
     void startSession()
   }, [startSession])
+
+  const getAiHint = useCallback(
+    (conic: string, prompt: string, wrongComponents: string[]) =>
+      requestHint({ conic, prompt, wrongComponents }),
+    [],
+  )
 
   const content = () => {
     if (loading) {
@@ -79,6 +111,7 @@ export function ReviewPage() {
         onRecordAttempt={recordSkillAttempt}
         onRestart={restartSession}
         onComplete={markReviewDone}
+        getAiHint={getAiHint}
       />
     )
   }

@@ -1,0 +1,139 @@
+{
+  "id": "trig-sine-cosine",
+  "title": "Sine & Cosine Graphs",
+  "order": 3,
+  "subject": "trig",
+  "simulator": "trig-graph",
+  "steps": [
+    {
+      "type": "explore",
+      "title": "From Circle to Wave",
+      "goal": "See the sine curve as the height of the unit-circle point over time.",
+      "introText": "If you track sin θ as the angle increases, you trace the **sine wave** — a smooth curve that repeats every 2π. Cosine is the same wave shifted a quarter period.",
+      "prompt": "Drag the handles to reshape the curve. The red handle sets the phase, the blue handle sets the period, the orange handle sets the amplitude, and the green handle sets the midline.",
+      "interactive": true,
+      "successCondition": { "movedGraph": true },
+      "trigGraphConfig": {
+        "fn": "sin",
+        "showEquation": true,
+        "showMidline": true
+      }
+    },
+    {
+      "type": "explore",
+      "title": "Amplitude, Period & Shift",
+      "goal": "Connect each transformation to a part of the equation y = a·f(b(x − c)) + d.",
+      "introText": "In **y = a·sin(b(x − c)) + d**: a is the **amplitude**, the period is **2π/b**, c is the **phase shift**, and d is the **vertical shift** (the midline y = d).",
+      "prompt": "Try at least three different graphs. Toggle between sine and cosine and watch the equation update as you drag.",
+      "interactive": true,
+      "successCondition": { "minDistinctGraphs": 3 },
+      "trigGraphConfig": {
+        "fn": "sin",
+        "allowFunctionToggle": true,
+        "showEquation": true,
+        "showAmplitude": true,
+        "showMidline": true
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Set the Amplitude",
+      "goal": "Stretch the sine wave vertically.",
+      "info": "The **amplitude** is how far the curve rises above (and falls below) its midline. In y = a·sin(x), the amplitude is |a|.",
+      "prompt": "Graph y = 2 sin(x).",
+      "hideTarget": true,
+      "trigGraphTarget": { "kind": "transform", "fn": "sin", "amplitude": 2, "b": 1, "phase": 0, "vertical": 0 },
+      "trigGraphConfig": {
+        "fn": "sin",
+        "showMidline": true
+      },
+      "feedback": {
+        "correct": "Nice! The peak now reaches 2 and the trough reaches −2.",
+        "incorrect": "The amplitude isn't 2 yet — drag the orange handle to height 2.",
+        "hint": "Amplitude is the height of the peak above the midline. Drag the orange handle up to y = 2."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Set the Period",
+      "goal": "Compress the wave horizontally.",
+      "info": "The **period** is the horizontal length of one full cycle, equal to **2π/b**. Larger b means a shorter period.",
+      "prompt": "Graph y = cos(2x), whose period is π.",
+      "hideTarget": true,
+      "trigGraphTarget": { "kind": "transform", "fn": "cos", "amplitude": 1, "b": 2, "phase": 0, "vertical": 0 },
+      "trigGraphConfig": {
+        "fn": "cos",
+        "showPeriod": true,
+        "showMidline": true
+      },
+      "feedback": {
+        "correct": "Great! With b = 2 the period is 2π/2 = π — the wave repeats twice as fast.",
+        "incorrect": "The period isn't π yet — drag the blue handle so one cycle spans π.",
+        "hint": "Period = 2π/b. For a period of π you need b = 2, so drag the blue handle to x = π."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Vertical Shift",
+      "goal": "Raise the midline.",
+      "prompt": "Graph y = sin(x) + 2 (midline at y = 2).",
+      "hideTarget": true,
+      "trigGraphTarget": { "kind": "transform", "fn": "sin", "amplitude": 1, "b": 1, "phase": 0, "vertical": 2 },
+      "trigGraphConfig": {
+        "fn": "sin",
+        "showMidline": true
+      },
+      "feedback": {
+        "correct": "Exactly! Adding 2 lifts the entire wave so it oscillates around y = 2.",
+        "incorrect": "The midline isn't at y = 2 yet — drag the green handle up.",
+        "hint": "The +2 shifts the midline up. Drag the green handle to y = 2."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Phase Shift",
+      "goal": "Slide the wave horizontally.",
+      "info": "Replacing x with (x − c) shifts the graph **right** by c. This is the **phase shift**.",
+      "prompt": "Graph y = sin(x − π/2) — the sine wave shifted right by π/2.",
+      "hideTarget": true,
+      "trigGraphTarget": { "kind": "transform", "fn": "sin", "amplitude": 1, "b": 1, "phase": 1.5707963267948966, "vertical": 0 },
+      "trigGraphConfig": {
+        "fn": "sin",
+        "showMidline": true
+      },
+      "feedback": {
+        "correct": "Nice! Shifting sine right by π/2 actually reproduces the cosine curve.",
+        "incorrect": "The shift isn't π/2 to the right yet — drag the red handle.",
+        "hint": "(x − π/2) moves the start of the cycle to x = π/2. Drag the red phase handle to x ≈ 1.57."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Reading a Graph",
+      "goal": "Identify amplitude and period from an equation.",
+      "prompt": "What are the amplitude and period of y = 3 sin(2x)?",
+      "choices": [
+        { "id": "a", "label": "Amplitude 3, period π" },
+        { "id": "b", "label": "Amplitude 2, period 3" },
+        { "id": "c", "label": "Amplitude 3, period 2π" },
+        { "id": "d", "label": "Amplitude 6, period π" }
+      ],
+      "correctChoiceId": "a",
+      "feedback": "Correct! The amplitude is 3 and the period is 2π/2 = π.",
+      "incorrectFeedback": "Amplitude is the coefficient in front (3); period is 2π divided by the coefficient of x (2)."
+    },
+    {
+      "type": "mastery",
+      "title": "Mastery Check",
+      "goal": "Build four sine and cosine graphs — no hints.",
+      "trigGraphSequence": [
+        { "id": "m1", "label": "y = 3 sin(x)", "fn": "sin", "amplitude": 3, "b": 1, "phase": 0, "vertical": 0 },
+        { "id": "m2", "label": "y = cos(2x)", "fn": "cos", "amplitude": 1, "b": 2, "phase": 0, "vertical": 0 },
+        { "id": "m3", "label": "y = sin(x) − 1", "fn": "sin", "amplitude": 1, "b": 1, "phase": 0, "vertical": -1 },
+        { "id": "m4", "label": "y = 2 cos(x) + 1", "fn": "cos", "amplitude": 2, "b": 1, "phase": 0, "vertical": 1 }
+      ],
+      "hideLabels": true,
+      "completionMessage": "Fantastic! You can shape sine and cosine graphs with amplitude, period, phase, and vertical shifts. Finally, let's look at the tangent function."
+    }
+  ]
+}

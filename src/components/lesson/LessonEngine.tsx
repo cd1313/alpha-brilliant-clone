@@ -7,6 +7,8 @@ import {
   lessonUsesEllipseSimulator,
   lessonUsesHyperbolaSimulator,
   lessonUsesParabolaSimulator,
+  lessonUsesTrigGraphSimulator,
+  lessonUsesUnitCircleSimulator,
 } from '../../lib/course'
 import {
   clampCircleState,
@@ -33,9 +35,19 @@ import {
   roundP,
   type ParabolaState,
 } from '../../lib/parabolaGeometry'
+import {
+  clampAngle,
+  DEFAULT_UNIT_CIRCLE,
+  type UnitCircleState,
+} from '../../lib/unitCircleGeometry'
+import {
+  clampTrigGraphState,
+  DEFAULT_TRIG_GRAPH,
+  type TrigGraphState,
+} from '../../lib/trigGraphGeometry'
 import type { ConicType, Lesson, Step } from '../../types/lesson'
 import type { LessonProgress } from '../../types/progress'
-import type { AttemptResult } from '../../lib/feedback'
+import type { AttemptResult, HintDetail } from '../../lib/feedback'
 import { skillForStep } from '../../lib/reviewSkills'
 import type { SessionAttempt } from '../../lib/ai/tutorClient'
 import { ProgressBar } from './ProgressBar'
@@ -55,7 +67,14 @@ import { MasteryCheckStepView } from './steps/MasteryCheckStepView'
 import { ParabolaChallengeStepView } from './steps/ParabolaChallengeStepView'
 import { ParabolaExploreStepView } from './steps/ParabolaExploreStepView'
 import { ParabolaMasteryCheckStepView } from './steps/ParabolaMasteryCheckStepView'
+import { UnitCircleChallengeStepView } from './steps/UnitCircleChallengeStepView'
+import { UnitCircleExploreStepView } from './steps/UnitCircleExploreStepView'
+import { UnitCircleMasteryCheckStepView } from './steps/UnitCircleMasteryCheckStepView'
+import { TrigGraphChallengeStepView } from './steps/TrigGraphChallengeStepView'
+import { TrigGraphExploreStepView } from './steps/TrigGraphExploreStepView'
+import { TrigGraphMasteryCheckStepView } from './steps/TrigGraphMasteryCheckStepView'
 import { ReflectionStepView } from './steps/ReflectionStepView'
+import { requestHint } from '../../lib/ai/hintClient'
 
 type LessonEngineProps = {
   lesson: Lesson
@@ -74,6 +93,8 @@ function masterySequenceLength(step: Step | undefined): number {
   if (step.circleSequence?.length) return step.circleSequence.length
   if (step.ellipseSequence?.length) return step.ellipseSequence.length
   if (step.hyperbolaSequence?.length) return step.hyperbolaSequence.length
+  if (step.unitCircleSequence?.length) return step.unitCircleSequence.length
+  if (step.trigGraphSequence?.length) return step.trigGraphSequence.length
   return step.sequence?.length ?? 0
 }
 
@@ -142,6 +163,8 @@ export function LessonEngine({
   const usesCircle = lessonUsesCircleSimulator(lesson)
   const usesEllipse = lessonUsesEllipseSimulator(lesson)
   const usesHyperbola = lessonUsesHyperbolaSimulator(lesson)
+  const usesUnitCircle = lessonUsesUnitCircleSimulator(lesson)
+  const usesTrigGraph = lessonUsesTrigGraphSimulator(lesson)
   const usesCone = lessonUsesConeSimulator(lesson)
   const initialStepIndex = clampStepIndex(lesson, initialProgress?.currentStepIndex)
   const [stepIndex, setStepIndex] = useState(initialStepIndex)
@@ -150,6 +173,8 @@ export function LessonEngine({
   const [circle, setCircle] = useState<CircleState>(DEFAULT_CIRCLE)
   const [ellipse, setEllipse] = useState<EllipseState>(DEFAULT_ELLIPSE)
   const [hyperbola, setHyperbola] = useState<HyperbolaState>(DEFAULT_HYPERBOLA)
+  const [unitCircle, setUnitCircle] = useState<UnitCircleState>(DEFAULT_UNIT_CIRCLE)
+  const [trigGraph, setTrigGraph] = useState<TrigGraphState>(DEFAULT_TRIG_GRAPH)
   const initialParabolaRef = useRef(DEFAULT_PARABOLA)
   const initialCircleRef = useRef(DEFAULT_CIRCLE)
   const [distinctConicsSeen, setDistinctConicsSeen] = useState<Set<ConicType>>(
@@ -172,6 +197,22 @@ export function LessonEngine({
 
   const step = lesson.steps[stepIndex]
   const isReviewing = stepIndex < furthestStepIndex
+
+  const lessonConic = usesParabola ? 'parabola'
+    : usesCircle ? 'circle'
+    : usesEllipse ? 'ellipse'
+    : usesHyperbola ? 'hyperbola'
+    : usesUnitCircle ? 'unit-circle'
+    : usesTrigGraph ? 'trig-graph'
+    : null
+
+  const onRequestHint = useCallback(
+    (wrongComponents: string[], details: HintDetail[]) =>
+      lessonConic && step
+        ? requestHint({ conic: lessonConic, prompt: 'prompt' in step ? step.prompt : '', wrongComponents, details })
+        : Promise.resolve(null),
+    [lessonConic, step],
+  )
   const prevStepIndexRef = useRef(stepIndex)
   const stepIndexRef = useRef(stepIndex)
   const sessionAttemptsRef = useRef<SessionAttempt[]>([])
@@ -211,6 +252,14 @@ export function LessonEngine({
       setHyperbola(DEFAULT_HYPERBOLA)
     }
 
+    if (usesUnitCircle && currentStep.type === 'challenge') {
+      setUnitCircle(DEFAULT_UNIT_CIRCLE)
+    }
+
+    if (usesTrigGraph && currentStep.type === 'challenge') {
+      setTrigGraph(DEFAULT_TRIG_GRAPH)
+    }
+
     if (currentStep.type === 'explore') {
       if (exploreTracksDistinctP(currentStep)) {
         setDistinctPValues(new Set())
@@ -239,7 +288,7 @@ export function LessonEngine({
         }
       }
     }
-  }, [stepIndex, lesson.steps, usesParabola, usesCircle, usesEllipse, usesHyperbola])
+  }, [stepIndex, lesson.steps, usesParabola, usesCircle, usesEllipse, usesHyperbola, usesUnitCircle, usesTrigGraph])
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const persistProgress = useCallback(
@@ -338,6 +387,14 @@ export function LessonEngine({
 
   const handleHyperbolaChange = useCallback((nextHyperbola: HyperbolaState) => {
     setHyperbola(clampHyperbolaState(nextHyperbola))
+  }, [])
+
+  const handleUnitCircleChange = useCallback((next: UnitCircleState) => {
+    setUnitCircle({ angle: clampAngle(next.angle) })
+  }, [])
+
+  const handleTrigGraphChange = useCallback((next: TrigGraphState) => {
+    setTrigGraph(clampTrigGraphState(next))
   }, [])
 
   const finishLesson = () => {
@@ -482,6 +539,26 @@ export function LessonEngine({
         />
       )}
 
+      {usesUnitCircle && step.type === 'explore' && (
+        <UnitCircleExploreStepView
+          key={stepIndex}
+          step={step}
+          unitCircle={unitCircle}
+          onUnitCircleChange={handleUnitCircleChange}
+          onContinue={goToNextStep}
+        />
+      )}
+
+      {usesTrigGraph && step.type === 'explore' && (
+        <TrigGraphExploreStepView
+          key={stepIndex}
+          step={step}
+          graph={trigGraph}
+          onGraphChange={handleTrigGraphChange}
+          onContinue={goToNextStep}
+        />
+      )}
+
       {usesCone && step.type === 'explore' && (
         <ExploreStepView
           key={stepIndex}
@@ -501,6 +578,7 @@ export function LessonEngine({
           onParabolaChange={handleParabolaChange}
           onSuccess={goToNextStep}
           onAttempt={handleAttempt}
+          onRequestHint={onRequestHint}
         />
       )}
 
@@ -512,6 +590,7 @@ export function LessonEngine({
           onCircleChange={handleCircleChange}
           onSuccess={goToNextStep}
           onAttempt={handleAttempt}
+          onRequestHint={onRequestHint}
         />
       )}
 
@@ -523,6 +602,7 @@ export function LessonEngine({
           onEllipseChange={handleEllipseChange}
           onSuccess={goToNextStep}
           onAttempt={handleAttempt}
+          onRequestHint={onRequestHint}
         />
       )}
 
@@ -534,6 +614,31 @@ export function LessonEngine({
           onHyperbolaChange={handleHyperbolaChange}
           onSuccess={goToNextStep}
           onAttempt={handleAttempt}
+          onRequestHint={onRequestHint}
+        />
+      )}
+
+      {usesUnitCircle && step.type === 'challenge' && (
+        <UnitCircleChallengeStepView
+          key={stepIndex}
+          step={step}
+          unitCircle={unitCircle}
+          onUnitCircleChange={handleUnitCircleChange}
+          onSuccess={goToNextStep}
+          onAttempt={handleAttempt}
+          onRequestHint={onRequestHint}
+        />
+      )}
+
+      {usesTrigGraph && step.type === 'challenge' && (
+        <TrigGraphChallengeStepView
+          key={stepIndex}
+          step={step}
+          graph={trigGraph}
+          onGraphChange={handleTrigGraphChange}
+          onSuccess={goToNextStep}
+          onAttempt={handleAttempt}
+          onRequestHint={onRequestHint}
         />
       )}
 
@@ -598,6 +703,30 @@ export function LessonEngine({
           step={step}
           hyperbola={hyperbola}
           onHyperbolaChange={handleHyperbolaChange}
+          masteryIndex={masteryIndex}
+          onMasteryIndexChange={handleMasteryIndexChange}
+          onComplete={handleComplete}
+        />
+      )}
+
+      {usesUnitCircle && step.type === 'mastery' && (
+        <UnitCircleMasteryCheckStepView
+          key={stepIndex}
+          step={step}
+          unitCircle={unitCircle}
+          onUnitCircleChange={handleUnitCircleChange}
+          masteryIndex={masteryIndex}
+          onMasteryIndexChange={handleMasteryIndexChange}
+          onComplete={handleComplete}
+        />
+      )}
+
+      {usesTrigGraph && step.type === 'mastery' && (
+        <TrigGraphMasteryCheckStepView
+          key={stepIndex}
+          step={step}
+          graph={trigGraph}
+          onGraphChange={handleTrigGraphChange}
           masteryIndex={masteryIndex}
           onMasteryIndexChange={handleMasteryIndexChange}
           onComplete={handleComplete}

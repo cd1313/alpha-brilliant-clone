@@ -15,6 +15,7 @@ export function LessonPage() {
     loadLessonProgress,
     saveLessonProgress,
     completeLesson,
+    markReviewDone,
     recordSkillAttempt,
     loading,
     error,
@@ -50,8 +51,6 @@ export function LessonPage() {
     )
   }
 
-  // Daily review gate: block starting a brand-new lesson until today's review/practice is done.
-  // Resuming an already-started lesson and revisiting completed ones stay allowed.
   const completed = userProgress.completedLessons.includes(lessonId)
   const started =
     (lessonProgress?.currentStepIndex ?? 0) > 0 || userProgress.currentLesson?.lessonId === lessonId
@@ -66,8 +65,8 @@ export function LessonPage() {
         </header>
         <div className="page-card">
           <p>
-            Daily review first! Finish one Smart Review or Practice session today to unlock a new
-            lesson. You can still resume lessons you've started and revisit completed ones.
+            Daily review first! Finish a Smart Review, Practice session, or replay a completed
+            lesson today to unlock a new lesson.
           </p>
           <div className="step-actions">
             <Link to="/review" className="btn btn-primary">
@@ -100,7 +99,11 @@ export function LessonPage() {
         lesson={lesson}
         initialProgress={lessonProgress}
         onSaveProgress={(progress) => saveLessonProgress(lessonId, progress)}
-        onCompleteLesson={() => void completeLesson(lessonId)}
+        onCompleteLesson={() => {
+          void completeLesson(lessonId)
+          // Replaying a finished lesson satisfies the daily review requirement.
+          if (completed) markReviewDone()
+        }}
         onRecordAttempt={recordSkillAttempt}
       />
     </div>

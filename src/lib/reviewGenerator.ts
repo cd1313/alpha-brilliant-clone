@@ -3,18 +3,21 @@ import type {
   Feedback,
   HyperbolaOrientation,
   ReflectionStep,
+  TrigFunction,
 } from '../types/lesson'
 import type { SkillStat } from '../types/progress'
-import type { ReviewConic, ReviewSkill } from './reviewSkills'
+import type { ReviewTopic, ReviewSkill } from './reviewSkills'
 import { formatCircleEquation } from './circleGeometry'
 import { formatParabolaEquation } from './parabolaGeometry'
 import { deriveEllipse, formatEllipseEquation } from './ellipseGeometry'
 import { deriveHyperbola, formatHyperbolaEquation } from './hyperbolaGeometry'
+import { deriveUnitCircle } from './unitCircleGeometry'
+import { formatTrigEquation } from './trigGraphGeometry'
 
 export type GeneratedItem = {
   id: string
   skillId: string
-  conic: ReviewConic
+  conic: ReviewTopic
   kind: 'challenge' | 'reflection'
   step: ChallengeStep | ReflectionStep
 }
@@ -384,21 +387,200 @@ function hyperbolaReflection(skill: ReviewSkill, stat?: SkillStat): ReflectionSt
   })
 }
 
+// --- trig: unit circle ------------------------------------------------------
+
+type SpecialAngle = { angle: number; label: string; cos: string; sin: string }
+
+const SPECIAL_ANGLES: SpecialAngle[] = [
+  { angle: Math.PI / 6, label: 'π/6', cos: '√3/2', sin: '1/2' },
+  { angle: Math.PI / 4, label: 'π/4', cos: '√2/2', sin: '√2/2' },
+  { angle: Math.PI / 3, label: 'π/3', cos: '1/2', sin: '√3/2' },
+  { angle: Math.PI / 2, label: 'π/2', cos: '0', sin: '1' },
+  { angle: (2 * Math.PI) / 3, label: '2π/3', cos: '−1/2', sin: '√3/2' },
+  { angle: (3 * Math.PI) / 4, label: '3π/4', cos: '−√2/2', sin: '√2/2' },
+  { angle: (5 * Math.PI) / 6, label: '5π/6', cos: '−√3/2', sin: '1/2' },
+  { angle: Math.PI, label: 'π', cos: '−1', sin: '0' },
+  { angle: (4 * Math.PI) / 3, label: '4π/3', cos: '−1/2', sin: '−√3/2' },
+  { angle: (3 * Math.PI) / 2, label: '3π/2', cos: '0', sin: '−1' },
+  { angle: (5 * Math.PI) / 3, label: '5π/3', cos: '1/2', sin: '−√3/2' },
+  { angle: (7 * Math.PI) / 4, label: '7π/4', cos: '√2/2', sin: '−√2/2' },
+]
+
+const COS_SIN_POOL = ['1/2', '√3/2', '√2/2', '0', '1', '−1', '−1/2', '−√3/2', '−√2/2']
+
+function unitCircleChallenge(): ChallengeStep {
+  const special = pick(SPECIAL_ANGLES.filter((s) => s.angle > 0))
+  return {
+    type: 'challenge',
+    title: 'Place the angle',
+    prompt: `Drag the terminal point to the angle θ = ${special.label}.`,
+    hideTarget: true,
+    unitCircleTarget: { kind: 'angle', angle: special.angle },
+    unitCircleConfig: { showAngle: true, showCoordinates: true, snapSpecial: true },
+    feedback: challengeFeedback(
+      `Nice! θ = ${special.label} lands at (${special.cos}, ${special.sin}).`,
+      `${special.label} is ${Math.round((special.angle * 180) / Math.PI)}° — sweep counterclockwise from the positive x-axis.`,
+    ),
+  }
+}
+
+function unitCircleReflection(skill: ReviewSkill): ReflectionStep {
+  const special = pick(SPECIAL_ANGLES)
+  return pick([
+    () => {
+      const correct = special.cos
+      const distractors = shuffle(COS_SIN_POOL.filter((v) => v !== correct)).slice(0, 3)
+      return reflectionStep({
+        skillId: skill.id,
+        stem: `What is cos(${special.label})?`,
+        correct,
+        distractors,
+        explanation: `On the unit circle, cos(${special.label}) is the x-coordinate of the terminal point: ${correct}.`,
+        incorrect: 'Remember: cosine is the x-coordinate of the point on the unit circle.',
+      })
+    },
+    () => {
+      const correct = special.sin
+      const distractors = shuffle(COS_SIN_POOL.filter((v) => v !== correct)).slice(0, 3)
+      return reflectionStep({
+        skillId: skill.id,
+        stem: `What is sin(${special.label})?`,
+        correct,
+        distractors,
+        explanation: `On the unit circle, sin(${special.label}) is the y-coordinate of the terminal point: ${correct}.`,
+        incorrect: 'Remember: sine is the y-coordinate of the point on the unit circle.',
+      })
+    },
+    () => {
+      // Use an angle that lies strictly inside a quadrant.
+      const inQuadrant = pick(SPECIAL_ANGLES.filter((s) => deriveUnitCircle({ angle: s.angle }).quadrant !== null))
+      const q = deriveUnitCircle({ angle: inQuadrant.angle }).quadrant!
+      const labels: Record<number, string> = { 1: 'Quadrant I', 2: 'Quadrant II', 3: 'Quadrant III', 4: 'Quadrant IV' }
+      return reflectionStep({
+        skillId: skill.id,
+        stem: `Which quadrant contains the terminal side of θ = ${inQuadrant.label}?`,
+        correct: labels[q],
+        distractors: [labels[1], labels[2], labels[3], labels[4]].filter((l) => l !== labels[q]),
+        explanation: `${inQuadrant.label} ≈ ${Math.round((inQuadrant.angle * 180) / Math.PI)}°, which lands in ${labels[q]}.`,
+        incorrect: 'Convert to degrees and recall: QI is 0–90°, QII 90–180°, QIII 180–270°, QIV 270–360°.',
+      })
+    },
+  ])()
+}
+
+// --- trig: graphs -----------------------------------------------------------
+
+function trigGraphChallenge(_skill: ReviewSkill, stat?: SkillStat): ChallengeStep {
+  const fn: TrigFunction = coin() ? 'sin' : 'cos'
+  const amplitude = randInt(1, 3)
+  const b = pick([1, 2])
+  // Phase shift biased to nonzero when the learner struggles with phase.
+  const wantsPhase = wants(stat, 'phase shift') || Math.random() < 0.4
+  const phaseChoices = [0, Math.PI / 2, -Math.PI / 2]
+  const phase = wantsPhase ? pick(phaseChoices) : 0
+  const vertical = coin() ? randInt(-2, 2) : 0
+
+  const state = { fn, amplitude, b, phase, vertical }
+
+  return {
+    type: 'challenge',
+    title: 'Graph the function',
+    prompt: `Graph the function ${formatTrigEquation(state)}.`,
+    hideTarget: true,
+    trigGraphTarget: { kind: 'transform', fn, amplitude, b, phase, vertical },
+    trigGraphConfig: { fn, showEquation: false, showMidline: true },
+    feedback: challengeFeedback(
+      `Well done! Amplitude ${amplitude}, period ${b === 1 ? '2π' : b === 2 ? 'π' : '2π/' + b}, midline y = ${vertical}.`,
+      `The number in front sets the amplitude (${amplitude}); the coefficient of x sets the period (2π/${b}); the constant shifts the midline to y = ${vertical}.`,
+    ),
+  }
+}
+
+function periodLabel(b: number): string {
+  if (b === 1) return '2π'
+  if (b === 2) return 'π'
+  if (b === 0.5) return '4π'
+  return `2π/${b}`
+}
+
+function trigGraphReflection(skill: ReviewSkill): ReflectionStep {
+  const fn: TrigFunction = coin() ? 'sin' : 'cos'
+  const amplitude = randInt(2, 4)
+  const b = pick([1, 2])
+  const vertical = pick([-2, -1, 1, 2])
+  const eq = formatTrigEquation({ fn, amplitude, b, phase: 0, vertical })
+  return pick([
+    () =>
+      reflectionStep({
+        skillId: skill.id,
+        stem: `What is the amplitude of ${eq}?`,
+        correct: String(amplitude),
+        distractors: [String(amplitude + 1), String(amplitude - 1), periodLabel(b)],
+        explanation: `Amplitude is |a|, the coefficient in front of ${fn}: ${amplitude}.`,
+        incorrect: 'Amplitude is the number multiplying the trig function.',
+      }),
+    () =>
+      reflectionStep({
+        skillId: skill.id,
+        stem: `What is the period of ${eq}?`,
+        correct: periodLabel(b),
+        distractors: [periodLabel(b === 1 ? 2 : 1), '2π', String(amplitude)].filter(
+          (v) => v !== periodLabel(b),
+        ),
+        explanation: `Period = 2π / b = 2π / ${b} = ${periodLabel(b)}.`,
+        incorrect: 'Period = 2π divided by the coefficient of x.',
+      }),
+    () =>
+      reflectionStep({
+        skillId: skill.id,
+        stem: `What is the midline of ${eq}?`,
+        correct: `y = ${vertical}`,
+        distractors: [`y = ${-vertical}`, 'y = 0', `y = ${amplitude}`].filter(
+          (v) => v !== `y = ${vertical}`,
+        ),
+        explanation: `The constant added at the end shifts the midline to y = ${vertical}.`,
+        incorrect: 'The midline is y = d, where d is the constant added outside the trig function.',
+      }),
+  ])()
+}
+
 const CHALLENGE_BY_CONIC: Record<
-  ReviewConic,
+  ReviewTopic,
   (s: ReviewSkill, st?: SkillStat, frac?: boolean) => ChallengeStep
 > = {
   circle: circleChallenge,
   parabola: parabolaChallenge,
   ellipse: ellipseChallenge,
   hyperbola: hyperbolaChallenge,
+  'unit-circle': unitCircleChallenge,
+  'trig-graph': trigGraphChallenge,
 }
 
-const REFLECTION_BY_CONIC: Record<ReviewConic, (s: ReviewSkill, st?: SkillStat) => ReflectionStep> = {
+const REFLECTION_BY_CONIC: Record<ReviewTopic, (s: ReviewSkill, st?: SkillStat) => ReflectionStep> = {
   circle: circleReflection,
   parabola: parabolaReflection,
   ellipse: ellipseReflection,
   hyperbola: hyperbolaReflection,
+  'unit-circle': unitCircleReflection,
+  'trig-graph': trigGraphReflection,
+}
+
+/**
+ * Build a ReflectionStep from an AI-generated payload, falling back to the same internal
+ * builder used by deterministic generators to guarantee consistent structure.
+ */
+export function reflectionStepFromAi(
+  skill: ReviewSkill,
+  ai: { stem: string; correct: string; distractors: string[]; explanation: string },
+): ReflectionStep {
+  return reflectionStep({
+    skillId: skill.id,
+    stem: ai.stem,
+    correct: ai.correct,
+    distractors: ai.distractors,
+    explanation: ai.explanation,
+    incorrect: 'Think about the defining property of this conic section.',
+  })
 }
 
 /** Produce one validated review item for a skill. Pure/deterministic — no AI required. */

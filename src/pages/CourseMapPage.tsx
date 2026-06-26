@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
 import courseData from '../content/course.json'
 import { getLesson } from '../lib/lessons'
-import { getCourseLessons, getNextLessonId, isLessonUnlocked } from '../lib/course'
+import { allSectionLessonsComplete, getCourseLessons, getNextLessonId, isLessonUnlocked, sectionHasUnitTest } from '../lib/course'
 import { availableReviewSkills, getPracticeSkill } from '../lib/reviewSkills'
 import { dailyReviewRequired } from '../lib/reviewGate'
+import { LessonIcon } from '../components/course/LessonIcon'
 import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
 import type { Course } from '../types/lesson'
@@ -21,7 +22,7 @@ function unlockHint(lessonId: string): string | null {
 export function CourseMapPage() {
   const { user, logOut } = useAuth()
   const { userProgress, loading, error } = useProgress(user?.uid)
-  const nextLessonId = getNextLessonId(course, userProgress.completedLessons)
+  const nextLessonId = getNextLessonId(course, userProgress.completedLessons, userProgress.passedUnitTests)
 
   if (loading) {
     return (
@@ -159,7 +160,7 @@ export function CourseMapPage() {
           <div className="lesson-path">
             {section.lessons.map((lesson, index) => {
               const completed = userProgress.completedLessons.includes(lesson.id)
-              const unlocked = isLessonUnlocked(lesson, userProgress.completedLessons)
+              const unlocked = isLessonUnlocked(lesson, userProgress.completedLessons, userProgress.passedUnitTests, course)
               const inProgress =
                 userProgress.currentLesson?.lessonId === lesson.id && !completed
               const isLast = index === section.lessons.length - 1
@@ -213,11 +214,51 @@ export function CourseMapPage() {
                         </div>
                       )}
                     </div>
+                    <span className="lesson-node-graphic" aria-hidden="true">
+                      <LessonIcon lessonId={lesson.id} />
+                    </span>
                   </div>
                   {!isLast && <div className="lesson-connector" aria-hidden="true" />}
                 </div>
               )
             })}
+
+            {/* Unit test node — only for sections with practice skills */}
+            {!section.comingSoon && sectionHasUnitTest(section) && (() => {
+              const sectionComplete = allSectionLessonsComplete(section, userProgress.completedLessons)
+              const passed = userProgress.passedUnitTests.includes(section.id)
+              const available = sectionComplete && !passed
+
+              return (
+                <>
+                  <div className="lesson-connector" aria-hidden="true" />
+                  <div className="lesson-path-item">
+                    <div
+                      className={`lesson-node unit-test-node ${passed ? 'completed' : ''} ${!sectionComplete ? 'locked' : ''} ${available ? 'recommended' : ''}`}
+                    >
+                      <span className="lesson-order">★</span>
+                      <div className="lesson-node-body">
+                        <h3>Unit Test</h3>
+                        {!sectionComplete && (
+                          <p className="lesson-status">Complete all lessons first</p>
+                        )}
+                        {passed && <p className="lesson-status">Passed ✓</p>}
+                        {available && (
+                          <div className="lesson-node-actions">
+                            <Link
+                              to={`/unit-test/${section.id}`}
+                              className="btn btn-primary btn-sm"
+                            >
+                              Take Test
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )
+            })()}
           </div>
         </section>
       ))}

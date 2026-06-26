@@ -9,6 +9,8 @@ import { ParabolaChallengeStepView } from '../lesson/steps/ParabolaChallengeStep
 import { CircleChallengeStepView } from '../lesson/steps/CircleChallengeStepView'
 import { EllipseChallengeStepView } from '../lesson/steps/EllipseChallengeStepView'
 import { HyperbolaChallengeStepView } from '../lesson/steps/HyperbolaChallengeStepView'
+import { UnitCircleChallengeStepView } from '../lesson/steps/UnitCircleChallengeStepView'
+import { TrigGraphChallengeStepView } from '../lesson/steps/TrigGraphChallengeStepView'
 import { ReflectionStepView } from '../lesson/steps/ReflectionStepView'
 import { StepInfoPanel } from '../lesson/StepInfoPanel'
 import { ProgressBar } from '../lesson/ProgressBar'
@@ -20,6 +22,8 @@ import {
   DEFAULT_HYPERBOLA,
   type HyperbolaState,
 } from '../../lib/hyperbolaGeometry'
+import { clampAngle, DEFAULT_UNIT_CIRCLE, type UnitCircleState } from '../../lib/unitCircleGeometry'
+import { clampTrigGraphState, DEFAULT_TRIG_GRAPH, type TrigGraphState } from '../../lib/trigGraphGeometry'
 
 type ReviewSessionProps = {
   items: GeneratedItem[]
@@ -38,8 +42,18 @@ type ReviewSessionProps = {
   tutorTopic?: string
   /** Source context for the AI tutor. Defaults to 'review'. */
   tutorSource?: 'review' | 'practice'
+  /**
+   * On-demand AI hint provider. When supplied, challenge views call this when
+   * the student presses Hint, passing what they currently have wrong so the AI
+   * can tailor the hint to their live answer. Absent in lessons and Smart Review.
+   */
+  getAiHint?: (conic: string, prompt: string, wrongComponents: string[]) => Promise<string | null>
   /** Fired once when the session is fully completed (all items finished). */
   onComplete?: () => void
+  /** Like onComplete but also receives the final score — used by unit tests. */
+  onFinish?: (correctCount: number, total: number) => void
+  /** When false, each challenge is single-attempt with no hints (used by unit tests). */
+  allowRetry?: boolean
 }
 
 /**
@@ -50,21 +64,31 @@ function ReviewItem({
   item,
   onSuccess,
   onAttempt,
+  getAiHint,
+  allowRetry,
 }: {
   item: GeneratedItem
   onSuccess: () => void
   onAttempt: (result: AttemptResult) => void
+  getAiHint?: (conic: string, prompt: string, wrongComponents: string[]) => Promise<string | null>
+  allowRetry?: boolean
 }) {
   const [parabola, setParabola] = useState<ParabolaState>(DEFAULT_PARABOLA)
   const [circle, setCircle] = useState<CircleState>(DEFAULT_CIRCLE)
   const [ellipse, setEllipse] = useState<EllipseState>(DEFAULT_ELLIPSE)
   const [hyperbola, setHyperbola] = useState<HyperbolaState>(DEFAULT_HYPERBOLA)
+  const [unitCircle, setUnitCircle] = useState<UnitCircleState>(DEFAULT_UNIT_CIRCLE)
+  const [trigGraph, setTrigGraph] = useState<TrigGraphState>(DEFAULT_TRIG_GRAPH)
 
   if (item.kind === 'reflection') {
-    return <ReflectionStepView step={item.step as ReflectionStep} onSuccess={onSuccess} onAttempt={onAttempt} />
+    return <ReflectionStepView step={item.step as ReflectionStep} onSuccess={onSuccess} onAttempt={onAttempt} allowRetry={allowRetry} />
   }
 
   const challengeStep = item.step as ChallengeStep
+  const onRequestHint = getAiHint
+    ? (wrongComponents: string[]) => getAiHint(item.conic, challengeStep.prompt, wrongComponents)
+    : undefined
+
   switch (item.conic) {
     case 'parabola':
       return (
@@ -74,6 +98,8 @@ function ReviewItem({
           onParabolaChange={(s) => setParabola(clampParabolaState(s))}
           onSuccess={onSuccess}
           onAttempt={onAttempt}
+          onRequestHint={onRequestHint}
+          allowRetry={allowRetry}
         />
       )
     case 'circle':
@@ -84,6 +110,8 @@ function ReviewItem({
           onCircleChange={(s) => setCircle(clampCircleState(s))}
           onSuccess={onSuccess}
           onAttempt={onAttempt}
+          onRequestHint={onRequestHint}
+          allowRetry={allowRetry}
         />
       )
     case 'ellipse':
@@ -94,6 +122,8 @@ function ReviewItem({
           onEllipseChange={(s) => setEllipse(clampEllipseState(s))}
           onSuccess={onSuccess}
           onAttempt={onAttempt}
+          onRequestHint={onRequestHint}
+          allowRetry={allowRetry}
         />
       )
     case 'hyperbola':
@@ -104,6 +134,32 @@ function ReviewItem({
           onHyperbolaChange={(s) => setHyperbola(clampHyperbolaState(s))}
           onSuccess={onSuccess}
           onAttempt={onAttempt}
+          onRequestHint={onRequestHint}
+          allowRetry={allowRetry}
+        />
+      )
+    case 'unit-circle':
+      return (
+        <UnitCircleChallengeStepView
+          step={challengeStep}
+          unitCircle={unitCircle}
+          onUnitCircleChange={(s) => setUnitCircle({ angle: clampAngle(s.angle) })}
+          onSuccess={onSuccess}
+          onAttempt={onAttempt}
+          onRequestHint={onRequestHint}
+          allowRetry={allowRetry}
+        />
+      )
+    case 'trig-graph':
+      return (
+        <TrigGraphChallengeStepView
+          step={challengeStep}
+          graph={trigGraph}
+          onGraphChange={(s) => setTrigGraph(clampTrigGraphState(s))}
+          onSuccess={onSuccess}
+          onAttempt={onAttempt}
+          onRequestHint={onRequestHint}
+          allowRetry={allowRetry}
         />
       )
   }
@@ -118,11 +174,15 @@ export function ReviewSession({
   showTutor = true,
   tutorTopic,
   tutorSource = 'review',
+  getAiHint,
   onComplete,
+  onFinish,
+  allowRetry = true,
 }: ReviewSessionProps) {
   const [index, setIndex] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
   const [attempts, setAttempts] = useState<SessionAttempt[]>([])
+  const attemptedRef = useRef<Set<string>>(new Set())
 
   const finished = index >= items.length
   const item = finished ? null : items[index]
@@ -133,8 +193,9 @@ export function ReviewSession({
     if (finished && !completedRef.current) {
       completedRef.current = true
       onComplete?.()
+      onFinish?.(correctCount, items.length)
     }
-  }, [finished, onComplete])
+  }, [finished, onComplete, onFinish, correctCount, items.length])
 
   const goNext = () => setIndex((i) => i + 1)
 
@@ -144,17 +205,25 @@ export function ReviewSession({
       { skillId: it.skillId, correct: result.correct, weakComponents: result.weakComponents },
     ])
     onRecordAttempt(it.skillId, result)
-    if (result.correct) {
-      setCorrectCount((c) => c + 1)
+    if (!attemptedRef.current.has(it.id)) {
+      attemptedRef.current.add(it.id)
+      if (result.correct) {
+        setCorrectCount((c) => c + 1)
+      }
     }
   }
 
   if (finished) {
+    // When the parent supplies onFinish it owns the completion UI entirely —
+    // return null here so the parent's result screen renders without delay or
+    // a conflicting "Retake" button appearing in between.
+    if (onFinish) return null
+
     const topic = tutorTopic ?? 'conic sections'
     const concepts =
       tutorSource === 'practice' && tutorTopic
         ? [tutorTopic]
-        : ['circles', 'parabolas', 'ellipses', 'hyperbolas']
+        : ['circles', 'parabolas', 'ellipses', 'hyperbolas', 'the unit circle', 'trig graphs']
 
     return (
       <>
@@ -194,6 +263,8 @@ export function ReviewSession({
         item={item!}
         onSuccess={goNext}
         onAttempt={(result) => handleAttempt(item!, result)}
+        getAiHint={getAiHint}
+        allowRetry={allowRetry}
       />
     </div>
   )

@@ -8,12 +8,15 @@ type ReflectionStepViewProps = {
   step: ReflectionStep
   onSuccess: () => void
   onAttempt?: (result: AttemptResult) => void
+  /** When false, the first Submit is final — no retries. */
+  allowRetry?: boolean
 }
 
-export function ReflectionStepView({ step, onSuccess, onAttempt }: ReflectionStepViewProps) {
+export function ReflectionStepView({ step, onSuccess, onAttempt, allowRetry = true }: ReflectionStepViewProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [correct, setCorrect] = useState(false)
+  const [attempted, setAttempted] = useState(false)
   const [refHyperbola, setRefHyperbola] = useState<HyperbolaState | undefined>(
     step.referenceHyperbola,
   )
@@ -31,7 +34,10 @@ export function ReflectionStepView({ step, onSuccess, onAttempt }: ReflectionSte
       correct: isCorrect,
       weakComponents: !isCorrect && step.weakComponent ? [step.weakComponent] : undefined,
     })
+    if (!allowRetry) setAttempted(true)
   }
+
+  const done = correct || (!allowRetry && attempted)
 
   return (
     <div className="step-view reflection-step">
@@ -62,7 +68,7 @@ export function ReflectionStepView({ step, onSuccess, onAttempt }: ReflectionSte
               value={choice.id}
               checked={selected === choice.id}
               onChange={() => setSelected(choice.id)}
-              disabled={correct}
+              disabled={done}
             />
             <span>{choice.label}</span>
           </label>
@@ -76,7 +82,7 @@ export function ReflectionStepView({ step, onSuccess, onAttempt }: ReflectionSte
       )}
 
       <div className="step-actions">
-        {!correct ? (
+        {!done ? (
           <button type="button" className="btn btn-primary" disabled={!selected} onClick={submit}>
             Submit
           </button>

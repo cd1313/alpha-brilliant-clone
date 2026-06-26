@@ -1,55 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
 import { getLesson } from '../lib/lessons'
 import { getPracticeSkill } from '../lib/reviewSkills'
 import { generateReviewItem, type GeneratedItem } from '../lib/reviewGenerator'
+import { useState } from 'react'
 import { ReviewSession } from '../components/review/ReviewSession'
-import type { ChallengeStep } from '../types/lesson'
-import type { SkillStat } from '../types/progress'
-import {
-  buildLearnerProfile,
-  pickTargetedComponent,
-  profileLine,
-  retrieveConceptContext,
-} from '../lib/learnerProfile'
-import { isPracticeAiEnabled, tailorProblem } from '../lib/ai/practiceClient'
+import { requestHint } from '../lib/ai/practiceClient'
 
 const PRACTICE_LENGTH = 5
-
-/**
- * Wrap each engine-generated problem with an AI scenario + weakness-targeted hint. The
- * numeric target/answer is never touched, so problems stay solvable and in-bounds. Any
- * per-item failure (or AI disabled/quota) keeps that item's deterministic prompt + hint.
- */
-async function enrichWithAi(
-  items: GeneratedItem[],
-  stats: Record<string, SkillStat>,
-): Promise<GeneratedItem[]> {
-  const profile = buildLearnerProfile(stats)
-  const results = await Promise.allSettled(
-    items.map(async (item) => {
-      const step = item.step as ChallengeStep
-      const conicProfile = profile[item.conic]
-      const targetedComponent = pickTargetedComponent(conicProfile)
-      const tailored = await tailorProblem({
-        conic: item.conic,
-        equation: step.prompt,
-        targetedComponent,
-        conceptNotes: retrieveConceptContext(item.conic, conicProfile.weakComponents),
-        profileLine: profileLine(conicProfile),
-      })
-      if (!tailored) return item
-      const enrichedStep: ChallengeStep = {
-        ...step,
-        feedback: { ...step.feedback, hint: tailored.hint || step.feedback.hint },
-      }
-      return { ...item, step: enrichedStep }
-    }),
-  )
-  return results.map((r, i) => (r.status === 'fulfilled' ? r.value : items[i]))
-}
 
 export function PracticePage() {
   const { lessonId } = useParams<{ lessonId: string }>()
@@ -72,18 +32,14 @@ export function PracticePage() {
     setBuilding(true)
     setItems(null)
     const stats = await loadSkillStats()
-    let generated = Array.from({ length: PRACTICE_LENGTH }, () =>
+    const generated = Array.from({ length: PRACTICE_LENGTH }, () =>
       generateReviewItem(skill, stats[skill.id], { allowFractions: true }),
     )
-    if (isPracticeAiEnabled()) {
-      generated = await enrichWithAi(generated, stats)
-    }
     setItems(generated)
     setBuilding(false)
   }, [skill, loadSkillStats])
 
-  // Build once progress has loaded and practice is actually available, mirroring ReviewPage's
-  // race-guard so a slow Firestore read can't build off a stale completion list.
+  // Build once progress has loaded and practice is actually available.
   useEffect(() => {
     if (loading || !user || !canPractice || startedRef.current) return
     startedRef.current = true
@@ -94,6 +50,14 @@ export function PracticePage() {
     startedRef.current = true
     void startSession()
   }, [startSession])
+
+  // On-demand AI hint: called when the student presses Hint, with whatever
+  // components they currently have wrong based on their live simulator state.
+  const getAiHint = useCallback(
+    (conic: string, prompt: string, wrongComponents: string[]) =>
+      requestHint({ conic, prompt, wrongComponents }),
+    [],
+  )
 
   const content = () => {
     if (loading) {
@@ -143,6 +107,7 @@ export function PracticePage() {
         showTutor
         tutorTopic={topic}
         tutorSource="practice"
+        getAiHint={getAiHint}
         onComplete={markReviewDone}
       />
     )

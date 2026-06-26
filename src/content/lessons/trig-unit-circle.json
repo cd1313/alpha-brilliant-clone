@@ -1,0 +1,123 @@
+{
+  "id": "trig-unit-circle",
+  "title": "The Unit Circle",
+  "order": 2,
+  "subject": "trig",
+  "simulator": "unit-circle",
+  "steps": [
+    {
+      "type": "explore",
+      "title": "Sine & Cosine as Coordinates",
+      "goal": "See that the terminal point's coordinates are (cos θ, sin θ).",
+      "introText": "On the **unit circle** (radius 1), the terminal point of angle θ has coordinates **(cos θ, sin θ)**. The horizontal leg is cos θ and the vertical leg is sin θ.",
+      "prompt": "Drag the point and watch the red (cosine) and green (sine) legs. The coordinates you read off are exactly cos θ and sin θ.",
+      "interactive": true,
+      "successCondition": { "movedAngle": true },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "showCoordinates": true,
+        "showLegs": true
+      }
+    },
+    {
+      "type": "explore",
+      "title": "Special-Angle Coordinates",
+      "goal": "Read the exact coordinates at common angles.",
+      "introText": "At the special angles the coordinates are exact values like **±1/2**, **±√2/2**, and **±√3/2**. Memorizing a few lets you find the rest using symmetry.",
+      "prompt": "Snap to at least four different special angles and note how the signs of cos θ and sin θ change between quadrants.",
+      "interactive": true,
+      "successCondition": { "minDistinctAngles": 4 },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "showCoordinates": true,
+        "showLegs": true,
+        "snapSpecial": true
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Coordinates at π/3",
+      "goal": "Locate a first-quadrant special angle.",
+      "prompt": "Drag the point to θ = π/3 (60°), where (cos θ, sin θ) = (1/2, √3/2).",
+      "hideTarget": true,
+      "unitCircleTarget": { "kind": "angle", "angle": 1.0471975511965976 },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "showCoordinates": true,
+        "showLegs": true,
+        "snapSpecial": true
+      },
+      "feedback": {
+        "correct": "Perfect! At 60° the point is (1/2, √3/2) — short cosine, tall sine.",
+        "incorrect": "Not yet — π/3 is 60°, where cosine is 1/2 and sine is √3/2.",
+        "hint": "π/3 = 60°, in Quadrant I. The x-coordinate should read 0.5."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Negative Cosine",
+      "goal": "Use the signs of coordinates to find a quadrant-II point.",
+      "info": "In Quadrant II, x is negative and y is positive, so **cos θ < 0** while **sin θ > 0**.",
+      "prompt": "Place the point where cos θ = −√2/2 and sin θ = √2/2 (that's θ = 3π/4).",
+      "hideTarget": true,
+      "unitCircleTarget": { "kind": "coordinate", "cos": -0.7071, "sin": 0.7071 },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "showCoordinates": true,
+        "showLegs": true,
+        "snapSpecial": true
+      },
+      "feedback": {
+        "correct": "Great! 3π/4 (135°) gives (−√2/2, √2/2).",
+        "incorrect": "Check the signs — you need a negative x and a positive y, both with size √2/2.",
+        "hint": "√2/2 ≈ 0.71. You want the point in Quadrant II, at 135° (3π/4)."
+      }
+    },
+    {
+      "type": "challenge",
+      "title": "Where Sine Goes Negative",
+      "goal": "Reason about the sign of sine.",
+      "prompt": "Place the point so that sin θ is negative but cos θ is positive.",
+      "unitCircleTarget": { "kind": "quadrant", "quadrant": 4 },
+      "unitCircleConfig": {
+        "showAngle": true,
+        "showCoordinates": true,
+        "showLegs": true,
+        "snapSpecial": true
+      },
+      "feedback": {
+        "correct": "Exactly! Quadrant IV is where cosine is positive and sine is negative.",
+        "incorrect": "You need the lower-right region: positive x (cos), negative y (sin).",
+        "hint": "Sine is the y-coordinate. For y < 0 and x > 0, head to Quadrant IV (270°–360°)."
+      }
+    },
+    {
+      "type": "reflection",
+      "title": "Signs Around the Circle",
+      "goal": "Summarize the sign pattern of sine and cosine.",
+      "prompt": "In which quadrant are both sin θ and cos θ negative?",
+      "choices": [
+        { "id": "a", "label": "Quadrant I" },
+        { "id": "b", "label": "Quadrant II" },
+        { "id": "c", "label": "Quadrant III" },
+        { "id": "d", "label": "Quadrant IV" }
+      ],
+      "correctChoiceId": "c",
+      "feedback": "Right! In Quadrant III both coordinates are negative, so sine and cosine are both negative.",
+      "incorrectFeedback": "Remember cos θ is the x-coordinate and sin θ is the y-coordinate. Both are negative only in the lower-left quadrant."
+    },
+    {
+      "type": "mastery",
+      "title": "Mastery Check",
+      "goal": "Find four points on the unit circle — no hints.",
+      "unitCircleSequence": [
+        { "id": "m1", "label": "θ = π/6 (cos √3/2, sin 1/2)", "angle": 0.5235987755982988 },
+        { "id": "m2", "label": "θ = π (the point (−1, 0))", "angle": 3.141592653589793 },
+        { "id": "m3", "label": "Any point with sin θ < 0 and cos θ < 0", "quadrant": 3 },
+        { "id": "m4", "label": "θ = 5π/3 (cos 1/2, sin −√3/2)", "angle": 5.235987755982989 }
+      ],
+      "hideLabels": true,
+      "completionMessage": "Well done! You can read sine and cosine straight from the unit circle. Next, we'll unroll the circle into the sine and cosine graphs."
+    }
+  ]
+}

@@ -109,15 +109,20 @@ service cloud.firestore {
       return list is list && list.size() <= 50;
     }
 
+    function isValidUnitTestList(list) {
+      return list is list && list.size() <= 20;
+    }
+
     function isValidUserProgress(data) {
-      return hasOnlyAllowedFields(['streak', 'lastActiveDate', 'completedLessons', 'currentLesson', 'lastReviewDate'])
+      return hasOnlyAllowedFields(['streak', 'lastActiveDate', 'completedLessons', 'currentLesson', 'lastReviewDate', 'passedUnitTests'])
         && data.streak is int
         && data.streak >= 0
         && data.streak <= 10000
         && (data.lastActiveDate == null || isValidDateString(data.lastActiveDate))
         && isValidCompletedLessons(data.completedLessons)
         && isValidCurrentLesson(data.get('currentLesson', null))
-        && (data.get('lastReviewDate', null) == null || isValidDateString(data.lastReviewDate));
+        && (data.get('lastReviewDate', null) == null || isValidDateString(data.lastReviewDate))
+        && (!('passedUnitTests' in data) || isValidUnitTestList(data.passedUnitTests));
     }
 
     function isValidSkillStat(data) {

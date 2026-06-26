@@ -41,19 +41,29 @@
     {
       "id": "trigonometry",
       "title": "Trigonometric Functions",
-      "comingSoon": true,
       "lessons": [
         {
+          "id": "trig-angles",
+          "title": "Angles & Radians",
+          "order": 1
+        },
+        {
           "id": "trig-unit-circle",
-          "title": "Angles & the Unit Circle",
-          "order": 1,
-          "comingSoon": true
+          "title": "The Unit Circle",
+          "order": 2,
+          "unlockAfter": "trig-angles"
         },
         {
           "id": "trig-sine-cosine",
           "title": "Sine & Cosine Graphs",
-          "order": 2,
-          "comingSoon": true
+          "order": 3,
+          "unlockAfter": "trig-unit-circle"
+        },
+        {
+          "id": "trig-tangent",
+          "title": "Tangent & Reciprocal Functions",
+          "order": 4,
+          "unlockAfter": "trig-sine-cosine"
         }
       ]
     }

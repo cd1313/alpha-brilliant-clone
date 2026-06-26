@@ -1,4 +1,6 @@
 import { renderRichText } from '../../lib/richText'
+import { formatRadians } from '../../lib/unitCircleGeometry'
+import { formatTrigEquation } from '../../lib/trigGraphGeometry'
 import type { ConicType, Step } from '../../types/lesson'
 
 const STEP_TYPE_LABELS: Record<Step['type'], string> = {
@@ -99,6 +101,39 @@ export function StepInfoPanel({ step, stepNumber, totalSteps }: StepInfoPanelPro
         <p className="step-target-badge">
           Target: {step.hyperbolaTarget.orientation} hyperbola, center ({step.hyperbolaTarget.centerX},{' '}
           {step.hyperbolaTarget.centerY}), a = {step.hyperbolaTarget.a}, b = {step.hyperbolaTarget.b}
+        </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.unitCircleTarget?.kind === 'angle' && (
+        <p className="step-target-badge">
+          Target angle: <strong>{formatRadians(step.unitCircleTarget.angle)}</strong>
+        </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.unitCircleTarget?.kind === 'coordinate' && (
+        <p className="step-target-badge">
+          Target point: <strong>({step.unitCircleTarget.cos}, {step.unitCircleTarget.sin})</strong>
+        </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.unitCircleTarget?.kind === 'quadrant' && (
+        <p className="step-target-badge">
+          Target: <strong>Quadrant {step.unitCircleTarget.quadrant}</strong>
+        </p>
+      )}
+
+      {step.type === 'challenge' && !step.hideTarget && step.trigGraphTarget && (
+        <p className="step-target-badge">
+          Target:{' '}
+          <strong>
+            {formatTrigEquation({
+              fn: step.trigGraphTarget.fn ?? step.trigGraphConfig?.fn ?? 'sin',
+              amplitude: step.trigGraphTarget.amplitude,
+              b: step.trigGraphTarget.b,
+              phase: step.trigGraphTarget.phase,
+              vertical: step.trigGraphTarget.vertical,
+            })}
+          </strong>
         </p>
       )}
 

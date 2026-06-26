@@ -34,6 +34,19 @@ const CONCEPT_NOTES: Record<ReviewConic, Record<string, string>> = {
     foci: 'For a hyperbola c^2 = a^2 + b^2 (add, not subtract); foci lie in the opening direction.',
     'opening direction': 'The variable of the positive term tells you which way it opens.',
   },
+  'unit-circle': {
+    _: 'On the unit circle the terminal point of angle θ is (cos θ, sin θ); a full turn is 2π radians.',
+    angle: 'Measure θ counterclockwise from the positive x-axis; 180° = π radians.',
+    coordinates: 'cos θ is the x-coordinate and sin θ is the y-coordinate of the terminal point.',
+    quadrant: 'Signs of (cos θ, sin θ) follow the quadrant: (+,+), (−,+), (−,−), (+,−).',
+  },
+  'trig-graph': {
+    _: 'For y = a·f(b(x − c)) + d: a is amplitude, period is 2π/b (π/b for tangent), c is phase shift, d is the midline.',
+    amplitude: 'Amplitude |a| is how far the curve rises above and falls below its midline.',
+    period: 'The period is 2π/b; a larger b compresses the graph horizontally.',
+    'phase shift': 'Replacing x with (x − c) slides the graph right by c.',
+    'vertical shift': 'Adding d moves the entire graph up to the midline y = d.',
+  },
 }
 
 const CONICS: ReviewConic[] = ['circle', 'parabola', 'ellipse', 'hyperbola']

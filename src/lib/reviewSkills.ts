@@ -1,12 +1,26 @@
 import type { Lesson, Step } from '../types/lesson'
 import type { SkillStat } from '../types/progress'
 
-export type ReviewConic = 'circle' | 'parabola' | 'ellipse' | 'hyperbola'
+/**
+ * The set of reviewable topics. Originally just the four conics; now widened to
+ * include the trig simulators. The field stays named `conic` for back-compat with
+ * the generator/review pipeline, but it really means "review topic".
+ */
+export type ReviewTopic =
+  | 'circle'
+  | 'parabola'
+  | 'ellipse'
+  | 'hyperbola'
+  | 'unit-circle'
+  | 'trig-graph'
+
+/** @deprecated Use ReviewTopic — kept as an alias so existing imports keep working. */
+export type ReviewConic = ReviewTopic
 export type ReviewSkillKind = 'challenge' | 'reflection'
 
 export type ReviewSkill = {
   id: string
-  conic: ReviewConic
+  conic: ReviewTopic
   /** Lesson that must be completed before this skill can be reviewed. */
   lessonId: string
   kind: ReviewSkillKind
@@ -27,6 +41,10 @@ export const REVIEW_SKILLS: ReviewSkill[] = [
   { id: 'ellipse-reflection', conic: 'ellipse', lessonId: 'ellipses', kind: 'reflection', label: 'Ellipse concepts and foci' },
   { id: 'hyperbola-challenge', conic: 'hyperbola', lessonId: 'hyperbolas', kind: 'challenge', label: 'Graphing hyperbolas' },
   { id: 'hyperbola-reflection', conic: 'hyperbola', lessonId: 'hyperbolas', kind: 'reflection', label: 'Hyperbola concepts and foci' },
+  { id: 'unit-circle-challenge', conic: 'unit-circle', lessonId: 'trig-angles', kind: 'challenge', label: 'Angles on the unit circle' },
+  { id: 'unit-circle-reflection', conic: 'unit-circle', lessonId: 'trig-angles', kind: 'reflection', label: 'Unit circle concepts' },
+  { id: 'trig-graph-challenge', conic: 'trig-graph', lessonId: 'trig-sine-cosine', kind: 'challenge', label: 'Graphing trig functions' },
+  { id: 'trig-graph-reflection', conic: 'trig-graph', lessonId: 'trig-sine-cosine', kind: 'reflection', label: 'Trig graph concepts' },
 ]
 
 const SKILL_BY_ID = new Map(REVIEW_SKILLS.map((s) => [s.id, s]))
@@ -105,11 +123,15 @@ function weightedPick(pool: ReviewSkill[], stats: Record<string, SkillStat>): Re
 /**
  * Pick `count` skills, guaranteeing the top weakest skills appear, then filling the rest
  * weighted toward struggle (recent-dominant). Avoids repeats until the pool is exhausted.
+ *
+ * `maxReflections` caps the number of reflection-kind slots per session; excess reflections
+ * are swapped for challenge-kind skills from the available pool.
  */
 export function pickReviewSkills(
   available: ReviewSkill[],
   stats: Record<string, SkillStat>,
   count: number,
+  maxReflections = 1,
 ): ReviewSkill[] {
   if (available.length === 0) return []
 
@@ -127,6 +149,37 @@ export function pickReviewSkills(
     picks.push(weightedPick(pool, stats))
   }
 
-  // Shuffle so the guaranteed-weak skills aren't always first.
-  return shuffle(picks).slice(0, count)
+  const selected = shuffle(picks).slice(0, count)
+
+  // Replace excess reflections with challenge-kind skills.
+  // When a student has few completed lessons the pick loop allows repeats, so
+  // all challenge IDs may already be in `selected`. Fall back to repeating any
+  // available challenge rather than silently keeping the extra reflections.
+  const reflectionCount = selected.filter((s) => s.kind === 'reflection').length
+  if (reflectionCount > maxReflections) {
+    const selectedIds = new Set(selected.map((s) => s.id))
+    const allChallenges = available.filter((s) => s.kind === 'challenge')
+    // Prefer challenges not already in the session; fall back to any challenge.
+    const replacements = shuffle([
+      ...allChallenges.filter((s) => !selectedIds.has(s.id)),
+      ...shuffle(allChallenges),
+    ])
+    let reflectionsSeen = 0
+    const result: ReviewSkill[] = []
+    for (const s of selected) {
+      if (s.kind === 'reflection') {
+        reflectionsSeen++
+        if (reflectionsSeen > maxReflections && replacements.length > 0) {
+          result.push(replacements.shift()!)
+        } else {
+          result.push(s)
+        }
+      } else {
+        result.push(s)
+      }
+    }
+    return shuffle(result)
+  }
+
+  return selected
 }

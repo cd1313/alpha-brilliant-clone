@@ -3,9 +3,12 @@ import { CircleSimulator } from '../../circle/CircleSimulator'
 import { matchesCircleChallengeTarget, type CircleState } from '../../../lib/circleGeometry'
 import {
   adaptiveMismatchMessage,
+  axisDirection,
+  scalarDirection,
   weakComponentsOf,
   type AttemptResult,
   type FeedbackPart,
+  type HintDetail,
 } from '../../../lib/feedback'
 import type { ChallengeStep, CircleChallengeTarget } from '../../../types/lesson'
 
@@ -15,6 +18,9 @@ type CircleChallengeStepViewProps = {
   onCircleChange: (circle: CircleState) => void
   onSuccess: () => void
   onAttempt?: (result: AttemptResult) => void
+  onRequestHint?: (wrongComponents: string[], details: HintDetail[]) => Promise<string | null>
+  /** When false, the first Check attempt is final — no retries, no hints. */
+  allowRetry?: boolean
 }
 
 function deriveGhost(target: CircleChallengeTarget | undefined): CircleState | null {
@@ -35,10 +41,15 @@ export function CircleChallengeStepView({
   onCircleChange,
   onSuccess,
   onAttempt,
+  onRequestHint,
+  allowRetry = true,
 }: CircleChallengeStepViewProps) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
+  const [hintLoading, setHintLoading] = useState(false)
+  const [activeHint, setActiveHint] = useState<string | null>(null)
   const [solved, setSolved] = useState(false)
+  const [attempted, setAttempted] = useState(false)
   const target = step.circleTarget
   const config = step.circleConfig ?? {}
 
@@ -63,6 +74,39 @@ export function CircleChallengeStepView({
     ]
   }
 
+  const computeHintDetails = (t: CircleChallengeTarget): HintDetail[] => {
+    const tol = t.tolerance ?? 0.35
+    const details: HintDetail[] = []
+
+    if (t.kind === 'center') {
+      if (Math.abs(circle.centerX - t.x) > tol) {
+        details.push({ component: 'center', direction: axisDirection(circle.centerX, t.x, 'x') })
+      }
+      if (Math.abs(circle.centerY - t.y) > tol) {
+        details.push({ component: 'center', direction: axisDirection(circle.centerY, t.y, 'y') })
+      }
+      return details
+    }
+
+    if (Math.abs(circle.centerX - t.centerX) > tol) {
+      details.push({ component: 'center', direction: axisDirection(circle.centerX, t.centerX, 'x') })
+    }
+    if (Math.abs(circle.centerY - t.centerY) > tol) {
+      details.push({ component: 'center', direction: axisDirection(circle.centerY, t.centerY, 'y') })
+    }
+
+    if (t.kind === 'small') {
+      const maxR = t.maxR ?? 2
+      if (circle.radius > maxR + tol) {
+        details.push({ component: 'radius', direction: scalarDirection(circle.radius, maxR) })
+      }
+    } else if (Math.abs(circle.radius - t.radius) > tol) {
+      details.push({ component: 'radius', direction: scalarDirection(circle.radius, t.radius) })
+    }
+
+    return details
+  }
+
   const checkAnswer = () => {
     if (!target) return
 
@@ -76,7 +120,10 @@ export function CircleChallengeStepView({
       setSolved(false)
       onAttempt?.({ correct: false, weakComponents: weakComponentsOf(parts) })
     }
+    if (!allowRetry) setAttempted(true)
   }
+
+  const done = solved || (!allowRetry && attempted)
 
   return (
     <div className="step-view challenge-step">
@@ -100,24 +147,43 @@ export function CircleChallengeStepView({
         </p>
       )}
 
-      {showHint && <p className="hint-text">{step.feedback.hint}</p>}
+      {showHint && <p className="hint-text">{activeHint ?? step.feedback.hint}</p>}
 
       {step.miniReflection && solved && (
         <p className="mini-reflection">{step.miniReflection}</p>
       )}
 
       <div className="step-actions">
-        {!solved && (
+        {!done && (
           <>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowHint((show) => !show)}>
-              {showHint ? 'Hide Hint' : 'Hint'}
-            </button>
+            {allowRetry && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={hintLoading}
+                onClick={async () => {
+                  if (showHint) { setShowHint(false); return }
+                  if (onRequestHint && target) {
+                    setHintLoading(true)
+                    const wrong = weakComponentsOf(computeParts(target))
+                    const aiHint = await onRequestHint(wrong, computeHintDetails(target))
+                    setActiveHint(aiHint ?? step.feedback.hint)
+                    setHintLoading(false)
+                  } else {
+                    setActiveHint(step.feedback.hint)
+                  }
+                  setShowHint(true)
+                }}
+              >
+                {hintLoading ? 'Loading hint…' : showHint ? 'Hide Hint' : 'Hint'}
+              </button>
+            )}
             <button type="button" className="btn btn-primary" onClick={checkAnswer}>
               Check
             </button>
           </>
         )}
-        {solved && (
+        {done && (
           <button type="button" className="btn btn-primary" onClick={onSuccess}>
             Continue
           </button>
