@@ -45,7 +45,21 @@ type ReflectRequest = {
   weakComponent?: string
 }
 
-type AiRequest = SummaryRequest | ChatRequest | TailorRequest | ReflectRequest
+type TopicInsight = {
+  topic: string
+  label: string
+  mastery: number | null
+  attempts: number
+  misses: number
+  weakComponents: string[]
+}
+
+type InsightsRequest = {
+  kind: 'insights'
+  topics: TopicInsight[]
+}
+
+type AiRequest = SummaryRequest | ChatRequest | TailorRequest | ReflectRequest | InsightsRequest
 
 let client: OpenAI | null = null
 function openai(): OpenAI {
@@ -279,6 +293,85 @@ async function handleReflect(data: ReflectRequest) {
   }
 }
 
+async function handleInsights(data: InsightsRequest) {
+  const topics = Array.isArray(data.topics) ? data.topics.slice(0, 6) : []
+  const completion = await openai().chat.completions.create({
+    model: MODEL,
+    temperature: 0.3,
+    max_tokens: 500,
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'weakness_insights',
+        strict: true,
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            narrative: { type: 'string' },
+            plan: {
+              type: 'array',
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                properties: {
+                  action: { type: 'string' },
+                  topic: { type: 'string' },
+                },
+                required: ['action', 'topic'],
+              },
+            },
+          },
+          required: ['narrative', 'plan'],
+        },
+      },
+    },
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You are a supportive precalculus coach interpreting a student\'s deterministic mastery data. ' +
+          'Use only the numbers provided; do not invent statistics. Mastery is 0 (low) to 1 (high). ' +
+          'Write in plain English — do NOT use LaTeX, markdown, or any special formatting symbols. ' +
+          'CRITICAL: every plan action must be something this app actually offers. The ONLY available activities are: ' +
+          '(1) doing a Smart Review session, (2) doing a Practice set for a specific topic, and (3) replaying/redoing a lesson for a topic. ' +
+          'NEVER suggest anything outside the app, such as watching videos, reading textbooks or articles, using flashcards, ' +
+          'searching online, or working with a tutor or classmate. ' +
+          'Prefer a shorter plan: only include an action if it is genuinely useful, and omit padding. ' +
+          'It is better to return fewer (even just one) high-quality, in-scope actions than to include out-of-scope or filler items.',
+      },
+      {
+        role: 'user',
+        content:
+          `Per-topic mastery JSON (mastery 0-1, misses out of attempts, plus weakComponents like center, radius, ` +
+          `foci, opening direction, a, b, angle, amplitude, period, phase shift, vertical shift): ` +
+          `${JSON.stringify(topics)}. ` +
+          `Write a 2-3 sentence encouraging "narrative" that names their strongest and weakest topics and what to focus on. ` +
+          `Then write a "plan" of 1-3 concrete study actions, each phrased as a Smart Review, Practice, or lesson-replay activity ` +
+          `(for example: "Do a Practice set on ellipse foci" or "Replay the Hyperbolas lesson"). ` +
+          `Each item has a short "action" string and the "topic" label it targets. Do not suggest anything the app does not provide. ` +
+          `Use plain English only — no LaTeX, no markdown.`,
+      },
+    ],
+  })
+  const text = completion.choices[0]?.message?.content ?? '{}'
+  const parsed = JSON.parse(text) as {
+    narrative?: string
+    plan?: { action?: string; topic?: string }[]
+  }
+  return {
+    narrative: typeof parsed.narrative === 'string' ? parsed.narrative : '',
+    plan: Array.isArray(parsed.plan)
+      ? parsed.plan
+          .map((p) => ({
+            action: typeof p.action === 'string' ? p.action : '',
+            topic: typeof p.topic === 'string' ? p.topic : '',
+          }))
+          .slice(0, 4)
+      : [],
+  }
+}
+
 export const aiAssist = functions
   .runWith({ secrets: ['OPENAI_API_KEY'], maxInstances: MAX_INSTANCES })
   .https.onCall(async (data: AiRequest, context) => {
@@ -300,6 +393,8 @@ export const aiAssist = functions
           return await handleTailor(data)
         case 'reflect':
           return await handleReflect(data)
+        case 'insights':
+          return await handleInsights(data)
         default:
           throw new functions.https.HttpsError('invalid-argument', 'Unknown request "kind".')
       }

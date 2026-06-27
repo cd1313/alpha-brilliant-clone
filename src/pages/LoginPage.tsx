@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { AsymptoteLogo } from '../components/auth/AsymptoteLogo'
 
 type AuthMode = 'signin' | 'signup' | 'reset'
+
+const VALUE_PROPS = [
+  'Interactive lessons you learn by doing',
+  'Adaptive Smart Review targets your weak spots',
+  'Track your daily streak as you progress',
+]
 
 export function LoginPage() {
   const { user, signIn, signUp, signInWithGoogle, resetPassword, error, isConfigured } = useAuth()
@@ -11,6 +18,7 @@ export function LoginPage() {
   const [mode, setMode] = useState<AuthMode>('signin')
   const [submitting, setSubmitting] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   if (user) {
     return <Navigate to="/" replace />
@@ -46,10 +54,45 @@ export function LoginPage() {
   }
 
   return (
-    <div className="page login-page">
-      <div className="page-card">
-        <h1>Asymptote</h1>
-        <p className="subtitle">Learn precalculus by doing</p>
+    <div className="login-layout">
+      <aside className="login-hero" aria-hidden="true">
+        <svg className="login-hero-art" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+          <path d="M-20 300 C 80 120, 160 120, 200 200 C 240 280, 320 280, 420 100" />
+          <path d="M0 360 C 100 360, 140 60, 200 60 C 260 60, 300 360, 400 360" opacity="0.7" />
+          <circle cx="200" cy="200" r="120" opacity="0.5" />
+          <ellipse cx="200" cy="200" rx="170" ry="90" opacity="0.35" />
+        </svg>
+
+        <div className="login-hero-content">
+          <div className="brand-lockup">
+            <AsymptoteLogo className="brand-logo" />
+            <span className="brand-wordmark">Asymptote</span>
+          </div>
+          <p className="login-hero-tagline">Learn precalculus by doing.</p>
+          <ul className="login-valueprops">
+            {VALUE_PROPS.map((prop) => (
+              <li key={prop}>{prop}</li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+
+      <main className="login-panel">
+        <div className="page-card">
+          <div className="brand-lockup brand-lockup-compact">
+            <AsymptoteLogo className="brand-logo" />
+            <span className="brand-wordmark">Asymptote</span>
+          </div>
+          <h1>
+            {mode === 'signin' && 'Welcome back'}
+            {mode === 'signup' && 'Create your account'}
+            {mode === 'reset' && 'Reset your password'}
+          </h1>
+          <p className="subtitle">
+            {mode === 'signin' && 'Sign in to continue your precalculus journey.'}
+            {mode === 'signup' && 'Start learning precalculus by doing.'}
+            {mode === 'reset' && "We'll email you a reset link."}
+          </p>
 
         {!isConfigured && (
           <p className="error-banner">
@@ -72,14 +115,24 @@ export function LoginPage() {
           {mode !== 'reset' && (
             <label>
               Password
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-              />
+              <div className="password-field">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </label>
           )}
 
@@ -152,7 +205,8 @@ export function LoginPage() {
             Back to sign in
           </button>
         )}
-      </div>
+        </div>
+      </main>
     </div>
   )
 }

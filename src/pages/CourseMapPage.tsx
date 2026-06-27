@@ -63,9 +63,14 @@ export function CourseMapPage() {
         </div>
         <div className="header-actions">
           {availableReviewSkills(completedIds).length > 0 && (
-            <Link to="/review" className="btn btn-secondary">
-              Smart Review
-            </Link>
+            <>
+              <Link to="/review" className="btn btn-secondary">
+                Smart Review
+              </Link>
+              <Link to="/insights" className="btn btn-secondary">
+                Weakness Map
+              </Link>
+            </>
           )}
           <button type="button" className="btn btn-secondary" onClick={() => void logOut()}>
             Sign Out

@@ -27,17 +27,29 @@
 
 .page-header {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
+.page-header > :first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+.header-actions .btn {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.9rem;
 }
 
 .streak-badge {
@@ -60,6 +72,7 @@
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  white-space: nowrap;
   transition: background 0.15s ease;
 }
 
@@ -148,17 +161,173 @@
   height: 18px;
 }
 
-.login-page {
+.login-layout {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+}
+
+.login-hero {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100svh;
+  padding: 3rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
-.login-page .page-card {
+.login-hero-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.login-hero-content {
+  position: relative;
+  max-width: 360px;
+}
+
+.login-hero-tagline {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.login-valueprops {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.login-valueprops li {
+  position: relative;
+  padding-left: 1.6rem;
+  line-height: 1.4;
+  opacity: 0.95;
+}
+
+.login-valueprops li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+}
+
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+.login-panel .page-card {
   width: 100%;
   max-width: 420px;
   text-align: center;
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
+  box-shadow: 0 18px 48px rgba(29, 61, 78, 0.12);
+}
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-logo {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+.brand-wordmark {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.login-hero .brand-wordmark {
+  font-size: 2rem;
+}
+
+.brand-lockup-compact {
+  margin-bottom: 1.25rem;
+  color: var(--primary);
+}
+
+.password-field {
+  position: relative;
+  display: flex;
+}
+
+.password-field input {
+  flex: 1;
+  width: 100%;
+  padding-right: 3.5rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+}
+
+.password-toggle:hover {
+  color: var(--primary-hover);
+}
+
+@media (max-width: 860px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .login-hero {
+    padding: 2rem 1.5rem;
+    min-height: auto;
+  }
+
+  .login-hero-content {
+    max-width: none;
+    text-align: center;
+    margin: 0 auto;
+  }
+
+  .login-hero-tagline {
+    font-size: 1.2rem;
+    margin: 0.75rem 0;
+  }
+
+  .login-valueprops {
+    display: none;
+  }
+
+  .brand-lockup-compact {
+    display: none;
+  }
 }
 
 .error-text,
@@ -1311,6 +1480,177 @@
 
 .parabola-handle:active {
   cursor: grabbing;
+}
+
+/* --- Weakness Map / Insights -------------------------------------------- */
+.insights-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.25rem 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+}
+
+.insights-section-title {
+  font-size: 1.15rem;
+  margin: 0 0 0.85rem;
+  color: var(--text-h);
+}
+
+.insights-empty {
+  text-align: center;
+}
+
+.insights-empty h2 {
+  margin-bottom: 0.5rem;
+}
+
+.insights-empty p {
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.insights-empty-note {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.weakness-radar {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto;
+  color: var(--primary);
+  overflow: visible;
+}
+
+.weakness-radar-ring {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.weakness-radar-spoke {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.weakness-radar-area {
+  fill: var(--primary-soft);
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.85;
+}
+
+.weakness-radar-point {
+  fill: currentColor;
+}
+
+.weakness-radar-label {
+  fill: var(--text-h);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.weakness-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.weakness-bar-row {
+  display: grid;
+  grid-template-columns: auto 1fr 2.5rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.weakness-bar-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.weakness-bar-track {
+  height: 10px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.weakness-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 999px;
+}
+
+.weakness-bar-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.component-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.component-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.component-link:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.component-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.component-bar-track {
+  display: block;
+  height: 8px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.component-bar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-warm, var(--secondary)), var(--primary));
+  border-radius: 999px;
+}
+
+.insights-numbers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text);
 }
 
 @media (max-width: 600px) {
