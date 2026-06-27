@@ -113,16 +113,6 @@ export function formatRadians(angle: number): string {
   return `${roundMeasured(normalized)} rad`
 }
 
-export function formatDegrees(angle: number): string {
-  const deg = (normalizeAngle(angle) * 180) / Math.PI
-  return `${Math.round(deg)}°`
-}
-
-/** "120° · 2π/3" style label. */
-export function formatAngle(angle: number): string {
-  return `${formatDegrees(angle)} · ${formatRadians(angle)}`
-}
-
 export function formatCoordinate(value: number): string {
   const rounded = roundMeasured(value)
   if (Math.abs(rounded) < 1e-6) return '0'
@@ -135,7 +125,7 @@ export function setAngleFromPoint(x: number, y: number): UnitCircleState {
 }
 
 /** Shortest angular distance between two angles (radians, in [0, π]). */
-export function angularDistance(a: number, b: number): number {
+function angularDistance(a: number, b: number): number {
   const diff = Math.abs(normalizeAngle(a) - normalizeAngle(b)) % TWO_PI
   return diff > Math.PI ? TWO_PI - diff : diff
 }

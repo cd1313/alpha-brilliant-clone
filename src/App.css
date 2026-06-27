@@ -52,16 +52,6 @@
   font-size: 0.9rem;
 }
 
-.streak-badge {
-  background: var(--accent-warm-soft);
-  color: var(--accent-warm-text);
-  border: 1px solid var(--accent-warm);
-  border-radius: 999px;
-  padding: 0.35rem 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
 .btn {
   display: inline-flex;
   align-items: center;
@@ -437,11 +427,6 @@
 .lesson-node.unit-test-node.recommended {
   border-color: #7c6fa0;
   box-shadow: 0 0 0 2px rgba(124, 111, 160, 0.22);
-}
-
-.lesson-node.unit-test-locked {
-  opacity: 0.75;
-  border-color: #c08070;
 }
 
 .unit-test-result {
@@ -859,13 +844,6 @@
   margin-bottom: 0.5rem;
 }
 
-.step-info-tip {
-  background: #edf2e8;
-  border: 1px solid var(--c-sage-l);
-  border-radius: 8px;
-  padding: 0.65rem 0.85rem;
-}
-
 .mastery-progress-list {
   list-style: none;
   margin: 0 0 1rem;
@@ -1135,12 +1113,6 @@
   flex-direction: column;
   gap: 0.5rem;
   margin-top: 0.75rem;
-}
-
-.control-hint {
-  font-size: 0.85rem;
-  color: var(--text);
-  margin: 0;
 }
 
 .plane-handle-vertical {

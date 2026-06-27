@@ -40,15 +40,6 @@ const PHASE_BOUND = Math.PI
 const VERTICAL_BOUND = 3
 const MEASURED_DECIMALS = 2
 
-export {
-  MIN_AMPLITUDE as TRIG_MIN_AMPLITUDE,
-  MAX_AMPLITUDE as TRIG_MAX_AMPLITUDE,
-  MIN_B as TRIG_MIN_B,
-  MAX_B as TRIG_MAX_B,
-  PHASE_BOUND as TRIG_PHASE_BOUND,
-  VERTICAL_BOUND as TRIG_VERTICAL_BOUND,
-}
-
 export function roundMeasured(value: number): number {
   const factor = 10 ** MEASURED_DECIMALS
   return Math.round(value * factor) / factor

@@ -47,17 +47,6 @@ export function formatCircleEquation(h: number, k: number, r: number): string {
   return `${xTerm} + ${yTerm} = ${formatMeasuredValue(rSquared)}`
 }
 
-export function circlePath(cx: number, cy: number, r: number, steps = 64): string {
-  const points: string[] = []
-  for (let i = 0; i <= steps; i++) {
-    const theta = (2 * Math.PI * i) / steps
-    const x = cx + r * Math.cos(theta)
-    const y = cy + r * Math.sin(theta)
-    points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`)
-  }
-  return `${points.join(' ')} Z`
-}
-
 export function pointOnCircle(cx: number, cy: number, r: number, angleRad: number): {
   x: number
   y: number
@@ -93,7 +82,7 @@ export function setRadiusFromPoint(
   return clampCircleState({ ...state, radius })
 }
 
-export function matchesCenterTarget(
+function matchesCenterTarget(
   state: CircleState,
   x: number,
   y: number,
@@ -104,7 +93,7 @@ export function matchesCenterTarget(
   )
 }
 
-export function matchesRadiusTarget(
+function matchesRadiusTarget(
   state: CircleState,
   centerX: number,
   centerY: number,

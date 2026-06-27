@@ -21,7 +21,7 @@ export const isFirebaseConfigured = Object.values(firebaseConfig).every(
   (value) => typeof value === 'string' && value.length > 0,
 )
 
-export const useFirebaseEmulators = import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true'
+const useFirebaseEmulators = import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true'
 
 let app: FirebaseApp | null = null
 let auth: Auth | null = null
@@ -43,4 +43,4 @@ if (isFirebaseConfigured) {
   }
 }
 
-export { app, auth, db, functions }
+export { auth, db, functions }

@@ -24,11 +24,6 @@ const CENTER_X_BOUND = 4
 const CENTER_Y_BOUND = 3
 const MEASURED_DECIMALS = 1
 
-export { MIN_AXIS as HYPERBOLA_MIN_AXIS }
-export { MAX_AXIS as HYPERBOLA_MAX_AXIS }
-export { CENTER_X_BOUND as HYPERBOLA_CENTER_X_BOUND }
-export { CENTER_Y_BOUND as HYPERBOLA_CENTER_Y_BOUND }
-
 export type Point = { x: number; y: number }
 
 export function roundMeasured(value: number): number {

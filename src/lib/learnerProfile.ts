@@ -1,54 +1,6 @@
-import type { ReviewConic, ReviewTopic } from './reviewSkills'
+import type { ReviewTopic } from './reviewSkills'
 import { REVIEW_SKILLS } from './reviewSkills'
 import type { SkillStat } from '../types/progress'
-
-/**
- * Compact, lightweight "knowledge base": one short note per topic component. This is the
- * retrieval corpus for tailored practice. It is small on purpose (no vector store needed);
- * `retrieveConceptContext` is the single seam to swap in real retrieval later.
- */
-const CONCEPT_NOTES: Record<ReviewTopic, Record<string, string>> = {
-  circle: {
-    _: 'A circle (x - h)^2 + (y - k)^2 = r^2 has center (h, k) and radius r.',
-    center: 'The center (h, k) comes straight from the shifts inside the squares; watch the signs.',
-    radius: 'r is the square root of the right-hand side, not the right-hand side itself.',
-  },
-  parabola: {
-    _: 'A parabola is the set of points equidistant from the focus and the directrix; x^2 = 4py opens along the axis.',
-    vertex: 'The vertex sits exactly between the focus and the directrix.',
-    focus: 'In x^2 = 4py the focus is p units from the vertex (the coefficient is 4p).',
-    width: 'A larger |p| gives a wider opening; a smaller |p| makes it narrow.',
-    'opening direction': 'The sign of the coefficient decides whether it opens up/down (or left/right).',
-  },
-  ellipse: {
-    _: 'An ellipse x^2/a^2 + y^2/b^2 = 1 has a constant sum of distances to its two foci.',
-    center: 'The center is read from the shifts (h, k) inside the squared terms.',
-    a: 'a is the horizontal semi-axis: sqrt of the denominator under the x term.',
-    b: 'b is the vertical semi-axis: sqrt of the denominator under the y term.',
-    foci: 'For an ellipse c^2 = a^2 - b^2, and the foci lie on the longer (major) axis.',
-  },
-  hyperbola: {
-    _: 'A hyperbola has a constant absolute difference of distances to its two foci.',
-    center: 'The center is read from the shifts (h, k) inside the squared terms.',
-    a: 'a (transverse semi-axis) is sqrt of the denominator under the positive term.',
-    b: 'b (conjugate semi-axis) sets the asymptote slope b/a.',
-    foci: 'For a hyperbola c^2 = a^2 + b^2 (add, not subtract); foci lie in the opening direction.',
-    'opening direction': 'The variable of the positive term tells you which way it opens.',
-  },
-  'unit-circle': {
-    _: 'On the unit circle the terminal point of angle θ is (cos θ, sin θ); a full turn is 2π radians.',
-    angle: 'Measure θ counterclockwise from the positive x-axis; 180° = π radians.',
-    coordinates: 'cos θ is the x-coordinate and sin θ is the y-coordinate of the terminal point.',
-    quadrant: 'Signs of (cos θ, sin θ) follow the quadrant: (+,+), (−,+), (−,−), (+,−).',
-  },
-  'trig-graph': {
-    _: 'For y = a·f(b(x − c)) + d: a is amplitude, period is 2π/b (π/b for tangent), c is phase shift, d is the midline.',
-    amplitude: 'Amplitude |a| is how far the curve rises above and falls below its midline.',
-    period: 'The period is 2π/b; a larger b compresses the graph horizontally.',
-    'phase shift': 'Replacing x with (x − c) slides the graph right by c.',
-    'vertical shift': 'Adding d moves the entire graph up to the midline y = d.',
-  },
-}
 
 /** Every reviewable topic, in display order. */
 const TOPICS: ReviewTopic[] = ['circle', 'parabola', 'ellipse', 'hyperbola', 'unit-circle', 'trig-graph']
@@ -74,11 +26,6 @@ export type TopicProfile = {
 }
 
 export type WeaknessProfile = Record<ReviewTopic, TopicProfile>
-
-/** @deprecated Use TopicProfile — kept as an alias so older callers keep compiling. */
-export type ConicProfile = TopicProfile
-/** @deprecated Use WeaknessProfile — kept as an alias so older callers keep compiling. */
-export type LearnerProfile = WeaknessProfile
 
 /** Display name for a topic (e.g. 'unit-circle' -> 'Unit Circle'). */
 export function topicLabel(topic: ReviewTopic): string {
@@ -150,28 +97,9 @@ export function buildWeaknessProfile(stats: Record<string, SkillStat>): Weakness
   return profile
 }
 
-/** @deprecated Alias for buildWeaknessProfile, kept so older imports keep working. */
-export const buildLearnerProfile = buildWeaknessProfile
-
 /** The profiles for topics the learner has actually attempted, in display order. */
 export function attemptedTopics(profile: WeaknessProfile): TopicProfile[] {
   return TOPICS.map((t) => profile[t]).filter((p) => p.attempts > 0)
-}
-
-/** Pick a weak component to target for a problem, or a sensible default. */
-export function pickTargetedComponent(p: TopicProfile): string {
-  if (p.weakComponents.length === 0) return 'graphing from the equation'
-  return p.weakComponents[Math.floor(Math.random() * p.weakComponents.length)]
-}
-
-/** Retrieve the relevant concept notes for a topic + the components in play. */
-export function retrieveConceptContext(conic: ReviewConic, components: string[]): string[] {
-  const notes = CONCEPT_NOTES[conic]
-  const out = [notes._]
-  for (const c of components) {
-    if (notes[c]) out.push(notes[c])
-  }
-  return Array.from(new Set(out)).slice(0, 4)
 }
 
 /** A one-line natural-language summary of how the learner is doing on a topic. */

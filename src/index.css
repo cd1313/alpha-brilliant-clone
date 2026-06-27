@@ -1,14 +1,7 @@
 :root {
   /* Brand palette */
   --c-deep: #1d3d4e;
-  --c-teal-d: #246a73;
-  --c-teal: #368f8b;
-  --c-teal-l: #66a399;
-  --c-sage: #95b7a6;
   --c-sage-l: #c4cbb4;
-  --c-cream: #f3dfc1;
-  --c-tan-l: #e8cfb5;
-  --c-tan: #ddbea8;
 
   /* Semantic tokens */
   --text: #34525c;
