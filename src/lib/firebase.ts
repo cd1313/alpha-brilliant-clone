@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
-import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth'
+import { browserSessionPersistence, connectAuthEmulator, getAuth, setPersistence, type Auth } from 'firebase/auth'
 import {
   connectFirestoreEmulator,
   initializeFirestore,
@@ -31,6 +31,7 @@ let functions: Functions | null = null
 if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig)
   auth = getAuth(app)
+  void setPersistence(auth, browserSessionPersistence)
   db = initializeFirestore(app, {
     localCache: persistentLocalCache(),
   })
