@@ -9,6 +9,7 @@ import { generateReviewItem, type GeneratedItem } from '../lib/reviewGenerator'
 import { useState } from 'react'
 import { ReviewSession } from '../components/review/ReviewSession'
 import { requestHint } from '../lib/ai/practiceClient'
+import { saveSession, loadSession, clearSession, PRACTICE_KEY } from '../lib/sessionPersistence'
 
 const PRACTICE_LENGTH = 5
 
@@ -20,6 +21,8 @@ export function PracticePage() {
   )
   const [items, setItems] = useState<GeneratedItem[] | null>(null)
   const [building, setBuilding] = useState(true)
+  const [initialIndex, setInitialIndex] = useState(0)
+  const [initialCorrectCount, setInitialCorrectCount] = useState(0)
   const startedRef = useRef(false)
 
   const lesson = lessonId ? getLesson(lessonId) : undefined
@@ -29,16 +32,29 @@ export function PracticePage() {
   const canPractice = !!skill && completed
 
   const startSession = useCallback(async () => {
-    if (!skill) return
+    if (!skill || !lessonId) return
     setBuilding(true)
     setItems(null)
+
+    const saved = loadSession(PRACTICE_KEY(lessonId))
+    if (saved) {
+      setItems(saved.items)
+      setInitialIndex(saved.index)
+      setInitialCorrectCount(saved.correctCount)
+      setBuilding(false)
+      return
+    }
+
     const stats = await loadSkillStats()
     const generated = Array.from({ length: PRACTICE_LENGTH }, () =>
       generateReviewItem(skill, stats[skill.id], { allowFractions: true }),
     )
+    saveSession(PRACTICE_KEY(lessonId), { items: generated, index: 0, correctCount: 0 })
+    setInitialIndex(0)
+    setInitialCorrectCount(0)
     setItems(generated)
     setBuilding(false)
-  }, [skill, loadSkillStats])
+  }, [skill, lessonId, loadSkillStats])
 
   // Build once progress has loaded and practice is actually available.
   useEffect(() => {
@@ -48,15 +64,16 @@ export function PracticePage() {
   }, [loading, user, canPractice, startSession])
 
   const restartSession = useCallback(() => {
+    if (lessonId) clearSession(PRACTICE_KEY(lessonId))
     startedRef.current = true
     void startSession()
-  }, [startSession])
+  }, [lessonId, startSession])
 
   // On-demand AI hint: called when the student presses Hint, with whatever
   // components they currently have wrong based on their live simulator state.
   const getAiHint = useCallback(
-    (conic: string, prompt: string, wrongComponents: string[]) =>
-      requestHint({ conic, prompt, wrongComponents }),
+    (conic: string, prompt: string, wrongComponents: string[], hintIndex: number) =>
+      requestHint({ conic, prompt, wrongComponents, hintIndex }),
     [],
   )
 
@@ -109,7 +126,13 @@ export function PracticePage() {
         tutorTopic={topic}
         tutorSource="practice"
         getAiHint={getAiHint}
+        initialIndex={initialIndex}
+        initialCorrectCount={initialCorrectCount}
+        onSaveProgress={(idx, correct) => {
+          if (lessonId) saveSession(PRACTICE_KEY(lessonId), { items, index: idx, correctCount: correct })
+        }}
         onComplete={(correct, total) => {
+          if (lessonId) clearSession(PRACTICE_KEY(lessonId))
           // Only a passing session (>= 80%) clears today's daily review gate.
           if (meetsReviewThreshold(correct, total)) markReviewDone()
         }}

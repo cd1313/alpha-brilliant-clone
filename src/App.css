@@ -23,6 +23,7 @@
 .subtitle {
   color: var(--text);
   margin-bottom: 1.5rem;
+  white-space: nowrap;
 }
 
 .page-header {
@@ -36,7 +37,7 @@
 
 .page-header > :first-child {
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
 .header-actions {
@@ -995,6 +996,22 @@
   color: var(--text);
 }
 
+.hint-fallback-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  display: block;
+}
+.hint-fallback-link:hover {
+  color: var(--primary);
+}
+
 .mini-reflection {
   font-style: italic;
   border-left: 3px solid var(--primary);
@@ -1743,6 +1760,13 @@
   .header-actions {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .ai-toggle {
+    flex-basis: 100%;
+    justify-content: center;
+    margin-top: 0.25rem;
   }
 
   .lesson-engine {
@@ -1889,6 +1913,72 @@
   display: flex;
   justify-content: center;
   margin-top: 1.5rem;
+}
+
+/* AI on/off toggle */
+.ai-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+  color: var(--text-muted);
+}
+
+.ai-toggle:hover {
+  background: var(--primary-soft);
+}
+
+.ai-toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 2.1rem;
+  height: 1.2rem;
+  background: var(--border);
+  border-radius: 999px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ai-toggle-on .ai-toggle-track {
+  background: var(--primary);
+}
+
+.ai-toggle-thumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.ai-toggle-on .ai-toggle-thumb {
+  transform: translateX(0.9rem);
+}
+
+.ai-toggle-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.ai-toggle-on .ai-toggle-label {
+  color: var(--primary);
+}
+
+.ai-disabled-notice {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* Prior-knowledge badge on course map lesson nodes */

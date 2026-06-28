@@ -15,8 +15,6 @@ export type ReviewTopic =
   | 'unit-circle'
   | 'trig-graph'
 
-/** @deprecated Use ReviewTopic — kept as an alias so existing imports keep working. */
-export type ReviewConic = ReviewTopic
 export type ReviewSkillKind = 'challenge' | 'reflection'
 
 export type ReviewSkill = {

@@ -12,12 +12,14 @@ import {
   type TutorPerformance,
 } from '../lib/ai/tutorClient'
 import { PostSessionTutor } from '../components/review/PostSessionTutor'
+import { useAiEnabled } from '../hooks/useAiEnabled'
 
 export function LessonCompletePage() {
   const { lessonId } = useParams<{ lessonId: string }>()
   const location = useLocation()
   const { user } = useAuth()
   const { userProgress, loading, loadSkillStats } = useProgress(user?.uid)
+  const aiEnabled = useAiEnabled()
 
   const lesson = lessonId ? getLesson(lessonId) : undefined
   const topic = lesson?.title ?? 'this lesson'
@@ -87,9 +89,11 @@ export function LessonCompletePage() {
         </div>
       </div>
 
-      <div className="page-card tutor-card">
-        <PostSessionTutor performance={performance} concepts={[topic]} />
-      </div>
+      {aiEnabled && (
+        <div className="page-card tutor-card">
+          <PostSessionTutor performance={performance} concepts={[topic]} />
+        </div>
+      )}
     </div>
   )
 }

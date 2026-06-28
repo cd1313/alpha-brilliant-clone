@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useAiEnabled } from '../../hooks/useAiEnabled'
 import {
   isTutorEnabled,
   requestChatReply,
@@ -51,6 +52,7 @@ function toApiHistory(messages: ChatTurn[]): ChatTurn[] {
 }
 
 export function PostSessionTutor({ performance, concepts }: PostSessionTutorProps) {
+  const aiEnabled = useAiEnabled()
   const [summary, setSummary] = useState<TutorSummary | null>(null)
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [aiAvailable, setAiAvailable] = useState(false)
@@ -126,6 +128,8 @@ export function PostSessionTutor({ performance, concepts }: PostSessionTutorProp
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, chatLoading])
+
+  if (!aiEnabled) return null
 
   const send = async () => {
     const text = input.trim()

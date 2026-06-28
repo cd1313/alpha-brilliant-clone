@@ -8,6 +8,7 @@ import { dailyReviewRequired } from '../lib/reviewGate'
 import { effectiveStreak } from '../lib/dates'
 import { LessonIcon } from '../components/course/LessonIcon'
 import { useAuth } from '../hooks/useAuth'
+import { useAiEnabledControls } from '../hooks/useAiEnabled'
 import { useProgress } from '../hooks/useProgress'
 import { isPreCheckDone, preCheckRequired } from '../lib/preAssessment'
 import type { Course } from '../types/lesson'
@@ -34,6 +35,7 @@ function unlockHint(lessonId: string): string | null {
 
 export function CourseMapPage() {
   const { user, logOut, loading: authLoading } = useAuth()
+  const { aiEnabled, setAiEnabled } = useAiEnabledControls()
   const { userProgress, skillStats, loading, error, loadSkillStats } = useProgress(user?.uid)
   const nextLessonId = getNextLessonId(course, userProgress.completedLessons, userProgress.passedUnitTests)
   const statsLoadedRef = useRef(false)
@@ -115,6 +117,18 @@ export function CourseMapPage() {
           )}
           <button type="button" className="btn btn-secondary" onClick={() => void logOut()}>
             Sign Out
+          </button>
+          <button
+            type="button"
+            className={`ai-toggle${aiEnabled ? ' ai-toggle-on' : ''}`}
+            aria-pressed={aiEnabled}
+            aria-label={aiEnabled ? 'AI features on — click to disable' : 'AI features off — click to enable'}
+            onClick={() => setAiEnabled(!aiEnabled)}
+          >
+            <span className="ai-toggle-track">
+              <span className="ai-toggle-thumb" />
+            </span>
+            <span className="ai-toggle-label">✦ AI</span>
           </button>
         </div>
       </header>

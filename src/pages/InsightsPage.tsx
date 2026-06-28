@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useAiEnabled } from '../hooks/useAiEnabled'
 import { useProgress } from '../hooks/useProgress'
 import {
   attemptedTopics,
@@ -44,6 +45,7 @@ function deterministicInsights(attempted: TopicProfile[]): WeaknessInsights {
 
 export function InsightsPage() {
   const { user } = useAuth()
+  const aiEnabled = useAiEnabled()
   const { skillStats, loading, loadSkillStats } = useProgress(user?.uid)
   const [statsLoaded, setStatsLoaded] = useState(false)
   const [insights, setInsights] = useState<WeaknessInsights | null>(null)
@@ -117,7 +119,11 @@ export function InsightsPage() {
             <h2 className="tutor-heading">What this means</h2>
           </div>
 
-          {aiLoading ? (
+          {!aiEnabled ? (
+            <p className="tutor-summary ai-disabled-notice">
+              AI features are currently disabled. Turn them on using the ✦ AI toggle in the header to see your AI-generated insights.
+            </p>
+          ) : aiLoading ? (
             <p className="tutor-loading">
               <span className="tutor-spinner" aria-hidden="true" />
               Interpreting your results…

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAiEnabled } from '../../../hooks/useAiEnabled'
 import { ParabolaSimulator } from '../../parabola/ParabolaSimulator'
 import {
   deriveParabola,
@@ -21,7 +22,7 @@ type ParabolaChallengeStepViewProps = {
   onParabolaChange: (parabola: ParabolaState) => void
   onSuccess: () => void
   onAttempt?: (result: AttemptResult) => void
-  onRequestHint?: (wrongComponents: string[], details: HintDetail[]) => Promise<string | null>
+  onRequestHint?: (wrongComponents: string[], details: HintDetail[], hintIndex: number) => Promise<string | null>
   /** When false, the first Check attempt is final — no retries, no hints. */
   allowRetry?: boolean
 }
@@ -61,10 +62,13 @@ export function ParabolaChallengeStepView({
   onRequestHint,
   allowRetry = true,
 }: ParabolaChallengeStepViewProps) {
+  const aiEnabled = useAiEnabled()
   const [feedback, setFeedback] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [hintLoading, setHintLoading] = useState(false)
   const [activeHint, setActiveHint] = useState<string | null>(null)
+  const [hintCount, setHintCount] = useState(0)
+  const [usingAiHint, setUsingAiHint] = useState(false)
   const [solved, setSolved] = useState(false)
   const [attempted, setAttempted] = useState(false)
   const target = step.parabolaTarget
@@ -188,7 +192,23 @@ export function ParabolaChallengeStepView({
         </p>
       )}
 
-      {showHint && <p className="hint-text">{activeHint ?? step.feedback.hint}</p>}
+      {showHint && (
+        <>
+          <p className="hint-text">{activeHint ?? step.feedback.hint}</p>
+          {usingAiHint && aiEnabled && (
+            <button
+              type="button"
+              className="hint-fallback-link"
+              onClick={() => {
+                setActiveHint(step.feedback.hint)
+                setUsingAiHint(false)
+              }}
+            >
+              Not helpful? See the simpler hint
+            </button>
+          )}
+        </>
+      )}
 
       {step.miniReflection && solved && (
         <p className="mini-reflection">{step.miniReflection}</p>
@@ -203,20 +223,28 @@ export function ParabolaChallengeStepView({
                 className="btn btn-secondary"
                 disabled={hintLoading}
                 onClick={async () => {
-                  if (showHint) { setShowHint(false); return }
-                  if (onRequestHint && target) {
+                  const nextIndex = hintCount + 1
+                  setHintCount(nextIndex)
+                  if (aiEnabled && onRequestHint && target) {
                     setHintLoading(true)
                     const wrong = weakComponentsOf(computeParts(target))
-                    const aiHint = await onRequestHint(wrong, computeHintDetails(target))
-                    setActiveHint(aiHint ?? step.feedback.hint)
+                    const aiHint = await onRequestHint(wrong, computeHintDetails(target), nextIndex)
+                    if (aiHint) {
+                      setActiveHint(aiHint)
+                      setUsingAiHint(true)
+                    } else {
+                      setActiveHint(step.feedback.hint)
+                      setUsingAiHint(false)
+                    }
                     setHintLoading(false)
                   } else {
                     setActiveHint(step.feedback.hint)
+                    setUsingAiHint(false)
                   }
                   setShowHint(true)
                 }}
               >
-                {hintLoading ? 'Loading hint…' : showHint ? 'Hide Hint' : 'Hint'}
+                {hintLoading ? 'Loading hint…' : (aiEnabled && hintCount > 0) ? 'Another Hint' : 'Hint'}
               </button>
             )}
             <button type="button" className="btn btn-primary" onClick={checkAnswer}>

@@ -209,9 +209,9 @@ export function LessonEngine({
     : null
 
   const onRequestHint = useCallback(
-    (wrongComponents: string[], details: HintDetail[]) =>
+    (wrongComponents: string[], details: HintDetail[], hintIndex: number) =>
       lessonConic && step
-        ? requestHint({ conic: lessonConic, prompt: 'prompt' in step ? step.prompt : '', wrongComponents, details })
+        ? requestHint({ conic: lessonConic, prompt: 'prompt' in step ? step.prompt : '', wrongComponents, details, hintIndex })
         : Promise.resolve(null),
     [lessonConic, step],
   )

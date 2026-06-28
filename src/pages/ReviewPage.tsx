@@ -8,6 +8,7 @@ import { generateReviewItem, reflectionStepFromAi, type GeneratedItem } from '..
 import { callAiAssist } from '../lib/ai/aiAssist'
 import { requestHint } from '../lib/ai/hintClient'
 import { ReviewSession } from '../components/review/ReviewSession'
+import { saveSession, loadSession, clearSession, REVIEW_KEY } from '../lib/sessionPersistence'
 
 const SESSION_LENGTH = 6
 
@@ -18,6 +19,8 @@ export function ReviewPage() {
   )
   const [items, setItems] = useState<GeneratedItem[] | null>(null)
   const [building, setBuilding] = useState(true)
+  const [initialIndex, setInitialIndex] = useState(0)
+  const [initialCorrectCount, setInitialCorrectCount] = useState(0)
   const startedRef = useRef(false)
 
   const hasReviewable = availableReviewSkills(userProgress.completedLessons).length > 0
@@ -25,6 +28,16 @@ export function ReviewPage() {
   const startSession = useCallback(async () => {
     setBuilding(true)
     setItems(null)
+
+    const saved = loadSession(REVIEW_KEY)
+    if (saved) {
+      setItems(saved.items)
+      setInitialIndex(saved.index)
+      setInitialCorrectCount(saved.correctCount)
+      setBuilding(false)
+      return
+    }
+
     const stats = await loadSkillStats()
     const available = availableReviewSkills(userProgress.completedLessons)
     const skills = pickReviewSkills(available, stats, SESSION_LENGTH, 1)
@@ -52,6 +65,9 @@ export function ReviewPage() {
         return generateReviewItem(skill, stats[skill.id])
       }),
     )
+    saveSession(REVIEW_KEY, { items, index: 0, correctCount: 0 })
+    setInitialIndex(0)
+    setInitialCorrectCount(0)
     setItems(items)
     setBuilding(false)
   }, [loadSkillStats, userProgress.completedLessons])
@@ -65,13 +81,14 @@ export function ReviewPage() {
   }, [loading, user, hasReviewable, startSession])
 
   const restartSession = useCallback(() => {
+    clearSession(REVIEW_KEY)
     startedRef.current = true
     void startSession()
   }, [startSession])
 
   const getAiHint = useCallback(
-    (conic: string, prompt: string, wrongComponents: string[]) =>
-      requestHint({ conic, prompt, wrongComponents }),
+    (conic: string, prompt: string, wrongComponents: string[], hintIndex: number) =>
+      requestHint({ conic, prompt, wrongComponents, hintIndex }),
     [],
   )
 
@@ -111,7 +128,13 @@ export function ReviewPage() {
         items={items}
         onRecordAttempt={recordSkillAttempt}
         onRestart={restartSession}
+        initialIndex={initialIndex}
+        initialCorrectCount={initialCorrectCount}
+        onSaveProgress={(idx, correct) => {
+          if (items) saveSession(REVIEW_KEY, { items, index: idx, correctCount: correct })
+        }}
         onComplete={(correct, total) => {
+          clearSession(REVIEW_KEY)
           // Only a passing session (>= 80%) clears today's daily review gate.
           if (meetsReviewThreshold(correct, total)) markReviewDone()
         }}

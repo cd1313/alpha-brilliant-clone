@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AiEnabledProvider } from './components/AiEnabledProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { CourseMapPage } from './pages/CourseMapPage'
 import { InsightsPage } from './pages/InsightsPage'
@@ -14,6 +15,7 @@ import './App.css'
 
 function App() {
   return (
+    <AiEnabledProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
@@ -78,6 +80,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </AiEnabledProvider>
   )
 }
 

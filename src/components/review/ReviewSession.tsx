@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAiEnabled } from '../../hooks/useAiEnabled'
 import type { GeneratedItem } from '../../lib/reviewGenerator'
 import type { ChallengeStep, ReflectionStep } from '../../types/lesson'
-import type { AttemptResult } from '../../lib/feedback'
+import type { AttemptResult, HintDetail } from '../../lib/feedback'
 import { performanceFromAttempts, type SessionAttempt } from '../../lib/ai/tutorClient'
 import { PostSessionTutor } from './PostSessionTutor'
 import { ParabolaChallengeStepView } from '../lesson/steps/ParabolaChallengeStepView'
@@ -48,7 +49,7 @@ type ReviewSessionProps = {
    * the student presses Hint, passing what they currently have wrong so the AI
    * can tailor the hint to their live answer. Absent in lessons and Smart Review.
    */
-  getAiHint?: (conic: string, prompt: string, wrongComponents: string[]) => Promise<string | null>
+  getAiHint?: (conic: string, prompt: string, wrongComponents: string[], hintIndex: number) => Promise<string | null>
   /** Fired once when the session is fully completed, with the final score. */
   onComplete?: (correctCount: number, total: number) => void
   /** Like onComplete but also takes over the completion UI — used by unit tests. */
@@ -60,6 +61,12 @@ type ReviewSessionProps = {
    * what counts toward unlocking the next lesson. Used by Smart Review and Practice.
    */
   reviewPassThreshold?: number
+  /** Resume a saved session from this index instead of starting at 0. */
+  initialIndex?: number
+  /** Resume a saved session with this correct count instead of starting at 0. */
+  initialCorrectCount?: number
+  /** Called whenever the user advances to the next item, so the parent can persist progress. */
+  onSaveProgress?: (index: number, correctCount: number) => void
 }
 
 /**
@@ -76,7 +83,7 @@ function ReviewItem({
   item: GeneratedItem
   onSuccess: () => void
   onAttempt: (result: AttemptResult) => void
-  getAiHint?: (conic: string, prompt: string, wrongComponents: string[]) => Promise<string | null>
+  getAiHint?: (conic: string, prompt: string, wrongComponents: string[], hintIndex: number) => Promise<string | null>
   allowRetry?: boolean
 }) {
   const [parabola, setParabola] = useState<ParabolaState>(DEFAULT_PARABOLA)
@@ -92,7 +99,7 @@ function ReviewItem({
 
   const challengeStep = item.step as ChallengeStep
   const onRequestHint = getAiHint
-    ? (wrongComponents: string[]) => getAiHint(item.conic, challengeStep.prompt, wrongComponents)
+    ? (wrongComponents: string[], _details: HintDetail[], hintIndex: number) => getAiHint(item.conic, challengeStep.prompt, wrongComponents, hintIndex)
     : undefined
 
   switch (item.conic) {
@@ -185,9 +192,14 @@ export function ReviewSession({
   onFinish,
   allowRetry = true,
   reviewPassThreshold,
+  initialIndex = 0,
+  initialCorrectCount = 0,
+  onSaveProgress,
 }: ReviewSessionProps) {
-  const [index, setIndex] = useState(0)
-  const [correctCount, setCorrectCount] = useState(0)
+  const aiEnabled = useAiEnabled()
+  const [index, setIndex] = useState(initialIndex)
+  const [correctCount, setCorrectCount] = useState(initialCorrectCount)
+  const correctCountRef = useRef(initialCorrectCount)
   const [attempts, setAttempts] = useState<SessionAttempt[]>([])
   const [pendingAttempt, setPendingAttempt] = useState<{ item: GeneratedItem; result: AttemptResult } | null>(null)
   const attemptedRef = useRef<Set<string>>(new Set())
@@ -224,7 +236,11 @@ export function ReviewSession({
     // Advancing without choosing a confidence level still records the attempt, so the
     // score and stats are never silently dropped (e.g. clicking Continue straight away).
     recordPending(undefined)
-    setIndex((i) => i + 1)
+    setIndex((i) => {
+      const nextIndex = i + 1
+      onSaveProgress?.(nextIndex, correctCountRef.current)
+      return nextIndex
+    })
   }
 
   const handleAttempt = (it: GeneratedItem, result: AttemptResult) => {
@@ -232,7 +248,10 @@ export function ReviewSession({
     if (!attemptedRef.current.has(it.id)) {
       attemptedRef.current.add(it.id)
       if (result.correct) {
-        setCorrectCount((c) => c + 1)
+        setCorrectCount((c) => {
+          correctCountRef.current = c + 1
+          return c + 1
+        })
       }
     }
     setPendingAttempt({ item: it, result })
@@ -283,7 +302,7 @@ export function ReviewSession({
           </div>
         </div>
 
-        {showTutor && (
+        {showTutor && aiEnabled && (
           <div className="page-card tutor-card">
             <PostSessionTutor
               performance={performanceFromAttempts(topic, tutorSource, attempts)}

@@ -37,6 +37,7 @@ type TailorRequest = {
   prompt: string
   wrongComponents: string[]
   details?: HintDetail[]
+  hintIndex?: number
 }
 
 type ReflectRequest = {
@@ -193,17 +194,26 @@ async function handleTailor(data: TailorRequest) {
   const prompt = asString(data.prompt, 'prompt')
   const wrongComponents = Array.isArray(data.wrongComponents) ? data.wrongComponents : []
   const details = Array.isArray(data.details) ? data.details : []
+  const hintIndex = typeof data.hintIndex === 'number' ? data.hintIndex : 0
+
   // Directional descriptors are qualitative (e.g. "radius too small") and never contain the
   // exact target value, so they can be shown to the model without leaking the answer.
   const directionLine = details.length
-    ? ` Here is how each wrong part is off (directional only, no exact values): ` +
+    ? ` Directional info for each wrong part (no exact values): ` +
       `${details.map((d) => `${d.component} ${d.direction}`).join('; ')}.`
     : ''
+
+  // On repeated hint requests the student hasn't made progress — vary the explanation angle
+  // so each press offers a genuinely new perspective rather than rephrasing the same nudge.
+  const variationLine =
+    hintIndex > 0
+      ? ` This is hint attempt #${hintIndex + 1} for the same wrong parts — use a different explanation angle or diagnostic framing than before.`
+      : ''
 
   const completion = await openai().chat.completions.create({
     model: MODEL,
     temperature: 0.7,
-    max_tokens: 120,
+    max_tokens: 150,
     response_format: {
       type: 'json_schema',
       json_schema: {
@@ -223,12 +233,13 @@ async function handleTailor(data: TailorRequest) {
       {
         role: 'system',
         content:
-          'You help students with precalculus graphing problems by writing targeted, one-line hints. ' +
+          'You help students with precalculus graphing problems by writing short, diagnostic hints. ' +
           'Topics include conic sections (circles, parabolas, ellipses, hyperbolas) and trigonometric functions ' +
           '(the unit circle, angles and radians, sine/cosine/tangent graphs, amplitude, period, phase shift, and reciprocal functions). ' +
-          'Do NOT give the answer or restate the equation, and never state the exact target value or coordinates. ' +
-          'When directional descriptors are provided (e.g. "radius too small", "center too far left"), use them to nudge the student in the right direction without revealing the exact value. ' +
-          'Focus only on the specific parts the student currently has wrong. ' +
+          'For each wrong part, briefly name the likely misconception the student has (e.g. "You may be confusing the radius with the diameter" or ' +
+          '"It looks like you\'re reading the center coordinates directly from the equation without negating them"), then give a one-sentence nudge to fix it. ' +
+          'Do NOT give the answer, the exact target value, or exact coordinates. ' +
+          'Keep the total response to 1-2 sentences. ' +
           'Write in plain English only — no LaTeX, no markdown, no dollar signs, no special symbols. ' +
           'Write math inline as plain text, e.g. "p" not "$p$", "a^2 + b^2" not "\\sqrt{a^2+b^2}", "pi/2" not "\\frac{\\pi}{2}".',
       },
@@ -238,7 +249,8 @@ async function handleTailor(data: TailorRequest) {
           `Topic: ${topicLabel(conic)}. Problem: ${prompt}. ` +
           `The student currently has these parts wrong: ${wrongComponents.length ? wrongComponents.join(', ') : 'all parts'}.` +
           directionLine +
-          ` Write one short hint that helps them fix exactly those parts.`,
+          variationLine +
+          ` Identify the likely misconception and give a targeted diagnostic hint.`,
       },
     ],
   })
