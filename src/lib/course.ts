@@ -57,6 +57,11 @@ export function isLessonUnlocked(
   return true
 }
 
+/** The section that contains the given lesson id, or undefined if none. */
+export function getSectionForLesson(course: Course, lessonId: string): CourseSection | undefined {
+  return course.sections.find((s) => s.lessons.some((l) => l.id === lessonId))
+}
+
 /** All lessons across every section, in order. */
 export function getCourseLessons(course: Course): CourseLesson[] {
   return course.sections.flatMap((section) => section.lessons)

@@ -129,12 +129,14 @@ export function UnitTestPage() {
     )
   }
 
-  if (alreadyPassed) {
+  // Only show the "already passed" screen on a fresh revisit — never right after the learner
+  // just finished a passing run (in which case `result` is set and the celebratory screen wins).
+  if (alreadyPassed && !result) {
     return (
       <div className="page lesson-page">
         <div className="page-card">
           <h2>Unit Test Passed ✓</h2>
-          <p>You have already passed the {section.title} unit test.</p>
+          <p>You've already passed the {section.title} unit test.</p>
           <Link to="/" className="btn btn-primary">Back to Course Map</Link>
         </div>
       </div>

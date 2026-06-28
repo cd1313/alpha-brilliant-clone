@@ -51,6 +51,7 @@ import type { AttemptResult, HintDetail } from '../../lib/feedback'
 import { skillForStep } from '../../lib/reviewSkills'
 import type { SessionAttempt } from '../../lib/ai/tutorClient'
 import { ProgressBar } from './ProgressBar'
+import { ConfidencePrompt } from './ConfidencePrompt'
 import { StepInfoPanel } from './StepInfoPanel'
 import { ChallengeStepView } from './steps/ChallengeStepView'
 import { CircleChallengeStepView } from './steps/CircleChallengeStepView'
@@ -194,6 +195,7 @@ export function LessonEngine({
     initialMasteryIndex(lesson, initialProgress),
   )
   const [furthestStepIndex, setFurthestStepIndex] = useState(initialStepIndex)
+  const [pendingAttempt, setPendingAttempt] = useState<{ skillId: string; result: AttemptResult } | null>(null)
 
   const step = lesson.steps[stepIndex]
   const isReviewing = stepIndex < furthestStepIndex
@@ -230,6 +232,7 @@ export function LessonEngine({
   useEffect(() => {
     if (prevStepIndexRef.current === stepIndex) return
     prevStepIndexRef.current = stepIndex
+    setPendingAttempt(null)
 
     const currentStep = lesson.steps[stepIndex]
     if (!currentStep) return
@@ -405,6 +408,9 @@ export function LessonEngine({
   }
 
   const goToNextStep = () => {
+    // Flush any attempt the learner didn't tag with a confidence level before moving on,
+    // so it still lands in this run's stats and the session attempts handed to the tutor.
+    recordPending(undefined)
     const next = stepIndex + 1
     if (next >= lesson.steps.length) {
       finishLesson()
@@ -445,12 +451,27 @@ export function LessonEngine({
     if (!step) return
     const skillId = skillForStep(lesson, step)
     if (!skillId) return
+    setPendingAttempt({ skillId, result })
+  }
+
+  // Record the pending attempt exactly once (with the chosen confidence, if any). Called
+  // both when the learner picks a confidence level and as a flush when they advance without
+  // choosing one, so a lesson attempt is never silently dropped from stats/tutor data.
+  const recordPending = (confidence: AttemptResult['confidence']) => {
+    if (!pendingAttempt) return
+    const { skillId, result } = pendingAttempt
+    const recorded: AttemptResult = { ...result, confidence }
     sessionAttemptsRef.current.push({
       skillId,
-      correct: result.correct,
-      weakComponents: result.weakComponents,
+      correct: recorded.correct,
+      weakComponents: recorded.weakComponents,
     })
-    onRecordAttempt?.(skillId, result)
+    onRecordAttempt?.(skillId, recorded)
+    setPendingAttempt(null)
+  }
+
+  const handleConfidenceSelect = (confidence: AttemptResult['confidence']) => {
+    recordPending(confidence)
   }
 
   if (!step) {
@@ -744,6 +765,8 @@ export function LessonEngine({
           onComplete={handleComplete}
         />
       )}
+
+      {pendingAttempt && <ConfidencePrompt onSelect={handleConfidenceSelect} />}
     </div>
   )
 }

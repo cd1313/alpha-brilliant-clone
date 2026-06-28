@@ -79,6 +79,8 @@ export function UnitCircleExploreStepView({
         showReferenceAngle={config.showReferenceAngle}
         showLegs={config.showLegs}
         snapSpecial={config.snapSpecial}
+        showSideLabels={config.showSideLabels}
+        showQuadrantLabels={config.showQuadrantLabels}
         targetAngle={config.targetAngle}
       />
 

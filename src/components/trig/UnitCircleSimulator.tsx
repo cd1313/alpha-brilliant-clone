@@ -20,6 +20,10 @@ type UnitCircleSimulatorProps = {
   showLegs?: boolean
   snapSpecial?: boolean
   hideLabels?: boolean
+  /** Label the initial side (positive x-axis) and terminal side (the angle's ray). */
+  showSideLabels?: boolean
+  /** Label the four quadrants (I-IV) in the corners. */
+  showQuadrantLabels?: boolean
   targetAngle?: number
   ghost?: UnitCircleState | null
 }
@@ -61,6 +65,8 @@ export function UnitCircleSimulator({
   showLegs = false,
   snapSpecial = false,
   hideLabels = false,
+  showSideLabels = false,
+  showQuadrantLabels = false,
   targetAngle,
   ghost,
 }: UnitCircleSimulatorProps) {
@@ -74,6 +80,18 @@ export function UnitCircleSimulator({
   const point = toSvg(cos, sin)
   const refRay = toSvg(1, 0)
   const angleLabel = toSvg(0.32 * Math.cos(normalized / 2), 0.32 * Math.sin(normalized / 2))
+  // Side labels: the initial side sits along +x; the terminal-side label rides the angle's
+  // ray, nudged perpendicular (-sin, cos) so it clears the radius line as the angle changes.
+  const initialSideLabel = toSvg(0.62, 0)
+  const terminalSideLabel = toSvg(0.55 * cos - 0.18 * sin, 0.55 * sin + 0.18 * cos)
+  // Quadrant numerals sit in the corners (outside the circle) so they never collide with
+  // the rays, arc, or terminal point as the angle is dragged around.
+  const quadrantLabels = [
+    { roman: 'I', pos: toSvg(1.18, 1.18) },
+    { roman: 'II', pos: toSvg(-1.18, 1.18) },
+    { roman: 'III', pos: toSvg(-1.18, -1.18) },
+    { roman: 'IV', pos: toSvg(1.18, -1.18) },
+  ]
 
   const ghostPoint = ghost ? toSvg(Math.cos(ghost.angle), Math.sin(ghost.angle)) : null
 
@@ -172,6 +190,23 @@ export function UnitCircleSimulator({
           </>
         )}
 
+        {showQuadrantLabels && !hideLabels && (
+          <g pointerEvents="none">
+            {quadrantLabels.map(({ roman, pos }) => (
+              <text
+                key={roman}
+                x={pos.x}
+                y={pos.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="unit-circle-quadrant-label"
+              >
+                {roman}
+              </text>
+            ))}
+          </g>
+        )}
+
         {/* swept angle arc */}
         <line
           x1={center.x}
@@ -210,6 +245,30 @@ export function UnitCircleSimulator({
 
         {/* radius to terminal point */}
         <line x1={center.x} y1={center.y} x2={point.x} y2={point.y} stroke="#1e293b" strokeWidth="2" pointerEvents="none" />
+
+        {showSideLabels && !hideLabels && (
+          <g pointerEvents="none">
+            <text
+              x={initialSideLabel.x}
+              y={initialSideLabel.y + 18}
+              textAnchor="middle"
+              className="parabola-label"
+              fill="#64748b"
+            >
+              Initial side
+            </text>
+            <text
+              x={terminalSideLabel.x}
+              y={terminalSideLabel.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="parabola-label"
+              fill="#1e293b"
+            >
+              Terminal side
+            </text>
+          </g>
+        )}
 
         {targetSvg && (
           <circle cx={targetSvg.x} cy={targetSvg.y} r={9} fill="#fff" stroke="#9333ea" strokeWidth="3" pointerEvents="none" />

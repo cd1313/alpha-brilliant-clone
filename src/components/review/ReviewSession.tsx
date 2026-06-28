@@ -12,6 +12,7 @@ import { HyperbolaChallengeStepView } from '../lesson/steps/HyperbolaChallengeSt
 import { UnitCircleChallengeStepView } from '../lesson/steps/UnitCircleChallengeStepView'
 import { TrigGraphChallengeStepView } from '../lesson/steps/TrigGraphChallengeStepView'
 import { ReflectionStepView } from '../lesson/steps/ReflectionStepView'
+import { ConfidencePrompt } from '../lesson/ConfidencePrompt'
 import { StepInfoPanel } from '../lesson/StepInfoPanel'
 import { ProgressBar } from '../lesson/ProgressBar'
 import { clampParabolaState, DEFAULT_PARABOLA, type ParabolaState } from '../../lib/parabolaGeometry'
@@ -48,12 +49,17 @@ type ReviewSessionProps = {
    * can tailor the hint to their live answer. Absent in lessons and Smart Review.
    */
   getAiHint?: (conic: string, prompt: string, wrongComponents: string[]) => Promise<string | null>
-  /** Fired once when the session is fully completed (all items finished). */
-  onComplete?: () => void
-  /** Like onComplete but also receives the final score — used by unit tests. */
+  /** Fired once when the session is fully completed, with the final score. */
+  onComplete?: (correctCount: number, total: number) => void
+  /** Like onComplete but also takes over the completion UI — used by unit tests. */
   onFinish?: (correctCount: number, total: number) => void
   /** When false, each challenge is single-attempt with no hints (used by unit tests). */
   allowRetry?: boolean
+  /**
+   * When set (0-1), the summary screen explains that scoring at/above this fraction is
+   * what counts toward unlocking the next lesson. Used by Smart Review and Practice.
+   */
+  reviewPassThreshold?: number
 }
 
 /**
@@ -178,10 +184,12 @@ export function ReviewSession({
   onComplete,
   onFinish,
   allowRetry = true,
+  reviewPassThreshold,
 }: ReviewSessionProps) {
   const [index, setIndex] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
   const [attempts, setAttempts] = useState<SessionAttempt[]>([])
+  const [pendingAttempt, setPendingAttempt] = useState<{ item: GeneratedItem; result: AttemptResult } | null>(null)
   const attemptedRef = useRef<Set<string>>(new Set())
 
   const finished = index >= items.length
@@ -192,25 +200,46 @@ export function ReviewSession({
   useEffect(() => {
     if (finished && !completedRef.current) {
       completedRef.current = true
-      onComplete?.()
+      onComplete?.(correctCount, items.length)
       onFinish?.(correctCount, items.length)
     }
   }, [finished, onComplete, onFinish, correctCount, items.length])
 
-  const goNext = () => setIndex((i) => i + 1)
-
-  const handleAttempt = (it: GeneratedItem, result: AttemptResult) => {
+  // Record the pending attempt exactly once (with the chosen confidence, if any) into the
+  // session log + struggle stats. Scoring is handled separately at attempt time so it never
+  // depends on the learner picking a confidence level.
+  const recordPending = (confidence: AttemptResult['confidence']) => {
+    if (!pendingAttempt) return
+    const { item: it, result } = pendingAttempt
+    const recorded: AttemptResult = { ...result, confidence }
     setAttempts((prev) => [
       ...prev,
-      { skillId: it.skillId, correct: result.correct, weakComponents: result.weakComponents },
+      { skillId: it.skillId, correct: recorded.correct, weakComponents: recorded.weakComponents },
     ])
-    onRecordAttempt(it.skillId, result)
+    onRecordAttempt(it.skillId, recorded)
+    setPendingAttempt(null)
+  }
+
+  const goNext = () => {
+    // Advancing without choosing a confidence level still records the attempt, so the
+    // score and stats are never silently dropped (e.g. clicking Continue straight away).
+    recordPending(undefined)
+    setIndex((i) => i + 1)
+  }
+
+  const handleAttempt = (it: GeneratedItem, result: AttemptResult) => {
+    // Score the first attempt per item immediately, independent of the confidence prompt.
     if (!attemptedRef.current.has(it.id)) {
       attemptedRef.current.add(it.id)
       if (result.correct) {
         setCorrectCount((c) => c + 1)
       }
     }
+    setPendingAttempt({ item: it, result })
+  }
+
+  const handleConfidenceSelect = (confidence: AttemptResult['confidence']) => {
+    recordPending(confidence)
   }
 
   if (finished) {
@@ -225,6 +254,11 @@ export function ReviewSession({
         ? [tutorTopic]
         : ['circles', 'parabolas', 'ellipses', 'hyperbolas', 'the unit circle', 'trig graphs']
 
+    const passPct = reviewPassThreshold != null ? Math.round(reviewPassThreshold * 100) : null
+    const metThreshold =
+      reviewPassThreshold == null ||
+      (items.length > 0 && correctCount / items.length >= reviewPassThreshold)
+
     return (
       <>
         <div className="page-card review-summary">
@@ -232,6 +266,13 @@ export function ReviewSession({
           <p className="completion-message">
             You got {correctCount} of {items.length} correct. Keep the streak going!
           </p>
+          {passPct != null && (
+            <p className={`review-gate-note ${metThreshold ? 'review-gate-pass' : 'review-gate-fail'}`}>
+              {metThreshold
+                ? `Nice — scoring ${passPct}% or higher counts toward unlocking your next lesson.`
+                : `You scored below ${passPct}%, so this session won't unlock a new lesson yet. Try again to reach ${passPct}%.`}
+            </p>
+          )}
           <div className="step-actions">
             <button type="button" className="btn btn-primary" onClick={onRestart}>
               {restartLabel}
@@ -266,6 +307,7 @@ export function ReviewSession({
         getAiHint={getAiHint}
         allowRetry={allowRetry}
       />
+      {pendingAttempt && <ConfidencePrompt onSelect={handleConfidenceSelect} />}
     </div>
   )
 }

@@ -1,7 +1,11 @@
 export type FeedbackPart = { label: string; ok: boolean }
 
 /** One graded attempt, with the coarse components the learner missed (for struggle tracking). */
-export type AttemptResult = { correct: boolean; weakComponents?: string[] }
+export type AttemptResult = {
+  correct: boolean
+  weakComponents?: string[]
+  confidence?: 'sure' | 'unsure' | 'guessing'
+}
 
 /**
  * A single qualitative discrepancy between the student's input and the target,

@@ -1,5 +1,6 @@
 import type { Lesson, Step } from '../types/lesson'
 import type { SkillStat } from '../types/progress'
+import { todayString } from './dates'
 
 /**
  * The set of reviewable topics. Originally just the four conics; now widened to
@@ -84,15 +85,29 @@ export function getPracticeSkill(lessonId: string): ReviewSkill | undefined {
 const GUARANTEED_WEAK = 2
 
 /**
- * Higher weight = more likely to be reviewed. Recent struggle (the EMA `recentMissRate`)
- * dominates lifetime miss rate, with an extra bump if the most recent attempt was wrong.
+ * A skill is due when it has never been scheduled (new) or its next review date has
+ * arrived. Due skills are heavily prioritized by `skillWeight`.
+ */
+function isDue(stat: SkillStat | undefined): boolean {
+  if (!stat?.nextReviewDate) return true
+  return stat.nextReviewDate <= todayString()
+}
+
+/**
+ * Higher weight = more likely to be reviewed. Due skills (spaced repetition) receive a
+ * large bonus so they almost always come up before non-due skills; within the due pool
+ * the EMA `recentMissRate` formula acts as a tiebreaker. A reported-`sure` but wrong
+ * answer signals a likely misconception and earns an extra bump.
  */
 function skillWeight(stat: SkillStat | undefined): number {
-  if (!stat || stat.attempts === 0) return 1
+  const dueBonus = isDue(stat) ? 6 : 0
+  if (!stat || stat.attempts === 0) return 1 + dueBonus
   const lifetime = stat.misses / stat.attempts
   const recent = stat.recentMissRate ?? lifetime
   const recencyBonus = stat.lastResult === 'incorrect' ? 1 : 0
-  return 1 + 4 * recent + 1 * lifetime + recencyBonus
+  const misconceptionBonus =
+    stat.lastConfidence === 'sure' && stat.lastResult === 'incorrect' ? 2 : 0
+  return 1 + dueBonus + 4 * recent + 1 * lifetime + recencyBonus + misconceptionBonus
 }
 
 function shuffle<T>(arr: T[]): T[] {

@@ -93,6 +93,10 @@ export type UnitCircleSimulatorConfig = {
   showLegs?: boolean
   /** Snap the terminal point to common special angles (multiples of 30° and 45°). */
   snapSpecial?: boolean
+  /** Label the initial side (positive x-axis) and the terminal side (the angle's ray). */
+  showSideLabels?: boolean
+  /** Label the four quadrants (I-IV) in the corners. */
+  showQuadrantLabels?: boolean
   /** Show a typed angle-entry panel instead of (or alongside) free dragging. */
   angleInputMode?: boolean
   /** A fixed angle (radians) to mark on the circle as a target guide. */

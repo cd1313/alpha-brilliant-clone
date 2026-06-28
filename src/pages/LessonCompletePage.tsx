@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
 import { getLesson } from '../lib/lessons'
 import { availableReviewSkills, getPracticeSkill, REVIEW_SKILLS } from '../lib/reviewSkills'
+import { effectiveStreak } from '../lib/dates'
 import {
   performanceFromAttempts,
   performanceFromStats,
@@ -67,7 +68,7 @@ export function LessonCompletePage() {
         <h1>Lesson Complete!</h1>
         <p className="completion-message">Great work completing this lesson!</p>
         <p className="streak-message">
-          🔥 {userProgress.streak} day streak — keep it going tomorrow!
+          🔥 {effectiveStreak(userProgress.streak, userProgress.lastActiveDate)} day streak — keep it going tomorrow!
         </p>
         <div className="completion-actions">
           {canPractice && (

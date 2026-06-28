@@ -12,6 +12,8 @@ rules_version = '2';
 //   - completedLessons: list<string> (required, max 50 slugs)
 //   - currentLesson: map | null (optional, lessonId + stepIndex)
 //   - lastReviewDate: string | null (optional, YYYY-MM-DD or null; last review/practice day)
+//   - passedUnitTests: list<string> (optional, section ids whose unit test passed)
+//   - completedPreAssessments: list<string> (optional, section ids whose pre-assessment done)
 //
 // Subcollection: users/{uid}/lessonProgress
 // Document ID: {lessonId}
@@ -35,6 +37,9 @@ rules_version = '2';
 //   - lastResult: string ('correct' | 'incorrect')
 //   - weakComponents: list<string> (optional, max 16)
 //   - recentMissRate: number (optional, 0–1; EMA of recent misses)
+//   - nextReviewDate: string | null (optional, YYYY-MM-DD; spaced repetition due date)
+//   - reviewInterval: int (optional, 1–365; days until next review)
+//   - lastConfidence: string (optional, 'sure' | 'unsure' | 'guessing')
 //
 // ===============================================================
 
@@ -113,20 +118,35 @@ service cloud.firestore {
       return list is list && list.size() <= 20;
     }
 
+    // Type-checks the KNOWN progress fields when present, without constraining the
+    // overall key set. Used on update so a merge write (which re-sends the FULL
+    // merged document) can never be rejected merely because the stored doc carries
+    // an unexpected/legacy/future field. Each field is guarded by presence so extra
+    // keys are tolerated.
+    function isValidUserProgressTypes(data) {
+      return (!('streak' in data) || (data.streak is int && data.streak >= 0 && data.streak <= 10000))
+        && (!('lastActiveDate' in data) || data.lastActiveDate == null || isValidDateString(data.lastActiveDate))
+        && (!('completedLessons' in data) || isValidCompletedLessons(data.completedLessons))
+        && isValidCurrentLesson(data.get('currentLesson', null))
+        && (data.get('lastReviewDate', null) == null || isValidDateString(data.lastReviewDate))
+        && (!('passedUnitTests' in data) || isValidUnitTestList(data.passedUnitTests))
+        && (!('completedPreAssessments' in data) || isValidUnitTestList(data.completedPreAssessments));
+    }
+
+    // Strict validator for document CREATION: the initial doc must contain only the
+    // known fields. Updates use isValidUserProgressTypes (above) so they stay robust.
     function isValidUserProgress(data) {
-      return hasOnlyAllowedFields(['streak', 'lastActiveDate', 'completedLessons', 'currentLesson', 'lastReviewDate', 'passedUnitTests'])
+      return hasOnlyAllowedFields(['streak', 'lastActiveDate', 'completedLessons', 'currentLesson', 'lastReviewDate', 'passedUnitTests', 'completedPreAssessments'])
         && data.streak is int
         && data.streak >= 0
         && data.streak <= 10000
         && (data.lastActiveDate == null || isValidDateString(data.lastActiveDate))
         && isValidCompletedLessons(data.completedLessons)
-        && isValidCurrentLesson(data.get('currentLesson', null))
-        && (data.get('lastReviewDate', null) == null || isValidDateString(data.lastReviewDate))
-        && (!('passedUnitTests' in data) || isValidUnitTestList(data.passedUnitTests));
+        && isValidUserProgressTypes(data);
     }
 
     function isValidSkillStat(data) {
-      return hasOnlyAllowedFields(['attempts', 'misses', 'lastResult', 'weakComponents', 'recentMissRate'])
+      return hasOnlyAllowedFields(['attempts', 'misses', 'lastResult', 'weakComponents', 'recentMissRate', 'nextReviewDate', 'reviewInterval', 'lastConfidence'])
         && data.attempts is int
         && data.attempts >= 0
         && data.attempts <= 100000
@@ -135,7 +155,10 @@ service cloud.firestore {
         && data.misses <= 100000
         && data.lastResult in ['correct', 'incorrect']
         && (!('weakComponents' in data) || (data.weakComponents is list && data.weakComponents.size() <= 16))
-        && (!('recentMissRate' in data) || (data.recentMissRate is number && data.recentMissRate >= 0 && data.recentMissRate <= 1));
+        && (!('recentMissRate' in data) || (data.recentMissRate is number && data.recentMissRate >= 0 && data.recentMissRate <= 1))
+        && (!('nextReviewDate' in data) || data.nextReviewDate == null || isValidDateString(data.nextReviewDate))
+        && (!('reviewInterval' in data) || (data.reviewInterval is int && data.reviewInterval >= 1 && data.reviewInterval <= 365))
+        && (!('lastConfidence' in data) || data.lastConfidence in ['sure', 'unsure', 'guessing']);
     }
 
     function isValidLessonProgress(data) {
@@ -174,7 +197,9 @@ service cloud.firestore {
 
       allow create: if isOwner(userId) && isValidUserProgress(request.resource.data);
 
-      allow update: if isOwner(userId) && isValidUserProgress(request.resource.data);
+      // Tolerant on update: an owner may write valid known fields even if the stored
+      // doc carries extra keys, so a single stray field can never lock the user out.
+      allow update: if isOwner(userId) && isValidUserProgressTypes(request.resource.data);
 
       allow delete: if false;
 

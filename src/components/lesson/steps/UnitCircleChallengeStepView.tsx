@@ -103,6 +103,8 @@ export function UnitCircleChallengeStepView({
         showReferenceAngle={config.showReferenceAngle}
         showLegs={config.showLegs}
         snapSpecial={config.snapSpecial}
+        showSideLabels={config.showSideLabels}
+        showQuadrantLabels={config.showQuadrantLabels}
         targetAngle={config.targetAngle}
         ghost={showHint ? ghostFromTarget(target) : null}
       />

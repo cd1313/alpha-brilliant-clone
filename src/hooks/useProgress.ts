@@ -12,7 +12,8 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
-import { localDateString, todayString } from '../lib/dates'
+import { addDaysString, localDateString, todayString } from '../lib/dates'
+import { markPreAssessmentDoneLocal } from '../lib/preAssessment'
 import {
   defaultUserProgress,
   type LessonProgress,
@@ -127,8 +128,17 @@ export function useProgress(uid: string | undefined) {
 
   useEffect(() => {
     if (!uid || !db) {
+      // No user yet (auth still resolving) — there is nothing to load, so we are
+      // not in a loading state. Callers gate the warm-up redirect on auth instead.
+      setLoading(false)
       return
     }
+
+    // A uid just became available (or changed): we have NOT yet received this
+    // user's progress from the backend. Stay in the loading state until the first
+    // snapshot resolves so consumers never evaluate redirects against default
+    // progress (which would bounce returning users into the pre-assessment).
+    setLoading(true)
 
     let cancelled = false
     const userRef = userDocRef(uid)
@@ -147,6 +157,7 @@ export function useProgress(uid: string | undefined) {
             currentLesson: data.currentLesson ?? null,
             lastReviewDate: data.lastReviewDate ?? null,
             passedUnitTests: data.passedUnitTests ?? [],
+            completedPreAssessments: data.completedPreAssessments ?? [],
           })
         } else {
           try {
@@ -246,10 +257,17 @@ export function useProgress(uid: string | undefined) {
    * increments; recentMissRate is an EMA computed from the warm-loaded prior value.
    */
   const recordSkillAttempt = useCallback(
-    (skillId: string, result: { correct: boolean; weakComponents?: string[] }) => {
+    (
+      skillId: string,
+      result: {
+        correct: boolean
+        weakComponents?: string[]
+        confidence?: 'sure' | 'unsure' | 'guessing'
+      },
+    ) => {
       if (!uid || !db) return
 
-      const { correct, weakComponents } = result
+      const { correct, weakComponents, confidence } = result
       const RECENT_ALPHA = 0.5
       const miss = correct ? 0 : 1
 
@@ -262,12 +280,22 @@ export function useProgress(uid: string | undefined) {
       const recentMissRate = RECENT_ALPHA * miss + (1 - RECENT_ALPHA) * priorRecent
       const merged = Array.from(new Set([...(cur.weakComponents ?? []), ...(weakComponents ?? [])]))
 
+      // SM-2-inspired spaced repetition. Correct answers push the next review out by a
+      // confidence-adjusted multiplier; incorrect answers reset to tomorrow.
+      const multiplier = confidence === 'sure' ? 2.5 : 1.5
+      const priorInterval = cur.reviewInterval && cur.reviewInterval > 0 ? cur.reviewInterval : 1
+      const reviewInterval = correct ? Math.max(1, Math.floor(priorInterval * multiplier)) : 1
+      const nextReviewDate = correct ? addDaysString(reviewInterval) : addDaysString(1)
+
       const nextStat: SkillStat = {
         attempts,
         misses,
         lastResult: correct ? 'correct' : 'incorrect',
         weakComponents: merged,
         recentMissRate,
+        reviewInterval,
+        nextReviewDate,
+        ...(confidence ? { lastConfidence: confidence } : {}),
       }
       const nextMap = { ...skillStatsRef.current, [skillId]: nextStat }
       skillStatsRef.current = nextMap
@@ -278,9 +306,14 @@ export function useProgress(uid: string | undefined) {
         misses: increment(miss),
         lastResult: correct ? 'correct' : 'incorrect',
         recentMissRate,
+        reviewInterval,
+        nextReviewDate,
       }
       if (weakComponents && weakComponents.length > 0) {
         payload.weakComponents = arrayUnion(...weakComponents)
+      }
+      if (confidence) {
+        payload.lastConfidence = confidence
       }
 
       void setDoc(skillStatDocRef(uid, skillId), payload, { merge: true }).catch(() => {
@@ -303,6 +336,80 @@ export function useProgress(uid: string | undefined) {
       setError(err instanceof Error ? err.message : 'Failed to record review')
     })
   }, [uid])
+
+  /**
+   * Seed skillStats from a unit's start-of-unit pre-assessment, then record the section
+   * id so the pre-assessment is not shown again for that unit. `results` maps skill ids
+   * to whether the learner answered that topic correctly. Correct topics start a few days
+   * out; incorrect ones are due tomorrow so Smart Review surfaces them early.
+   */
+  const markPreAssessmentDone = useCallback(
+    async (sectionId: string, results: Record<string, boolean>) => {
+      if (!uid || !db) return
+
+      const nextMap = { ...skillStatsRef.current }
+      const writes: Promise<unknown>[] = []
+
+      for (const [skillId, correct] of Object.entries(results)) {
+        const seed: SkillStat = correct
+          ? {
+              attempts: 1,
+              misses: 0,
+              lastResult: 'correct',
+              recentMissRate: 0,
+              reviewInterval: 3,
+              nextReviewDate: addDaysString(3),
+            }
+          : {
+              attempts: 1,
+              misses: 1,
+              lastResult: 'incorrect',
+              recentMissRate: 1,
+              reviewInterval: 1,
+              nextReviewDate: addDaysString(1),
+            }
+        nextMap[skillId] = seed
+        writes.push(setDoc(skillStatDocRef(uid, skillId), seed, { merge: true }))
+      }
+
+      // Reflect completion locally first so this hook instance never re-shows the
+      // pre-assessment for this unit regardless of how the network writes resolve.
+      skillStatsRef.current = nextMap
+      setSkillStats(nextMap)
+      setUserProgress((prev) => ({
+        ...prev,
+        completedPreAssessments: (prev.completedPreAssessments ?? []).includes(sectionId)
+          ? prev.completedPreAssessments ?? []
+          : [...(prev.completedPreAssessments ?? []), sectionId],
+      }))
+
+      // Device-local safety net: even if the server write below is rejected and the
+      // optimistic value is rolled back by persistentLocalCache, the course map reads
+      // this key and will not bounce the learner back into the pre-assessment on this device.
+      markPreAssessmentDoneLocal(uid, sectionId)
+
+      // Seeding skillStats is best-effort: allSettled never rejects, so a partial
+      // failure (e.g. not-yet-deployed rules) cannot cascade and block the critical
+      // completedPreAssessments write below — otherwise the course map would redirect
+      // back into the pre-assessment forever.
+      await Promise.allSettled(writes)
+
+      // completedPreAssessments is what the course map reads from the server to know the
+      // unit's pre-assessment is done. Use setDoc(merge) with arrayUnion — matching
+      // markUnitTestPassed — so it succeeds even if the user doc is missing some fields,
+      // and isolate its failure from the seeding above.
+      try {
+        await setDoc(
+          userDocRef(uid),
+          { completedPreAssessments: arrayUnion(sectionId) },
+          { merge: true },
+        )
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to save pre-assessment')
+      }
+    },
+    [uid],
+  )
 
   const saveLessonProgress = useCallback(
     (lessonId: string, progress: LessonProgress) => {
@@ -427,5 +534,6 @@ export function useProgress(uid: string | undefined) {
     completeLesson,
     markReviewDone,
     markUnitTestPassed,
+    markPreAssessmentDone,
   }
 }

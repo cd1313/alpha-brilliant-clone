@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
 import { getLesson } from '../lib/lessons'
 import { getPracticeSkill } from '../lib/reviewSkills'
+import { REVIEW_PASS_RATE, meetsReviewThreshold } from '../lib/reviewGate'
 import { generateReviewItem, type GeneratedItem } from '../lib/reviewGenerator'
 import { useState } from 'react'
 import { ReviewSession } from '../components/review/ReviewSession'
@@ -108,7 +109,11 @@ export function PracticePage() {
         tutorTopic={topic}
         tutorSource="practice"
         getAiHint={getAiHint}
-        onComplete={markReviewDone}
+        onComplete={(correct, total) => {
+          // Only a passing session (>= 80%) clears today's daily review gate.
+          if (meetsReviewThreshold(correct, total)) markReviewDone()
+        }}
+        reviewPassThreshold={REVIEW_PASS_RATE}
       />
     )
   }

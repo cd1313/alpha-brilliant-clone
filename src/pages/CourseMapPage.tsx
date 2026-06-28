@@ -1,16 +1,29 @@
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import courseData from '../content/course.json'
 import { getLesson } from '../lib/lessons'
 import { allSectionLessonsComplete, getCourseLessons, getNextLessonId, isLessonUnlocked, sectionHasUnitTest } from '../lib/course'
 import { availableReviewSkills, getPracticeSkill } from '../lib/reviewSkills'
 import { dailyReviewRequired } from '../lib/reviewGate'
+import { effectiveStreak } from '../lib/dates'
 import { LessonIcon } from '../components/course/LessonIcon'
 import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
+import { isPreCheckDone, preCheckRequired } from '../lib/preAssessment'
 import type { Course } from '../types/lesson'
 
 const course = courseData as Course
 const allLessons = getCourseLessons(course)
+
+// Pre-assessment topics map to a lesson's challenge skill so the course map can
+// surface a "Prior knowledge" hint where the pre-check was answered correctly.
+const lessonPriorSkill: Record<string, string> = {
+  circles: 'circle-challenge',
+  parabolas: 'parabola-challenge',
+  ellipses: 'ellipse-challenge',
+  hyperbolas: 'hyperbola-challenge',
+  'trig-angles': 'unit-circle-challenge',
+}
 
 function unlockHint(lessonId: string): string | null {
   const entry = allLessons.find((l) => l.id === lessonId)
@@ -20,11 +33,21 @@ function unlockHint(lessonId: string): string | null {
 }
 
 export function CourseMapPage() {
-  const { user, logOut } = useAuth()
-  const { userProgress, loading, error } = useProgress(user?.uid)
+  const { user, logOut, loading: authLoading } = useAuth()
+  const { userProgress, skillStats, loading, error, loadSkillStats } = useProgress(user?.uid)
   const nextLessonId = getNextLessonId(course, userProgress.completedLessons, userProgress.passedUnitTests)
+  const statsLoadedRef = useRef(false)
 
-  if (loading) {
+  useEffect(() => {
+    if (!user || statsLoadedRef.current) return
+    statsLoadedRef.current = true
+    void loadSkillStats()
+  }, [user, loadSkillStats])
+
+  // Wait for BOTH auth and the user's progress to resolve before deciding anything.
+  // This component runs its own useAuth instance, so on first mount `user` is briefly
+  // null (uid undefined); wait for both auth and progress to resolve before rendering.
+  if (authLoading || !user || loading) {
     return (
       <div className="page-loading">
         <p>Loading your progress...</p>
@@ -32,10 +55,28 @@ export function CourseMapPage() {
     )
   }
 
+  // The start-of-unit pre-assessment is optional. Rather than force-redirecting the learner
+  // into it (which interrupted them right after passing a unit test), we surface it as an
+  // opt-in "Pre-check" node on the course map so they can take it now or skip it for later.
+
   const completedIds = userProgress.completedLessons
+
+  const hasPriorKnowledge = (lessonId: string): boolean => {
+    const skillId = lessonPriorSkill[lessonId]
+    if (!skillId || completedIds.includes(lessonId)) return false
+    const stat = skillStats[skillId]
+    return !!stat && stat.attempts > 0 && stat.misses === 0
+  }
   const gated = dailyReviewRequired(userProgress)
   const nextIsResume = !!nextLessonId && userProgress.currentLesson?.lessonId === nextLessonId
   const blockNextLesson = gated && !!nextLessonId && !nextIsResume
+
+  // The unit's pre-check must be done before its lessons can be started. When the next
+  // lesson sits in a unit whose pre-check is still pending, the CTA routes there first.
+  const nextSection = nextLessonId
+    ? course.sections.find((s) => s.lessons.some((l) => l.id === nextLessonId))
+    : undefined
+  const nextNeedsPreCheck = !!nextSection && preCheckRequired(nextSection, userProgress, user.uid)
   const countCompleted = (lessons: { id: string }[]) =>
     lessons.filter((l) => completedIds.includes(l.id)).length
   const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : 0)
@@ -82,8 +123,8 @@ export function CourseMapPage() {
         <div className="dashboard-card">
           <span className="dashboard-label">Streak</span>
           <span className="dashboard-value">
-            🔥 {userProgress.streak}
-            <span className="dashboard-unit"> day{userProgress.streak === 1 ? '' : 's'}</span>
+            🔥 {effectiveStreak(userProgress.streak, userProgress.lastActiveDate)}
+            <span className="dashboard-unit"> day{effectiveStreak(userProgress.streak, userProgress.lastActiveDate) === 1 ? '' : 's'}</span>
           </span>
         </div>
         <div className="dashboard-card">
@@ -121,7 +162,8 @@ export function CourseMapPage() {
           <div className="daily-review-text">
             <span className="daily-review-label">Daily review</span>
             <span className="daily-review-desc">
-              Finish one Smart Review or Practice session to unlock your next new lesson.
+              Score at least 80% on a Smart Review or Practice session to unlock your next new
+              lesson.
             </span>
           </div>
           <Link to="/review" className="btn btn-primary">
@@ -140,7 +182,11 @@ export function CourseMapPage() {
               {getLesson(nextLessonId)?.title ?? nextLessonId}
             </span>
           </div>
-          {blockNextLesson ? (
+          {nextNeedsPreCheck && nextSection ? (
+            <Link to={`/pre-assessment/${nextSection.id}`} className="btn course-cta-btn">
+              Start pre-check
+            </Link>
+          ) : blockNextLesson ? (
             <Link to="/review" className="btn course-cta-btn">
               Review to unlock
             </Link>
@@ -152,7 +198,10 @@ export function CourseMapPage() {
         </div>
       )}
 
-      {course.sections.map((section) => (
+      {course.sections.map((section) => {
+        const sectionPreCheckPending =
+          !section.comingSoon && preCheckRequired(section, userProgress, user.uid)
+        return (
         <section
           key={section.id}
           className={`course-section ${section.comingSoon ? 'coming-soon' : ''}`}
@@ -163,14 +212,56 @@ export function CourseMapPage() {
           </div>
 
           <div className="lesson-path">
+            {/* Pre-assessment node — start-of-unit preview for sections with topics */}
+            {!section.comingSoon && sectionHasUnitTest(section) && (() => {
+              const done = isPreCheckDone(userProgress, section.id, user.uid)
+              const firstLesson = section.lessons.find((l) => !l.comingSoon)
+              const unlocked = firstLesson
+                ? isLessonUnlocked(firstLesson, userProgress.completedLessons, userProgress.passedUnitTests, course)
+                : false
+
+              return (
+                <>
+                  <div className="lesson-path-item">
+                    <div
+                      className={`lesson-node pre-assessment-node ${done ? 'completed' : ''} ${!unlocked ? 'locked' : ''} ${!done && unlocked ? 'recommended' : ''}`}
+                    >
+                      <span className="lesson-order">◎</span>
+                      <div className="lesson-node-body">
+                        <h3>Pre-check</h3>
+                        {done && <p className="lesson-status">Done ✓</p>}
+                        {!done && !unlocked && (
+                          <p className="lesson-status">Unlocks with this unit</p>
+                        )}
+                        {!done && unlocked && (
+                          <div className="lesson-node-actions">
+                            <Link
+                              to={`/pre-assessment/${section.id}`}
+                              className="btn btn-primary btn-sm"
+                            >
+                              Start
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="lesson-connector" aria-hidden="true" />
+                </>
+              )
+            })()}
+
             {section.lessons.map((lesson, index) => {
               const completed = userProgress.completedLessons.includes(lesson.id)
               const unlocked = isLessonUnlocked(lesson, userProgress.completedLessons, userProgress.passedUnitTests, course)
               const inProgress =
                 userProgress.currentLesson?.lessonId === lesson.id && !completed
               const isLast = index === section.lessons.length - 1
-              const locked = !unlocked
-              const hint = locked ? unlockHint(lesson.id) : null
+              // A lesson the learner could otherwise start is held back until the unit's
+              // pre-check is done; lessons gated by an earlier prerequisite keep their own hint.
+              const blockedByPreCheck = unlocked && sectionPreCheckPending
+              const locked = !unlocked || sectionPreCheckPending
+              const hint = !unlocked ? unlockHint(lesson.id) : null
 
               return (
                 <div key={lesson.id} className="lesson-path-item">
@@ -180,11 +271,17 @@ export function CourseMapPage() {
                     <span className="lesson-order">{lesson.order}</span>
                     <div className="lesson-node-body">
                       <h3>{lesson.title}</h3>
+                      {hasPriorKnowledge(lesson.id) && (
+                        <span className="lesson-prior-badge">✓ Prior knowledge</span>
+                      )}
                       {lesson.comingSoon && <p className="lesson-status">Coming soon</p>}
-                      {!lesson.comingSoon && locked && hint && (
+                      {!lesson.comingSoon && blockedByPreCheck && (
+                        <p className="lesson-status">Complete the unit pre-check to unlock</p>
+                      )}
+                      {!lesson.comingSoon && locked && !blockedByPreCheck && hint && (
                         <p className="lesson-status">{hint}</p>
                       )}
-                      {!lesson.comingSoon && locked && !hint && (
+                      {!lesson.comingSoon && locked && !blockedByPreCheck && !hint && (
                         <p className="lesson-status">Locked</p>
                       )}
                       {completed && <p className="lesson-status">Completed ✓</p>}
@@ -266,7 +363,8 @@ export function CourseMapPage() {
             })()}
           </div>
         </section>
-      ))}
+        )
+      })}
     </div>
   )
 }

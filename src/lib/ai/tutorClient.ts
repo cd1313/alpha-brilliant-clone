@@ -107,3 +107,41 @@ export async function requestChatReply(args: {
   const reply = data?.reply?.trim()
   return reply && reply.length > 0 ? reply : null
 }
+
+export type SocraticTurn = { role: 'student' | 'tutor'; text: string }
+
+export async function requestSocraticOpen(args: {
+  topic: string
+  weakComponents: string[]
+}): Promise<string | null> {
+  if (!isTutorEnabled()) return null
+  const data = await callAiAssist<{ question: string }>({
+    kind: 'socratic',
+    action: 'open',
+    topic: args.topic,
+    weakComponents: args.weakComponents,
+  })
+  const question = data?.question?.trim()
+  return question && question.length > 0 ? question : null
+}
+
+export async function requestSocraticReply(args: {
+  topic: string
+  weakComponents: string[]
+  history: SocraticTurn[]
+  answer: string
+}): Promise<{ question: string; affirmed: boolean } | null> {
+  if (!isTutorEnabled()) return null
+  const data = await callAiAssist<{ question: string; affirmed: boolean }>({
+    kind: 'socratic',
+    action: 'reply',
+    topic: args.topic,
+    weakComponents: args.weakComponents,
+    history: args.history,
+    answer: args.answer,
+  })
+  if (!data || typeof data.question !== 'string' || typeof data.affirmed !== 'boolean') return null
+  const question = data.question.trim()
+  if (!question) return null
+  return { question, affirmed: data.affirmed }
+}

@@ -1159,6 +1159,24 @@
   color: var(--text-h);
 }
 
+.review-gate-note {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.review-gate-pass {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.review-gate-fail {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
 .streak-message {
   font-weight: 600;
   color: var(--accent-warm-text);
@@ -1220,6 +1238,14 @@
 
 .unit-circle-arc {
   fill: none;
+}
+
+.unit-circle-quadrant-label {
+  font-size: 18px;
+  fill: #94a3b8;
+  font-weight: 700;
+  font-style: italic;
+  user-select: none;
 }
 
 .trig-asymptote {
@@ -1342,6 +1368,90 @@
   left: 0;
   color: var(--primary);
   font-weight: 700;
+}
+
+.tutor-socratic {
+  margin: 0 0 1.1rem;
+  padding: 0.85rem 0.95rem;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 10px 10px 0;
+  background: var(--surface-2);
+}
+
+.tutor-socratic-heading {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+  color: var(--text-h);
+}
+
+.tutor-socratic-question {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+  color: var(--text-h);
+  line-height: 1.5;
+}
+
+.tutor-socratic-textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  resize: vertical;
+  background: var(--surface);
+  color: var(--text-h);
+  box-sizing: border-box;
+}
+
+.tutor-socratic-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(0, 128, 128, 0.15);
+}
+
+.tutor-socratic-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.tutor-socratic-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.tutor-socratic-exchange {
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.tutor-socratic-exchange-student {
+  color: var(--text-h);
+}
+
+.tutor-socratic-exchange-tutor {
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+}
+
+.tutor-socratic-closing {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.tutor-socratic-start {
+  margin: 0 0 1.1rem;
 }
 
 .tutor-chat {
@@ -1638,4 +1748,160 @@
   .lesson-engine {
     padding: 1rem 0.75rem;
   }
+}
+
+/* Confidence prompt — inline row shown after a Check press */
+.confidence-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.confidence-prompt-label {
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: 0.95rem;
+}
+
+.confidence-prompt-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.confidence-btn {
+  background: var(--surface);
+  color: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.4rem 0.95rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.confidence-btn:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+/* Pre-assessment / pre-check page */
+.pre-assessment-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.pre-assessment-intro {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.pre-assessment-intro p {
+  color: var(--text-muted);
+}
+
+.pre-assessment-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(29, 61, 78, 0.06);
+}
+
+.pre-assessment-progress {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.pre-assessment-question {
+  color: var(--text-h);
+  font-size: 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.pre-assessment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pre-assessment-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pre-assessment-option:hover {
+  border-color: var(--primary);
+}
+
+.pre-assessment-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+}
+
+.pre-assessment-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.pre-assessment-result {
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.pre-assessment-result .pre-assessment-score {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0.5rem 0;
+}
+
+.pre-assessment-result p {
+  color: var(--text-muted);
+}
+
+.pre-assessment-intro-actions,
+.pre-assessment-result-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* Prior-knowledge badge on course map lesson nodes */
+.lesson-prior-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--success-soft);
+  color: var(--success-text);
+  border: 1px solid var(--success);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
 }

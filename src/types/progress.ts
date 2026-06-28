@@ -10,6 +10,8 @@ export type UserProgress = {
   lastReviewDate: string | null
   /** Section ids whose unit test has been passed, e.g. ['conics']. */
   passedUnitTests: string[]
+  /** Section ids whose start-of-unit pre-assessment has been completed, e.g. ['conics']. */
+  completedPreAssessments: string[]
 }
 
 export type LessonProgress = {
@@ -34,6 +36,12 @@ export type SkillStat = {
   weakComponents?: string[]
   /** Exponential moving average of recent miss rate (0-1); weights recent attempts more. */
   recentMissRate?: number
+  /** Next scheduled review date (YYYY-MM-DD); null/absent means due now. */
+  nextReviewDate?: string | null
+  /** Days until the next review (starts at 1, grows on correct answers). */
+  reviewInterval?: number
+  /** Confidence the learner reported on their most recent attempt. */
+  lastConfidence?: 'sure' | 'unsure' | 'guessing'
 }
 
 export const defaultUserProgress = (): UserProgress => ({
@@ -43,4 +51,5 @@ export const defaultUserProgress = (): UserProgress => ({
   currentLesson: null,
   lastReviewDate: null,
   passedUnitTests: [],
+  completedPreAssessments: [],
 })

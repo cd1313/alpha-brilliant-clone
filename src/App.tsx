@@ -6,6 +6,7 @@ import { LessonCompletePage } from './pages/LessonCompletePage'
 import { LessonPage } from './pages/LessonPage'
 import { LoginPage } from './pages/LoginPage'
 import { PracticePage } from './pages/PracticePage'
+import { PreAssessmentPage } from './pages/PreAssessmentPage'
 import { ReviewPage } from './pages/ReviewPage'
 import { UnitTestPage } from './pages/UnitTestPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
@@ -22,6 +23,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CourseMapPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pre-assessment/:sectionId"
+          element={
+            <ProtectedRoute>
+              <PreAssessmentPage />
             </ProtectedRoute>
           }
         />

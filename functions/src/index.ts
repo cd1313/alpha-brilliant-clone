@@ -59,7 +59,22 @@ type InsightsRequest = {
   topics: TopicInsight[]
 }
 
-type AiRequest = SummaryRequest | ChatRequest | TailorRequest | ReflectRequest | InsightsRequest
+type SocraticRequest = {
+  kind: 'socratic'
+  action: 'open' | 'reply'
+  topic: string
+  weakComponents: string[]
+  history?: { role: 'student' | 'tutor'; text: string }[]
+  answer?: string
+}
+
+type AiRequest =
+  | SummaryRequest
+  | ChatRequest
+  | TailorRequest
+  | ReflectRequest
+  | InsightsRequest
+  | SocraticRequest
 
 let client: OpenAI | null = null
 function openai(): OpenAI {
@@ -372,6 +387,108 @@ async function handleInsights(data: InsightsRequest) {
   }
 }
 
+async function handleSocratic(data: SocraticRequest) {
+  const topic = topicLabel(asString(data.topic, 'topic'))
+  const weakComponents = Array.isArray(data.weakComponents) ? data.weakComponents.slice(0, 8) : []
+  const weakest = weakComponents[0] ?? 'key concepts'
+
+  const socraticSystem =
+    `You are a Socratic precalculus tutor conducting a short check-in about ${topic}. ` +
+    `The student's weak areas are: ${weakComponents.length ? weakComponents.join(', ') : 'general concepts'}. ` +
+    'Your ONLY job is to ask focused questions — you must NEVER state the correct answer, give away the formula, or solve the problem for the student. ' +
+    'If the student is wrong, ask a redirecting question that nudges them toward the right idea without revealing it. ' +
+    'Keep each question short (one or two sentences). ' +
+    'Plain English only — no LaTeX, no markdown, no special symbols. Write equations as plain text like (x-h)^2/a^2 + (y-k)^2/b^2 = 1.'
+
+  if (data.action === 'open') {
+    const completion = await openai().chat.completions.create({
+      model: MODEL,
+      temperature: 0.4,
+      max_tokens: 120,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'socratic_open',
+          strict: true,
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              question: { type: 'string' },
+            },
+            required: ['question'],
+          },
+        },
+      },
+      messages: [
+        { role: 'system', content: socraticSystem },
+        {
+          role: 'user',
+          content:
+            `Ask ONE opening question about "${weakest}" as it specifically applies to ${topic}. ` +
+            `The question must name "${topic}" explicitly so it is not vague or generic. ` +
+            `For example, do not ask "What is a focus?" — instead ask something like "In an ellipse, what does the distance from a point on the curve to each focus tell you?" ` +
+            `Ask the question directly without preamble.`,
+        },
+      ],
+    })
+    const text = completion.choices[0]?.message?.content ?? '{}'
+    const parsed = JSON.parse(text) as { question?: string }
+    return {
+      question: typeof parsed.question === 'string' ? parsed.question : '',
+    }
+  }
+
+  const history = Array.isArray(data.history) ? data.history.slice(-10) : []
+  const answer = asString(data.answer, 'answer')
+
+  const historyMessages: OpenAI.Chat.ChatCompletionMessageParam[] = history.map((turn) => ({
+    role: turn.role === 'tutor' ? ('assistant' as const) : ('user' as const),
+    content: String(turn.text ?? ''),
+  }))
+
+  const completion = await openai().chat.completions.create({
+    model: MODEL,
+    temperature: 0.3,
+    max_tokens: 150,
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'socratic_reply',
+        strict: true,
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            question: { type: 'string' },
+            affirmed: { type: 'boolean' },
+          },
+          required: ['question', 'affirmed'],
+        },
+      },
+    },
+    messages: [
+      { role: 'system', content: socraticSystem },
+      ...historyMessages,
+      { role: 'user', content: answer },
+      {
+        role: 'user',
+        content:
+          `Does the student's answer above show correct understanding of "${weakest}"? ` +
+          `Set affirmed to true only if it is clearly correct. ` +
+          `Then write your next response in "question": if affirmed, either ask a harder follow-up or write a brief closing line; ` +
+          `if not affirmed, ask a guiding question — do NOT give the answer.`,
+      },
+    ],
+  })
+  const text = completion.choices[0]?.message?.content ?? '{}'
+  const parsed = JSON.parse(text) as { question?: string; affirmed?: boolean }
+  return {
+    question: typeof parsed.question === 'string' ? parsed.question : '',
+    affirmed: parsed.affirmed === true,
+  }
+}
+
 export const aiAssist = functions
   .runWith({ secrets: ['OPENAI_API_KEY'], maxInstances: MAX_INSTANCES })
   .https.onCall(async (data: AiRequest, context) => {
@@ -395,6 +512,8 @@ export const aiAssist = functions
           return await handleReflect(data)
         case 'insights':
           return await handleInsights(data)
+        case 'socratic':
+          return await handleSocratic(data)
         default:
           throw new functions.https.HttpsError('invalid-argument', 'Unknown request "kind".')
       }

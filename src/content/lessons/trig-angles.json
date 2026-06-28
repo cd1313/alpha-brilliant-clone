@@ -14,7 +14,8 @@
       "interactive": true,
       "successCondition": { "movedAngle": true },
       "unitCircleConfig": {
-        "showAngle": true
+        "showAngle": true,
+        "showSideLabels": true
       }
     },
     {
@@ -57,7 +58,8 @@
       "unitCircleConfig": {
         "showAngle": true,
         "showCoordinates": true,
-        "snapSpecial": true
+        "snapSpecial": true,
+        "showQuadrantLabels": true
       },
       "feedback": {
         "correct": "Nice! Quadrant II holds angles between π/2 and π.",
